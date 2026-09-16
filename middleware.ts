@@ -21,9 +21,23 @@ const PROTEGIDAS: Record<string, "coordinador" | "admin"> = {
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Si las variables de Supabase no están configuradas (p. ej. build/preview sin env),
+  // no fallar toda la app: las rutas públicas siguen funcionando y los guards de
+  // las rutas protegidas/API rechazarán sin sesión.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const pathname = request.nextUrl.pathname;
+
+  if (!supabaseUrl || !anonKey) {
+    if (pathname.startsWith("/api/admin") || pathname.startsWith("/api/metricas")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    anonKey,
     {
       cookies: {
         getAll() {
@@ -40,12 +54,15 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refrescar la sesión (renueva cookies si es necesario).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
+  // Refrescar la sesión (renueva cookies si es necesario). Si Supabase no responde
+  // (indisponible o dominio no autorizado), se degrada a "sin sesión" en lugar de 500.
+  let user: { app_metadata?: { rol?: string } } | null = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = (data.user ?? null) as { app_metadata?: { rol?: string } } | null;
+  } catch {
+    user = null;
+  }
 
   // API de administración y métricas: exclusivo de rol admin (403 para fetch, no redirect).
   if (pathname.startsWith("/api/admin") || pathname.startsWith("/api/metricas")) {

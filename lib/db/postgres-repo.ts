@@ -78,7 +78,18 @@ function mapeoCotizacion(f: Record<string, unknown>): Cotizacion {
 }
 
 export class PostgresRepositorio implements Repositorio {
-  constructor(private readonly pg: Pool = obtenerPool()) {}
+  private _pg?: Pool;
+
+  constructor(pg?: Pool) {
+    if (pg) this._pg = pg;
+  }
+
+  // Pool lazy: no se conecta hasta la primera consulta, para no exigir DATABASE_URL
+  // al importar el módulo (p. ej. en el build de Vercel).
+  private get pg(): Pool {
+    if (!this._pg) this._pg = obtenerPool();
+    return this._pg;
+  }
 
   async crearSolicitud(
     datos: Parameters<Repositorio["crearSolicitud"]>[0],

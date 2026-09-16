@@ -11,6 +11,21 @@ export type DocGenerado = {
   referencia: string;
 };
 
+// Fuente fallback embebida para que el texto se dibuje en el PDF (pdfme requiere una fuente).
+let fontCache: Promise<{ Roboto: { data: Uint8Array<ArrayBuffer>; fallback: boolean } } | null> | null = null;
+
+function getFont() {
+  if (!fontCache) {
+    fontCache = (async () => {
+      const path = process.env.PDF_FONT_PATH || "assets/Geist-Regular.ttf";
+      const data = await import("node:fs/promises").then((fs) => fs.readFile(path));
+      const u8 = Uint8Array.from(data) as Uint8Array<ArrayBuffer>;
+      return { Roboto: { data: u8, fallback: true } };
+    })().catch(() => null);
+  }
+  return fontCache;
+}
+
 export async function generarDocumento(opts: {
   tipo: "RFI" | "RFQ" | "RFP";
   solicitud: Solicitud;
@@ -29,8 +44,9 @@ export async function generarDocumento(opts: {
     tipo,
     area: solicitud.areaSolicitante ?? "no especificado",
     solicitante: solicitud.solicitanteNombre,
-    coordenador: coordenadorNombre ?? "no especificado",
+    coordinadorAsignado: coordenadorNombre ?? "no especificado",
     fechaLimite: fechaLimite ?? solicitud.fechaRequerida ?? "no especificado",
+    fechaLimiteHeader: fechaLimite ?? solicitud.fechaRequerida ?? "no especificado",
     titulo: solicitud.titulo,
     descripcion: solicitud.descripcion ?? "no especificado",
     campos,
@@ -38,11 +54,13 @@ export async function generarDocumento(opts: {
 
   const template = createTemplate(tipo) as unknown as Parameters<typeof generate>[0]["template"];
 
-  // pdfme 6: generate({ template, inputs, plugins })
+  // pdfme 6: generate({ template, inputs, plugins, options: { font } })
+  const font = await getFont();
   const buffer = await generate({
     template,
     inputs: [inputs],
     plugins: { text, line },
+    options: font ? { font } : undefined,
   });
 
   return { buffer, tipo, referencia: inputs.referencia };

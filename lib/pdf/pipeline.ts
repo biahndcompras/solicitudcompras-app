@@ -19,29 +19,33 @@ export async function pipelineEnvioACompras(opts: {
   repo: Repositorio;
   solicitud: Solicitud;
   respuestas?: Record<string, string>;
+  coordinadorIdSolicitado?: string;
 }): Promise<ResultadoPipeline> {
-  const { repo, solicitud, respuestas = {} } = opts;
+  const { repo, solicitud, respuestas = {}, coordinadorIdSolicitado } = opts;
   const tipo = solicitud.tipo ?? "RFQ";
 
-  // 0. Asignar coordinador (regla por categoría, con respaldo) — Q1
+  // 0. Asignar coordinador. Si el solicitante eligió uno explícito (1.1), respetar esa elección;
+  //    si no, regla por categoría con respaldo (Q1).
   const coordinadores = await repo.listarCoordinadores();
-  const coordinadoresPorCategoria: Record<string, string> = {};
-  for (const c of coordinadores) {
-    for (const cat of c.categoriasAsignadas) {
-      coordinadoresPorCategoria[cat] = c.id;
+  let coordinadorId = coordinadorIdSolicitado;
+  if (!coordinadorId || !coordinadores.some((c) => c.id === coordinadorId)) {
+    const coordinadoresPorCategoria: Record<string, string> = {};
+    for (const c of coordinadores) {
+      for (const cat of c.categoriasAsignadas) {
+        coordinadoresPorCategoria[cat] = c.id;
+      }
     }
+    // Respaldo: el coordinador de mayor cobertura (catch-all).
+    const respaldoId =
+      [...coordinadores].sort(
+        (a, b) => (b.categoriasAsignadas?.length ?? 0) - (a.categoriasAsignadas?.length ?? 0)
+      )[0]?.id ?? "";
+    coordinadorId = asignarCoordinadorPorCategoria({
+      categoria: solicitud.categoria,
+      coordinadoresPorCategoria,
+      respaldoId,
+    });
   }
-  // Respaldo: el coordinador de mayor cobertura (catch-all). Evita que categorías
-  // sin clave canónica caigan a un coordinador arbitrario (antes: el primero por nombre).
-  const respaldoId =
-    [...coordinadores].sort(
-      (a, b) => (b.categoriasAsignadas?.length ?? 0) - (a.categoriasAsignadas?.length ?? 0)
-    )[0]?.id ?? "";
-  const coordinadorId = asignarCoordinadorPorCategoria({
-    categoria: solicitud.categoria,
-    coordinadoresPorCategoria,
-    respaldoId,
-  });
   if (coordinadorId) {
     await repo.asignarCoordinador(solicitud.id, coordinadorId);
   }

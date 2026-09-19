@@ -131,6 +131,41 @@ export class PostgresRepositorio implements Repositorio {
     }
   }
 
+  // Re-cotización (2.3): edita campos clave de una solicitud no terminal (descripción,
+  // fecha requerida y/o respuestas) para volver a cotizar con el proveedor original.
+  async actualizarCamposSolicitud(
+    solicitudId: string,
+    cambios: { descripcion?: string; fechaRequerida?: string; respuestas?: Record<string, string> }
+  ): Promise<void> {
+    if (cambios.descripcion !== undefined || cambios.fechaRequerida !== undefined) {
+      await this.pg.query(
+        `UPDATE solicitud SET descripcion = COALESCE($2, descripcion), fecha_requerida = COALESCE($3, fecha_requerida)
+         WHERE id = $1`,
+        [solicitudId, cambios.descripcion ?? null, cambios.fechaRequerida ?? null]
+      );
+    }
+    if (cambios.respuestas && Object.keys(cambios.respuestas).length > 0) {
+      const filas = this.pg.query(
+        `SELECT * FROM campo_catalogo WHERE campo_key = ANY($1::text[])`,
+        [Object.keys(cambios.respuestas)]
+      );
+      const cat = (await filas).rows;
+      const respuestas: RespuestaCampo[] = cat.map((c: { campo_key: string; label: string }) => {
+        const valor = cambios.respuestas?.[c.campo_key] ?? "";
+        return {
+          id: `${solicitudId}-${c.campo_key}`,
+          solicitudId,
+          campoKey: String(c.campo_key),
+          campoLabel: String(c.label),
+          valor,
+          valorNumerico: Number.isFinite(Number(valor)) && valor.trim() !== "" ? Number(valor) : undefined,
+          origen: "assessment" as const,
+        };
+      });
+      await this.guardarRespuestas(solicitudId, respuestas);
+    }
+  }
+
   // Genera el número de referencia dentro de la transacción del cambio de estado.
   // Formato desde configuracion.formato_numero_referencia: {{TIPO}}-{{ANIO}}-{{SECUENCIA}}.
   private async generarNumeroReferenciaTx(

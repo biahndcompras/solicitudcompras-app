@@ -15,7 +15,7 @@ import type { ResultadoAssessment } from "@/lib/domain/assessment";
 
 export type SalidaCorta = Pick<
   Solicitud,
-  "id" | "numeroReferencia" | "titulo" | "estado" | "fechaCreacion" | "fechaCierre"
+  "id" | "numeroReferencia" | "titulo" | "estado" | "fechaCreacion" | "fechaCierre" | "fechaRequerida" | "areaSolicitante" | "categoria"
 >;
 
 async function json<T>(res: Response): Promise<T> {
@@ -52,6 +52,7 @@ export const api = {
     actorIdentificador?: string;
     nota?: string;
     respuestas?: Record<string, string>;
+    coordinadorId?: string;
     coordenadorNombre?: string;
   }): Promise<{ solicitud: Solicitud; eventoId: string; pipeline?: unknown; enlace?: { token: string; url: string } }> {
     return fetch(`/api/solicitudes/${payload.solicitudId}/estado`, {
@@ -205,6 +206,10 @@ export const api = {
       }
       return r.json();
     });
+  },
+
+  listarCoordinadoresPublicos(): Promise<{ id: string; nombre: string; categorias: string[] }[]> {
+    return fetch("/api/coordinadores", { method: "GET" }).then((r) => json<{ id: string; nombre: string; categorias: string[] }[]>(r));
   },
 
   generarComparativa(solicitudId: string): Promise<Comparativa> {

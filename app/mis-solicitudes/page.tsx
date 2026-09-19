@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { Badge, type BadgeTone } from "@/components/Badge";
+import { SemParoBadge } from "@/components/Semaforo";
+import { duracionAtencion } from "@/lib/domain/semaforo";
 import { api, type SalidaCorta } from "@/lib/api-client";
 import type { Cotizacion, Solicitud } from "@/lib/domain/types";
 import { nombreCategoria } from "@/lib/domain/categorias";
@@ -141,7 +143,10 @@ function MisSolicitudesInner() {
                       <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{s.numeroReferencia ?? "—"}</div>
                       <h3 className="text-base font-medium text-slate-900">{s.titulo}</h3>
                     </div>
-                    <Badge tone={toneDe(s.estado)} label={estadoLegible(s.estado)} />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <SemParoBadge solicitud={s} />
+                      <Badge tone={toneDe(s.estado)} label={estadoLegible(s.estado)} />
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-slate-500">
@@ -151,6 +156,9 @@ function MisSolicitudesInner() {
                       Ver detalle
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1.5">
+                    Atención: {duracionAtencion({ fechaCreacion: s.fechaCreacion, fechaCierre: s.fechaCierre }).texto}
                   </div>
                 </button>
               ))}
@@ -167,6 +175,7 @@ function MisSolicitudesInner() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded">{detalle.solicitud.numeroReferencia ?? "—"}</span>
+                    <SemParoBadge solicitud={detalle.solicitud} />
                     <Badge tone={toneDe(detalle.solicitud.estado)} label={estadoLegible(detalle.solicitud.estado)} />
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900 mt-2">{detalle.solicitud.titulo}</h3>

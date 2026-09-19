@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CargaCotizaciones } from "./CargaCotizaciones";
 import { ComparativaView } from "./Comparativa";
 import { Recomendacion } from "./Recomendacion";
@@ -20,6 +21,7 @@ type DetalleSolicitudProps = {
 };
 
 export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: DetalleSolicitudProps) {
+  const router = useRouter();
   const terminal = ESTADOS_TERMINALES.includes(solicitud.estado);
   const [etapa, setEtapa] = useState<Etapa>(7);
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
@@ -27,6 +29,27 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
   const [comparativaData, setComparativaData] = useState<Comparativa | undefined>(undefined);
   const [enlaceEnviado, setEnlaceEnviado] = useState<{ token: string; url: string } | null>(null);
   const [errorEnvio, setErrorEnvio] = useState<string | null>(null);
+  const [cancelando, setCancelando] = useState(false);
+
+  // Cancela la solicitud (3.5): disponible para coordinador y admin; registra evento CANCELADA.
+  async function cancelarSolicitud() {
+    if (!window.confirm("¿Cancelar esta solicitud? El proceso se cerrará y quedará registrado como CANCELADA.")) return;
+    setCancelando(true);
+    setErrorEnvio(null);
+    try {
+      await api.transicionar({
+        solicitudId: solicitud.id,
+        hacia: "CANCELADA",
+        actorTipo: "coordinador",
+        nota: "Cancelada desde el panel por el coordinador",
+      });
+      router.refresh();
+    } catch (e) {
+      setErrorEnvio(e instanceof Error ? e.message : "No se pudo cancelar la solicitud");
+    } finally {
+      setCancelando(false);
+    }
+  }
 
   async function enviarComparativa(recomendacion: string): Promise<boolean> {
     if (!comparativaData) return false;
@@ -117,6 +140,18 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
           Volver al panel
         </Link>
         <div className="flex items-center gap-2">
+          {terminal ? null : (
+            <button
+              type="button"
+              onClick={cancelarSolicitud}
+              disabled={cancelando}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-rose-600 hover:bg-rose-50 border border-rose-200 bg-white/70 disabled:opacity-50"
+              title="Cancela la solicitud (queda registrada como CANCELADA)"
+            >
+              {cancelando ? "Cancelando…" : "Cancelar solicitud"}
+            </button>
+          )}
+          {errorEnvio ? <span className="text-[10px] text-rose-600">{errorEnvio}</span> : null}
           {tabs.map((t) => (
             <button
               key={t.n}

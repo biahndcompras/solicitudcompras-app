@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
-import { useSolicitudWizard, type WizardState } from "@/hooks/useSolicitudWizard";
+import { useSolicitudWizard, type WizardState, type CoordinadorPublico } from "@/hooks/useSolicitudWizard";
 import { CATEGORIAS, nombreCategoria } from "@/lib/domain/categorias";
 
 const PASOS_SIDEBAR = [
@@ -18,7 +18,7 @@ export function SolicitanteWizard() {
   const searchParams = useSearchParams();
   const nuevo = (searchParams.get("nuevo") ?? "") === "1";
   const w = useSolicitudWizard(nuevo);
-  const { estado, set, siguiente, anterior, pasoValido, envio, enviarSolicitud, guardarBorrador, cancelar, borradoAt, clasificandoIA, clasificarIA, evaluandoAssessment, evaluarAssessment } = w;
+  const { estado, set, siguiente, anterior, pasoValido, envio, enviarSolicitud, guardarBorrador, cancelar, borradoAt, clasificandoIA, clasificarIA, evaluandoAssessment, evaluarAssessment, coordinadores } = w;
   const [confirmCancel, setConfirmCancel] = useState(false);
   const emailInicial = searchParams.get("email") ?? "";
   const nombreInicial = searchParams.get("nombre") ?? "";
@@ -150,7 +150,7 @@ export function SolicitanteWizard() {
           ) : estado.paso === 4 ? (
             <PasoDetalles estado={estado} set={set} siguiente={siguiente} anterior={anterior} pasoValido={pasoValido} />
           ) : estado.paso === 5 ? (
-            <PasoDocumento estado={estado} enviarSolicitud={enviarSolicitud} anterior={anterior} envio={envio} />
+            <PasoDocumento estado={estado} set={set} enviarSolicitud={enviarSolicitud} anterior={anterior} envio={envio} coordinadores={coordinadores} />
           ) : (
             <PasoConfirmacion estado={estado} />
           )}
@@ -501,7 +501,26 @@ function PasoDetalles({
                     {completada ? "Listo" : "Pendiente"}
                   </span>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
+                {aq.sugerencias && aq.sugerencias.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-2 mb-2.5">
+                      <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Sugerido:</span>
+                      {aq.sugerencias.map((sug) => {
+                        const activa = respuesta?.valor === sug;
+                        return (
+                          <button
+                            key={sug}
+                            type="button"
+                            onClick={() => set("assessmentRespuestas", { ...estado.assessmentRespuestas, [aq.campoKey]: { valor: activa ? "" : sug, noSe: false } })}
+                            className={"text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all " + (activa ? "bg-sky-500 text-white border-sky-500" : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700")}
+                          >
+                            {sug}
+                          </button>
+                        );
+                      })}
+                      <span className="text-[10px] text-slate-400 italic">o escribí tu propia respuesta:</span>
+                    </div>
+                  ) : null}
+                  <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="text"
                     value={respuesta?.valor ?? ""}
@@ -539,15 +558,20 @@ function PasoDetalles({
 /* ---------- STEP 5: Documento ---------- */
 function PasoDocumento({
   estado,
+  set,
   enviarSolicitud,
   anterior,
   envio,
+  coordinadores,
 }: {
   estado: ReturnType<typeof useSolicitudWizard>["estado"];
+  set: <K extends keyof WizardState>(key: K, valor: WizardState[K]) => void;
   enviarSolicitud: () => void;
   anterior: () => void;
   envio: ReturnType<typeof useSolicitudWizard>["envio"];
+  coordinadores: CoordinadorPublico[];
 }) {
+  const coordSeleccionado = coordinadores.find((c) => c.id === estado.coordinadorId);
   return (
     <div className="flex flex-col h-full w-full step-enter">
       <div className="mb-8">
@@ -613,6 +637,42 @@ function PasoDocumento({
             </div>
           </div>
         </div>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-200/70 shadow-sm p-5 md:p-6 mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-sky-500"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">¿A qué comprador va dirigida la solicitud?</span>
+        </div>
+        {coordinadores.length === 0 ? (
+          <p className="text-xs text-slate-400 mt-2">Cargando compradores…</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+            {coordinadores.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => set("coordinadorId", c.id)}
+                className={
+                  "text-left rounded-xl border px-3.5 py-3 transition-all " +
+                  (estado.coordinadorId === c.id
+                    ? "border-sky-500 bg-sky-50 ring-1 ring-sky-500/40"
+                    : "border-slate-200 bg-white hover:border-slate-300")
+                }
+              >
+                <span className={"block text-sm font-semibold " + (estado.coordinadorId === c.id ? "text-sky-700" : "text-slate-800")}>{c.nombre}</span>
+                <span className="block text-[10px] text-slate-400 mt-0.5">
+                  {c.categorias.length > 0 ? c.categorias.map((cat) => nombreCategoria(cat)).join(" · ") : "Todas las categorías"}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+        {coordSeleccionado ? (
+          <p className="mt-3 text-[11px] text-sky-700 flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            Irá asignada a <b>{coordSeleccionado.nombre}</b>
+          </p>
+        ) : null}
       </div>
       {envio.estado === "error" ? (
         <p role="alert" className="mb-4 text-[11px] text-rose-600">{envio.mensaje}</p>

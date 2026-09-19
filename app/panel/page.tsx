@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { Badge, type BadgeTone } from "@/components/Badge";
+import { SemParoBadge } from "@/components/Semaforo";
+import { duracionAtencion } from "@/lib/domain/semaforo";
 import { useSesion } from "@/lib/sesion-context";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { api } from "@/lib/api-client";
@@ -281,7 +283,11 @@ export default function PanelPage() {
                           <Badge tone={toneCategoria(s.categoria)} label={nombreCategoria(s.categoria)} />
                         </td>
                         <td className="px-6 py-4">
-                          <Badge tone={toneEstado(s.estado)} label={estadoLegible(s.estado)} />
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Badge tone={toneEstado(s.estado)} label={estadoLegible(s.estado)} />
+                            <SemParoBadge solicitud={s} compact />
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-1">{duracionAtencion({ fechaCreacion: s.fechaCreacion, fechaCierre: s.fechaCierre }).texto} de gestión</div>
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span

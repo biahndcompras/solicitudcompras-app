@@ -2,8 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AdminShell } from "@/components/ui-ext/AdminShell";
 import { Badge, type BadgeTone } from "@/components/Badge";
+import { SemParoBadge } from "@/components/Semaforo";
+import { CancelarSolicitudButton } from "@/components/CancelarSolicitudButton";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { nombreCategoria } from "@/lib/domain/categorias";
+import { duracionAtencion } from "@/lib/domain/semaforo";
 
 export const dynamic = "force-dynamic";
 
@@ -44,10 +47,15 @@ export default async function AdminSolicitudDetallePage({
             <Badge tone={toneDe(s.estado)} label={estadoLegible(s.estado)} />
           </div>
         </div>
-        <Link href="/admin" className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5 bg-white/70 px-4 py-2 rounded-xl border border-white shadow-sm">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
-          Volver
-        </Link>
+        <div className="flex items-center gap-3">
+          {["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"].includes(s.estado) ? null : (
+            <CancelarSolicitudButton solicitudId={s.id} rol="admin" variante="borde" />
+          )}
+          <Link href="/admin" className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5 bg-white/70 px-4 py-2 rounded-xl border border-white shadow-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            Volver
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -102,6 +110,14 @@ export default async function AdminSolicitudDetallePage({
               <div>
                 <span className="text-slate-500 uppercase tracking-wider font-semibold block text-[10px] mb-1">Ciclo Actual</span>
                 <span className="font-medium text-slate-900">{s.fechaCierre ? "Cerrado" : "En curso"}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 uppercase tracking-wider font-semibold block text-[10px] mb-1">Tiempo de atención</span>
+                <span className="font-medium text-slate-900">{duracionAtencion({ fechaCreacion: s.fechaCreacion, fechaCierre: s.fechaCierre }).texto}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 uppercase tracking-wider font-semibold block text-[10px] mb-1">Semáforo</span>
+                <SemParoBadge solicitud={s} />
               </div>
             </div>
           </div>

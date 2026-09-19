@@ -111,6 +111,11 @@ export interface Repositorio {
 
   listarCamposDePlantilla(tipo: "RFI" | "RFQ" | "RFP", subtipo?: string, categoria?: string): Promise<CampoCatalogo[]>;
 
+  actualizarCamposSolicitud(
+    solicitudId: string,
+    cambios: { descripcion?: string; fechaRequerida?: string; resupuestas?: Record<string, string> }
+  ): Promise<void>;
+
   guardarConfig(clave: string, valor: unknown): Promise<void>;
 }
 

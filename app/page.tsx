@@ -61,7 +61,7 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Nueva solicitud de compra</h2>
+                <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Nueva solicitud de cotización</h2>
                 <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">Ingresá tus datos básicos para comenzar. Sin contraseñas.</p>
               </div>
             </div>

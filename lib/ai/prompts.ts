@@ -37,14 +37,15 @@ Recibís:
 
 Debés:
 1. Analizar qué campos del catálogo serían relevantes para esta solicitud específica según su categoría y subtipo.
-2. Devolver hasta 6 preguntas para campos que falten o necesiten detalle.
+2. Devolver hasta 10 preguntas para campos que falten o necesiten detalle.
 3. Cada pregunta debe incluir: campoKey (del catálogo), la pregunta en lenguaje natural, por qué se pregunta, y si es crítica (bloqueante).
-4. Para cada pregunta, incluir "ejemplo_respuesta": una sugerencia concreta de respuesta válida para ESTA solicitud (basada en el título y descripción ya compartidos, NO genérica). Si no podés sugerir algo coherente con lo pedido, dejalo vacío ("").
+4. Para cada pregunta, incluir "sugerencias": entre 2 y 3 opciones de respuesta concretas y seleccionables para ESTA solicitud (basadas en el título y descripción ya compartidos, NO genéricas). Pueden ser valores distintos entre sí que cubran los casos típicos. Si no podés sugerir algo coherente, dejalo vacío ([]).
+5. CLARIFICACIÓN DE CONTEXTO: si el campo pregunta por dimensiones/medidas/materiales y la solicitud menciona branding/logo además del producto, especificá explícitamente si la pregunta es sobre el PRODUCTO, sobre el LOGO/MARCA, o sobre el SERVICIO (p. ej. "Dimensiones del LOGO (alto x ancho)" vs "Dimensiones del PRODUCTO"). Evitá ambigüedad.
 
 ${GUARDRAILS_COMUNES}
 REGLA 7: Todo campoKey devuelto DEBE existir en el catálogo provisto. Si no hay campoKey en el catálogo relevante, no inventes campos.
 REGLA 8: Para el logo (campoKey "archivo_logo" o similar): NO preguntes "¿podés subir el logo?" — el sistema ya tiene su componente de carga de logo/arte arriba. Pregunta solo aspectos que falten (formato vectorial / alta resolución). No dupliques la carga.
-REGLA 9: ejemplo_respuesta debe referirse específicamente al pedido. Ej: si piden sombrillas corporativas con logo, sugierí "lona impermeable 600d, estampado del logo" — NO "tornillos" ni genéricos. Si no tenés base, dejalo vacío.
+REGLA 9: las sugerencias deben referirse específicamente al pedido. Ej: si piden sombrillas corporativas con logo, sugierí "lona impermeable 600d, estampado del logo" — NO "tornillos" ni genéricos. Si no tenés base, dejalo vacío ([]).
 REGLA 10: el catálogo puede incluir campos de otros rubros; solo debés preguntar los que apliquen a ESTA solicitud concreta.`,
   userPromptTemplate: `Tipo: {{tipo}}
 Subtipo: {{subtipo}}
@@ -52,7 +53,7 @@ Categoría: {{categoria}}
 Campos ya capturados: {{camposCapturados}}
 Catálogo disponible: {{catalogo}}
 
-Determiná qué preguntas hacer (máximo 6) para completar la información faltante. Si todo está cubierto, devolvé sin_preguntas_pendientes: true. Entrega el JSON con claves en snake_case (por_que, contexto_investigado, sin_preguntas_pendientes).`,
+Determiná qué preguntas hacer (máximo 10) para completar la información faltante. Si todo está cubierto, devolvé sin_preguntas_pendientes: true. Entrega el JSON con claves en snake_case.`,
 };
 
 export const EXTRAER_COTIZACION: z.infer<typeof FuncionPromptSchema> = {

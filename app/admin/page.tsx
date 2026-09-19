@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminShell } from "@/components/ui-ext/AdminShell";
 import { Badge, type BadgeTone } from "@/components/Badge";
+import { SemParoBadge } from "@/components/Semaforo";
+import { duracionAtencion } from "@/lib/domain/semaforo";
 import { api } from "@/lib/api-client";
 import type { MetricasDashboard } from "@/lib/domain/metrics";
 import type { Solicitud } from "@/lib/domain/types";
@@ -161,6 +163,7 @@ export default function AdminDashboardPage() {
                     <th className="px-5 py-3 font-semibold">Solicitante</th>
                     <th className="px-5 py-3 font-semibold">Coordinador</th>
                     <th className="px-5 py-3 font-semibold">Estado</th>
+                    <th className="px-5 py-3 font-semibold">Tiempo</th>
                     <th className="px-5 py-3 font-semibold">Creación</th>
                     <th className="px-5 py-3 font-semibold text-right">Acción</th>
                   </tr>
@@ -177,7 +180,8 @@ export default function AdminDashboardPage() {
                         <div className="text-[10px] text-slate-500">{s.areaSolicitante ?? "—"}</div>
                       </td>
                       <td className="px-5 py-4"><div className="font-medium text-slate-700">{nombreCoord(s.coordinadorId ?? "")}</div></td>
-                      <td className="px-5 py-4"><Badge tone={toneDe(s.estado)} label={estadoLegible(s.estado)} /></td>
+                      <td className="px-5 py-4"><div className="flex flex-wrap items-center gap-1.5"><Badge tone={toneDe(s.estado)} label={estadoLegible(s.estado)} /><SemParoBadge solicitud={s} compact /></div></td>
+                      <td className="px-5 py-4 text-slate-700 whitespace-nowrap">{duracionAtencion({ fechaCreacion: s.fechaCreacion, fechaCierre: s.fechaCierre }).texto}</td>
                       <td className="px-5 py-4 text-slate-500 whitespace-nowrap">{new Date(s.fechaCreacion).toLocaleDateString("es-HN")}</td>
                       <td className="px-5 py-4 text-right">
                         <Link href={`/admin/solicitud/${s.id}`} className="text-sky-600 hover:text-sky-800 font-semibold px-3 py-1.5 bg-sky-50 rounded-lg transition-colors whitespace-nowrap">Ver Detalle</Link>

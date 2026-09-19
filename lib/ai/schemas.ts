@@ -40,10 +40,11 @@ export const PreguntaAssessmentSchema = z.object({
   por_que: z.string(),
   critica: z.boolean(),
   ejemplo_respuesta: z.string().optional(),
+  sugerencias: z.array(z.string()).max(3).optional(),
 });
 
 export const AssessmentOutputSchema = z.object({
-  preguntas: z.array(PreguntaAssessmentSchema).max(6),
+  preguntas: z.array(PreguntaAssessmentSchema).max(10),
   contexto_investigado: z.string().default(""),
   sin_preguntas_pendientes: z.boolean().optional(),
 }).transform((d) => ({

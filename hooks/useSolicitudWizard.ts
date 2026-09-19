@@ -33,10 +33,11 @@ export type WizardState = {
   llevaBranding: boolean;
   archivoLogo: string;
   assessmentListo: boolean;
-  assessmentPreguntas: { campoKey: string; pregunta: string; ejemplo?: string }[];
+  assessmentPreguntas: { campoKey: string; pregunta: string; ejemplo?: string; sugerencias?: string[] }[];
   camposPlantilla?: { campoKey: string; label: string; tipoDato: string; ayuda?: string; obligatorio: boolean; seccionPdf?: string }[];
   assessmentRespuestas: Record<string, { valor: string; noSe: boolean }>;
   solicitudId: string | null;
+  coordinadorId: string;
 };
 
 function estadoInicial(nuevo: boolean): WizardState {
@@ -62,6 +63,7 @@ function estadoInicial(nuevo: boolean): WizardState {
     camposPlantilla: [],
     assessmentRespuestas: {},
     solicitudId: null,
+    coordinadorId: "",
   };
   // En una solicitud NUEVA (viniendo de P1) no se restaura ningún borrador anterior.
   // El borrador previo ya fue limpiado al arrancar desde la home.
@@ -76,6 +78,8 @@ function estadoInicial(nuevo: boolean): WizardState {
   return base;
 }
 
+export type CoordinadorPublico = { id: string; nombre: string; categorias: string[] };
+
 export function useSolicitudWizard(nuevo = false) {
   const router = useRouter();
   const [estado, setEstado] = useState<WizardState>(() => estadoInicial(nuevo));
@@ -83,6 +87,30 @@ export function useSolicitudWizard(nuevo = false) {
   const [borradoAt, setBorradoAt] = useState<number | null>(null);
   const [clasificandoIA, setClasificandoIA] = useState(false);
   const [evaluandoAssessment, setEvaluandoAssessment] = useState(false);
+  const [coordinadores, setCoordinadores] = useState<CoordinadorPublico[]>([]);
+
+  // Cargar compradores disponibles y preseleccionar por categoría al llegar al paso de documento.
+  useEffect(() => {
+    if (estado.paso !== 5) return;
+    let activo = true;
+    (async () => {
+      try {
+        const { api } = await import("@/lib/api-client");
+        const lista = await api.listarCoordinadoresPublicos();
+        if (!activo) return;
+        setCoordinadores(lista);
+        if (!estado.coordinadorId) {
+          const porCategoria = lista.filter((c) => c.categorias.includes(estado.tipoNecesidad));
+          const sugerido = porCategoria[0] ?? lista[0];
+          if (sugerido) setEstado((s) => ({ ...s, coordinadorId: sugerido.id }));
+        }
+      } catch {
+        if (activo) setCoordinadores([]);
+      }
+    })();
+    return () => { activo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estado.paso]);
 
   // Autoguarda el borrador en cada cambio (para que back/forward y recarga conserven los datos).
   useEffect(() => {
@@ -153,6 +181,7 @@ export function useSolicitudWizard(nuevo = false) {
             campoKey: p.campoKey,
             pregunta: p.pregunta,
             ejemplo: p.ejemplo_respuesta || undefined,
+            sugerencias: p.sugerencias,
           })),
           camposPlantilla: res.camposPlantilla ?? [],
           assessmentListo: res.sin_preguntas_pendientes,
@@ -191,6 +220,7 @@ export function useSolicitudWizard(nuevo = false) {
         actorTipo: "solicitante",
         actorIdentificador: estado.email,
         nota: "Solicitud completada por el solicitante",
+        coordinadorId: estado.coordinadorId || undefined,
         respuestas: {
           titulo: estado.titulo,
           tipoNecesidad: estado.tipoNecesidad,
@@ -275,6 +305,7 @@ export function useSolicitudWizard(nuevo = false) {
     clasificarIA,
     evaluandoAssessment,
     evaluarAssessment,
+    coordinadores,
     guardarBorrador: guardarBorradorActual,
     cancelar,
     borradoAt,

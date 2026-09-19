@@ -11,6 +11,7 @@ export type PreguntaAssessment = {
   por_que: string;
   critica: boolean;
   ejemplo_respuesta?: string;
+  sugerencias?: string[];
 };
 
 export type ResultadoAssessment = {
@@ -29,7 +30,7 @@ export type AssessmentInput = {
   archivoLogo?: string;
 };
 
-const MAX_PREGUNTAS = 6;
+const MAX_PREGUNTAS = 10;
 
 export async function assessment_requerimiento(input: AssessmentInput): Promise<ResultadoAssessment> {
   // Sin catálogo no hay campos que preguntar; fallback directo (no gasta llamada IA).
@@ -70,6 +71,7 @@ export async function assessment_requerimiento(input: AssessmentInput): Promise<
           por_que: p.por_que,
           critica: p.critica,
           ejemplo_respuesta: p.ejemplo_respuesta || undefined,
+          sugerencias: p.sugerencias?.length ? p.sugerencias : undefined,
         })),
         contexto_investigado: iaResultado.contexto_investigado,
         sin_preguntas_pendientes: iaResultado.sin_preguntas_pendientes,

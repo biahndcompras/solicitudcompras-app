@@ -18,7 +18,7 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Portal de Compras BIA",
   description:
-    "Solicita una compra y deja que el equipo de Compras la gestione con especificaciones claras y comparables.",
+    "Solicita una cotización y deja que el equipo de Compras la gestione con especificaciones claras y comparables.",
 };
 
 export default function RootLayout({

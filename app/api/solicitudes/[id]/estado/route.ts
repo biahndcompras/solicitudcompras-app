@@ -23,6 +23,7 @@ const schema = z.object({
   actorIdentificador: z.string().optional(),
   nota: z.string().optional(),
   respuestas: z.record(z.string(), z.string()).optional(),
+  coordinadorId: z.string().optional(),
 });
 
 function generarTokenEnlace(): string {
@@ -71,6 +72,8 @@ export async function PATCH(
         repo,
         solicitud,
         respuestas: body.respuestas,
+        // El solicitante eligió explícitamente a qué comprador va la solicitud (1.1).
+        coordinadorIdSolicitado: body.coordinadorId,
       });
       if (!pipeline.ok) {
         return NextResponse.json(

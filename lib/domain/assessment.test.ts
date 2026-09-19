@@ -25,7 +25,7 @@ describe("assessment_requerimiento", () => {
     expect(keys.every((k) => catalogo.some((c) => c.campoKey === k))).toBe(true);
   });
 
-  it("respeta el límite de 6 preguntas", async () => {
+  it("respeta el límite de 10 preguntas", async () => {
     const grande: CampoCatalogo[] = Array.from({ length: 20 }, (_, i) => ({
       campoKey: `campo_${i}`,
       label: `Campo ${i}`,
@@ -39,7 +39,7 @@ describe("assessment_requerimiento", () => {
       camposCapturados: [],
       camposDisponiblesCatalogo: grande,
     });
-    expect(r.preguntas.length).toBeLessThanOrEqual(6);
+    expect(r.preguntas.length).toBeLessThanOrEqual(10);
   });
 
   it("no devuelve preguntas si no falta nada", async () => {

@@ -38,7 +38,7 @@ export const PLANTILLAS_CORREO = {
     asunto: (d: DatosCorreo) => `Nueva solicitud ${esc(d.numeroReferencia)} — ${esc(d.titulo)}`,
     cuerpo: (d: DatosCorreo) => `
       <p>Hola ${esc(d.coordinadorNombre)},</p>
-      <p>Se te asignó una nueva solicitud de compra.</p>
+      <p>Se te asignó una nueva solicitud de cotización.</p>
       <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:13px">
         <tr><td><b>Referencia</b></td><td>${esc(d.numeroReferencia)}</td></tr>
         <tr><td><b>Tipo</b></td><td>${esc(d.tipo)}</td></tr>

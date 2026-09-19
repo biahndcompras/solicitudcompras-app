@@ -42,7 +42,35 @@ export async function POST(
   if (auth.negada) return auth.negada;
   try {
     const { id } = await params;
-    const body = schema.parse(await request.json());
+
+    // Soporta dos formatos: JSON (compat, sin archivo) y FormData (con archivo original).
+    const contentType = request.headers.get("content-type") ?? "";
+    let body: z.infer<typeof schema>;
+    let archivoBytea: Uint8Array | undefined;
+    let archivoNombre: string | undefined;
+
+    if (contentType.includes("multipart/form-data")) {
+      const form = await request.formData();
+      const archivo = form.get("archivo");
+      if (archivo instanceof File) {
+        archivoBytea = new Uint8Array(await archivo.arrayBuffer());
+        archivoNombre = archivo.name;
+      }
+      body = schema.parse({
+        proveedorNombre: form.get("proveedorNombre"),
+        formatoOriginal: form.get("formatoOriginal") ?? "manual",
+        valorNeto: maybeNum(form.get("valorNeto")),
+        moneda: form.get("moneda") ?? undefined,
+        impuestosDesglosados: boolOrUndef(form.get("impuestosDesglosados")),
+        montoIsv: maybeNum(form.get("montoIsv")),
+        valorTotal: maybeNum(form.get("valorTotal")),
+        plazoEntrega: form.get("plazoEntrega") ?? undefined,
+        markdownExtraido: form.get("markdownExtraido") ?? undefined,
+      });
+    } else {
+      body = schema.parse(await request.json());
+    }
+
     const cotizacion = await repo.guardarCotizacion({
       solicitudId: id,
       proveedorNombre: body.proveedorNombre,
@@ -57,6 +85,10 @@ export async function POST(
       confianzaExtraccion: body.confianzaExtraccion,
       editadaManualmente: false,
       fechaCarga: new Date().toISOString(),
+      // 2.2: persistir el archivo original para adjuntarlo al envío de comparativa.
+      archivoOriginal: archivoBytea ? `cotizacion/${cotizacionRef(id, archivoNombre)}` : undefined,
+      archivoNombreOriginal: archivoNombre,
+      archivoBytea,
     });
 
     // Si se incluyó markdown extraído, ejecutar extracción IA y actualizar.
@@ -117,6 +149,22 @@ type DatosExtraidos = {
   impuestosDesglosados?: boolean | null;
   observacionesFiscales?: string | null;
 };
+
+function maybeNum(v: FormDataEntryValue | null): number | undefined {
+  if (v === null || v === "") return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function boolOrUndef(v: FormDataEntryValue | null): boolean | undefined {
+  if (v === null || v === "") return undefined;
+  return v === "true" || v === "1";
+}
+
+function cotizacionRef(id: string, nombre?: string): string {
+  const nombreOk = nombre ? `_${nombre.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 40)}` : "";
+  return `${id}${nombreOk}`;
+}
 
 // Validación fiscal: determinística primero, luego IA si está disponible. Nunca bloquea.
 async function validarCotizacion(cotizacionId: string, extraida: DatosExtraidos): Promise<void> {

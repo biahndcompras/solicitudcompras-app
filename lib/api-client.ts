@@ -116,6 +116,25 @@ export const api = {
     }).then((r) => json<Cotizacion>(r));
   },
 
+  // 2.2: sube la cotización con su archivo original (multipart) para adjuntarlo al envío de comparativa.
+  cargarCotizacionConArchivo(payload: {
+    solicitudId: string;
+    proveedorNombre: string;
+    formatoOriginal: Cotizacion["formatoOriginal"];
+    archivo: File;
+    markdownExtraido?: string;
+  }): Promise<Cotizacion> {
+    const form = new FormData();
+    form.append("proveedorNombre", payload.proveedorNombre);
+    form.append("formatoOriginal", payload.formatoOriginal);
+    form.append("archivo", payload.archivo, payload.archivo.name);
+    if (payload.markdownExtraido) form.append("markdownExtraido", payload.markdownExtraido);
+    return fetch(`/api/solicitudes/${payload.solicitudId}/cotizaciones`, {
+      method: "POST",
+      body: form,
+    }).then((r) => json<Cotizacion>(r));
+  },
+
   crearCotizacionManual(payload: {
     solicitudId: string;
     proveedorNombre: string;

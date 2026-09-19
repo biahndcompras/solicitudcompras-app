@@ -86,11 +86,11 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
     setError(null);
     try {
       const conv = await api.convertirDocumento(file);
-      await api.cargarCotizacion({
+      await api.cargarCotizacionConArchivo({
         solicitudId,
         proveedorNombre: c.proveedorNombre,
         formatoOriginal: extFormato(file.name),
-        especificacionesOfertadas: {},
+        archivo: file,
         markdownExtraido: conv.ok ? conv.markdown : undefined,
       });
       onCotizacionCargada();
@@ -335,10 +335,22 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
                           Guardar
                         </button>
                       ) : (
-                        <button type="button" onClick={() => { setEditandoId(c.id); setBorradorEdit({ ...c }); }} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
-                          Editar
-                        </button>
+                        <>
+                          {c.archivoNombreOriginal ? (
+                            <a
+                              href={`/api/solicitudes/${solicitudId}/cotizaciones/${c.id}/archivo`}
+                              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl text-sky-700 hover:bg-sky-50 border border-sky-200 transition-colors"
+                              title="Descargar el archivo original de esta cotización"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                              PDF
+                            </a>
+                          ) : null}
+                          <button type="button" onClick={() => { setEditandoId(c.id); setBorradorEdit({ ...c }); }} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+                            Editar
+                          </button>
+                        </>
                       )}
                       <button
                         type="button"

@@ -54,6 +54,10 @@ export interface Repositorio {
 
   guardarCotizacion(cotizacion: Omit<Cotizacion, "id">): Promise<Cotizacion>;
 
+  obtenerArchivoCotizacion(id: string): Promise<{ bytea: Uint8Array; nombre: string } | null>;
+
+  listarCotizacionesConArchivo(solicitudId: string): Promise<{ id: string; proveedorNombre: string; archivoNombreOriginal?: string; bytea: Uint8Array }[]>;
+
   listarCotizaciones(solicitudId: string): Promise<Cotizacion[]>;
 
   guardarComparativa(solicitudId: string, comparativa: Comparativa): Promise<Comparativa>;

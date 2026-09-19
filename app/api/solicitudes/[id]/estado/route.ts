@@ -4,6 +4,7 @@ import { z } from "zod";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { esTransicionValida } from "@/lib/domain/state-machine";
 import { pipelineEnvioACompras } from "@/lib/pdf/pipeline";
+import { enviarCorreo } from "@/lib/mail/enviar";
 import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
@@ -109,6 +110,36 @@ export async function PATCH(
         new Date(Date.now() + dias * 86400000).toISOString()
       );
       enlace = { token: link.token, url: `/comparativa/${link.token}` };
+
+      // 2.2: enviar correo 3 al solicitante con las cotizaciones ORIGINALES adjuntas.
+      // El solicitante siempre quiere ver las ofertas que consiguió Compras, no solo el comparativo.
+      void (async () => {
+        try {
+          const adjuntos = (await repo.listarCotizacionesConArchivo(id)).map((c) => ({
+            filename: c.archivoNombreOriginal ?? `${c.id}.pdf`,
+            content: c.bytea,
+          }));
+          const coordNombre = body.actorTipo === "admin" ? undefined : "Compras";
+          await enviarCorreo({
+            repo,
+            tipoCorreo: "3",
+            solicitudId: id,
+            destinatario: solicitud.solicitanteEmail,
+            datos: {
+              numeroReferencia: solicitud.numeroReferencia,
+              titulo: solicitud.titulo,
+              solicitanteNombre: solicitud.solicitanteNombre,
+              coordinadorNombre: coordNombre ?? "Compras",
+              cantidadCotizaciones: adjuntos.length || (await repo.listarCotizaciones(id)).length,
+              recomendacion: body.nota,
+              urlComparativa: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}${enlace?.url}`,
+            },
+            adjuntos,
+          });
+        } catch {
+          // El envío de correo no debe bloquear la transición (RF-25: notificación no crítica).
+        }
+      })();
     }
 
     const res = await repo.transicionarEstado({

@@ -148,6 +148,9 @@ export type Cotizacion = {
   confianzaExtraccion: Record<string, number>;
   editadaManualmente: boolean;
   fechaCarga: string;
+  archivoOriginal?: string; // ruta/identificador del archivo original (2.2)
+  archivoNombreOriginal?: string;
+  archivoBytea?: Uint8Array; // contenido binario del archivo original (solo lectura/uso interno servidor)
 };
 
 export type Discrepancia = {

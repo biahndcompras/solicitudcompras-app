@@ -12,9 +12,10 @@ export async function enviarCorreo(opts: {
   destinatario: string;
   datos: DatosCorreo;
   adjuntoPdf?: { filename: string; content: Uint8Array };
+  adjuntos?: { filename: string; content: Uint8Array }[];
   reintentos?: number;
 }): Promise<CorreoEnviado> {
-  const { repo, tipoCorreo, solicitudId, destinatario, datos, adjuntoPdf, reintentos = 2 } = opts;
+  const { repo, tipoCorreo, solicitudId, destinatario, datos, adjuntoPdf, adjuntos, reintentos = 2 } = opts;
   const { asunto, html } = renderCorreo(tipoCorreo, datos);
 
   let intento = 0;
@@ -26,7 +27,11 @@ export async function enviarCorreo(opts: {
       to: destinatario,
       subject: asunto,
       html,
-      attachments: adjuntoPdf ? [{ filename: adjuntoPdf.filename, content: adjuntoPdf.content }] : undefined,
+      attachments: adjuntos
+        ? adjuntos
+        : adjuntoPdf
+          ? [{ filename: adjuntoPdf.filename, content: adjuntoPdf.content }]
+          : undefined,
     });
     if (res.ok) {
       return repo.registrarCorreo({

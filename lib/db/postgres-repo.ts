@@ -73,6 +73,8 @@ function mapeoCotizacion(f: Record<string, unknown>): Cotizacion {
     observacionesFiscales: (f.observaciones_fiscales as string) ?? undefined,
     confianzaExtraccion: f.confianza_extraccion as Record<string, number>,
     editadaManualmente: Boolean(f.editada_manualmente),
+    archivoOriginal: (f.archivo_original_ruta as string) ?? undefined,
+    archivoNombreOriginal: (f.archivo_original_nombre as string) ?? undefined,
     fechaCarga: String(f.fecha_carga),
   };
 }
@@ -385,8 +387,9 @@ export class PostgresRepositorio implements Repositorio {
          (solicitud_id, proveedor_nombre, proveedor_identificacion_fiscal, proveedor_contacto,
           formato_original, valor_neto, moneda, impuestos_desglosados, monto_isv,
           monto_otros_impuestos, valor_total, plazo_entrega, forma_pago, vigencia_oferta, garantia,
-          especificaciones_ofertadas, observaciones_fiscales, confianza_extraccion)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+          especificaciones_ofertadas, observaciones_fiscales, confianza_extraccion,
+          archivo_original_ruta, archivo_original_nombre, archivo_original_bytea)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
        RETURNING *`,
       [
         cotizacion.solicitudId,
@@ -407,6 +410,9 @@ export class PostgresRepositorio implements Repositorio {
         JSON.stringify(cotizacion.especificacionesOfertadas ?? {}),
         cotizacion.observacionesFiscales ?? null,
         JSON.stringify(cotizacion.confianzaExtraccion ?? {}),
+        cotizacion.archivoOriginal ?? null,
+        cotizacion.archivoNombreOriginal ?? null,
+        cotizacion.archivoBytea ?? null,
       ]
     );
     return mapeoCotizacion(res.rows[0]);
@@ -463,10 +469,45 @@ export class PostgresRepositorio implements Repositorio {
 
   async listarCotizaciones(solicitudId: string): Promise<Cotizacion[]> {
     const res = await this.pg.query(
-      "SELECT * FROM cotizacion WHERE solicitud_id = $1 ORDER BY fecha_carga ASC",
+      `SELECT id, solicitud_id, proveedor_nombre, proveedor_identificacion_fiscal, proveedor_contacto,
+              formato_original, valor_neto, moneda, impuestos_desglosados, monto_isv, monto_otros_impuestos,
+              valor_total, plazo_entrega, forma_pago, vigencia_oferta, garantia, especificaciones_ofertadas,
+              observaciones_fiscales, confianza_extraccion, editada_manualmente, fecha_carga,
+              archivo_original_ruta, archivo_original_nombre
+         FROM cotizacion WHERE solicitud_id = $1 ORDER BY fecha_carga ASC`,
       [solicitudId]
     );
     return res.rows.map(mapeoCotizacion);
+  }
+
+  // Devuelve el binario del archivo original de una cotización (sin listarlo entre los datos normales).
+  async obtenerArchivoCotizacion(id: string): Promise<{ bytea: Uint8Array; nombre: string } | null> {
+    const res = await this.pg.query(
+      `SELECT archivo_original_bytea, archivo_original_nombre FROM cotizacion WHERE id = $1`,
+      [id]
+    );
+    const f = res.rows[0];
+    if (!f || !f.archivo_original_bytea) return null;
+    const buf = f.archivo_original_bytea as Buffer;
+    return { bytea: new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength), nombre: (f.archivo_original_nombre as string) ?? "cotizacion" };
+  }
+
+  // Cotizaciones que tienen archivo original, con su binario (para adjuntar al envío de comparativa).
+  async listarCotizacionesConArchivo(solicitudId: string): Promise<{ id: string; proveedorNombre: string; archivoNombreOriginal?: string; bytea: Uint8Array }[]> {
+    const res = await this.pg.query(
+      `SELECT id, proveedor_nombre, archivo_original_nombre, archivo_original_bytea
+         FROM cotizacion WHERE solicitud_id = $1 AND archivo_original_bytea IS NOT NULL ORDER BY fecha_carga ASC`,
+      [solicitudId]
+    );
+    return res.rows.map((f) => {
+      const buf = f.archivo_original_bytea as Buffer;
+      return {
+        id: String(f.id),
+        proveedorNombre: String(f.proveedor_nombre),
+        archivoNombreOriginal: (f.archivo_original_nombre as string) ?? undefined,
+        bytea: new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength),
+      };
+    });
   }
 
   async eliminarCotizacion(id: string): Promise<void> {

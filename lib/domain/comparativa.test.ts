@@ -69,6 +69,21 @@ describe("pros/contras y sugerencia", () => {
     expect(sugerencia?.cotizacionId).toBe("c2");
   });
 
+  it("invierte ahorro potencial en pros de la opción más cara", () => {
+    const { prosContras } = generarProsContras({
+      requerimiento: "Sombrillas",
+      cotizaciones: [
+        cot("c1", "A", { material: "x" }, { total: 100, desglosado: true }),
+        cot("c2", "B", { material: "x" }, { total: 80, desglosado: true }),
+      ],
+    });
+    const ahorro = prosContras.c1.pros.find((p) => p.startsWith("Ahorro potencial"));
+    expect(ahorro).toBeTruthy();
+    expect(ahorro).toContain("20");
+    // La opción más barata no menciona ahorro
+    expect(prosContras.c2.pros.some((p) => p.startsWith("Ahorro"))).toBe(false);
+  });
+
   it("no genera sugerencia con una sola cotización", () => {
     const { sugerencia } = generarProsContras({
       requerimiento: "Sombrillas",

@@ -358,11 +358,12 @@ export class PostgresRepositorio implements Repositorio {
 
   // Reasignación (3.4): cambia el comprador y registra el evento en la trazabilidad.
   async reasignarCoordinador(solicitudId: string, nuevoCoordinadorId: string, actorIdentificador?: string): Promise<void> {
-    const previous = await this.pg.query(
-      "SELECT coordinador_id FROM solicitud WHERE id = $1",
+    const prev = await this.pg.query(
+      "SELECT coordinador_id, estado FROM solicitud WHERE id = $1",
       [solicitudId]
     );
-    const anteriorId = previous.rows[0]?.coordinador_id;
+    const anteriorId = prev.rows[0]?.coordinador_id;
+    const estadoActual = prev.rows[0]?.estado as string | null;
     if (anteriorId === nuevoCoordinadorId) return;
     await this.pg.query(
       "UPDATE solicitud SET coordinador_id = $2 WHERE id = $1",
@@ -370,11 +371,10 @@ export class PostgresRepositorio implements Repositorio {
     );
     await this.pg.query(
       `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, estado_anterior, estado_nuevo, actor_tipo, actor_identificador, nota, metadata)
-       VALUES ($1, 'reasignacion', $2, $3, 'admin', $4, $5, $6)`,
+       VALUES ($1, 'reasignacion', $2, $2, 'admin', $3, $4, $5)`,
       [
         solicitudId,
-        anteriorId ?? null,
-        nuevoCoordinadorId,
+        estadoActual ?? null,
         actorIdentificador ?? null,
         "Solicitud reasignada a otro comprador",
         JSON.stringify({ anterior: anteriorId ?? null, nuevo: nuevoCoordinadorId }),

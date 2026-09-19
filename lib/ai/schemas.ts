@@ -34,17 +34,30 @@ export const AssessmentInputSchema = z.object({
   })),
 });
 
+// Schema tolerante: algunos modelos devuelven la pregunta con otra clave (campo/nombre/id)
+// u omiten por_que. Normalizamos antes de validar para no descartar la llamada IA completa
+// por una clave renombrada (antes: ZodError y caída al fallback determinístico).
+const normalizarPregunta = (raw: unknown): unknown => {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const o = raw as Record<string, unknown>;
+  const campo = o.campoKey ?? o.campo ?? o.nombre ?? o.id ?? o.campo_key ?? o.campo_clave ?? o.clave;
+  if (campo !== undefined && o.campoKey === undefined) {
+    return { ...o, campoKey: campo };
+  }
+  return o;
+};
+
 export const PreguntaAssessmentSchema = z.object({
-  campoKey: z.string(),
-  pregunta: z.string(),
-  por_que: z.string(),
-  critica: z.boolean(),
+  campoKey: z.string().min(1),
+  pregunta: z.string().default(""),
+  por_que: z.string().default(""),
+  critica: z.boolean().default(false),
   ejemplo_respuesta: z.string().optional(),
   sugerencias: z.array(z.string()).max(3).optional(),
 });
 
 export const AssessmentOutputSchema = z.object({
-  preguntas: z.array(PreguntaAssessmentSchema).max(10),
+  preguntas: z.array(z.preprocess(normalizarPregunta, PreguntaAssessmentSchema)).max(10),
   contexto_investigado: z.string().default(""),
   sin_preguntas_pendientes: z.boolean().optional(),
 }).transform((d) => ({

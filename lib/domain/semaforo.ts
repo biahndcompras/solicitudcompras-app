@@ -24,9 +24,15 @@ export function calcularSemaforo(input: {
     return { nivel: "ok", texto: "Sin fecha límite", diasRestantes: null };
   }
 
+  // Parseo robusto: puede venir como "YYYY-MM-DD", como Date.toString() ("Mon Oct 05 2026…")
+  // o como ISO completo. Si no se puede interpretar, se trata como sin fecha límite.
+  const requeridaDate = new Date(fechaRequerida);
+  if (Number.isNaN(requeridaDate.getTime())) {
+    return { nivel: "ok", texto: "Sin fecha límite", diasRestantes: null };
+  }
   const hoy = new Date(now ?? new Date().toISOString());
   const hoyIso = hoy.toISOString().slice(0, 10);
-  const requeridaIso = fechaRequerida.slice(0, 10);
+  const requeridaIso = requeridaDate.toISOString().slice(0, 10);
   const dias = Math.round(
     (new Date(requeridaIso + "T23:59:59").getTime() - new Date(hoyIso + "T00:00:00").getTime()) / 86400000
   );

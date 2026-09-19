@@ -31,6 +31,18 @@ describe("calcularSemaforo", () => {
     const r = calcularSemaforo({ ...base });
     expect(r.nivel).toBe("ok");
   });
+
+  it("parsea fechas en formato Date.toString() ('Mon Oct 05 2026…')", () => {
+    const r = calcularSemaforo({ ...base, fechaRequerida: "Mon Oct 05 2026 00:00:00 GMT-0600 (Central Standard Time)" });
+    expect(r.nivel).toBe("ok");
+    expect(r.diasRestantes).not.toBeNull();
+  });
+
+  it("fecha ilegible no rompe (sin fecha límite)", () => {
+    const r = calcularSemaforo({ ...base, fechaRequerida: "no aplica" });
+    expect(r.nivel).toBe("ok");
+    expect(r.diasRestantes).toBeNull();
+  });
 });
 
 describe("duracionAtencion", () => {

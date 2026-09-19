@@ -157,7 +157,7 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
               key={t.n}
               type="button"
               aria-pressed={etapa === t.n}
-              disabled={!comparativaData && t.n === 8}
+              disabled={!tieneComparativa && t.n === 8}
               onClick={() => setEtapa(t.n)}
               className={
                 "px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors " +

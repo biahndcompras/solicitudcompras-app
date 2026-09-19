@@ -65,17 +65,17 @@ const SUBTITULO_DOC: Record<string, string> = {
 };
 
 export function createTemplate(tipo: "RFI" | "RFQ" | "RFP"): PlantillaPdf {
-  // Encabezado corporativo (membrete) alineado al estilo de los formatos de BIA.
+  // Encabezado corporativo (membrete) alineado a los formatos oficiales compartidos por Compras.
   const header: Record<string, unknown>[] = [
-    textSchema("bia_marca", MX, 36, 140, 16, { fontSize: 13, fontWeight: 800, content: "BIA" }),
-    textSchema("bia_slogan", MX + 30, 50, 200, 10, { fontSize: 7, content: "BIA Foods Honduras · Compras" }),
-    textSchema("doc_tipo", MX + 150, 36, 300, 16, { fontSize: 12, fontWeight: 700, content: TITULO_DOC[tipo] }),
-    textSchema("doc_subtipo", MX + 150, 52, 300, 12, { fontSize: 8, content: SUBTITULO_DOC[tipo] }),
-    linea(MX, 72, ANCHO - MX, 72),
-    textSchema("referencia_lbl", ANCHO - 190, 82, 90, 10, { fontSize: 7, content: "Nº DE REFERENCIA" }),
-    field("referencia", ANCHO - 190, 93, 90, 12, { fontSize: 9, fontWeight: 700, alignment: "right" }),
-    textSchema("fecha_lbl", ANCHO - 95, 82, 90, 10, { fontSize: 7, alignment: "right", content: "FECHA" }),
-    field("fechaLimiteHeader", ANCHO - 95, 93, 90, 12, { fontSize: 8, alignment: "right" }),
+    textSchema("bia_marca", MX, 34, 300, 14, { fontSize: 15, fontWeight: 800, content: "BIA FOODS HONDURAS" }),
+    textSchema("bia_slogan", MX, 49, 300, 10, { fontSize: 7, content: "Departamento de Compras · GABRIEL KAFATI S.A. / MOLINO DE CAFÉ MAYA" }),
+    textSchema("doc_tipo", MX + 160, 34, 300, 14, { fontSize: 11, fontWeight: 700, content: TITULO_DOC[tipo] }),
+    textSchema("doc_subtipo", MX + 160, 49, 300, 12, { fontSize: 7.5, content: SUBTITULO_DOC[tipo] }),
+    linea(MX, 70, ANCHO - MX, 70),
+    textSchema("referencia_lbl", ANCHO - 200, 78, 100, 10, { fontSize: 6.5, content: "Nº DE REFERENCIA" }),
+    field("referencia", ANCHO - 200, 89, 100, 12, { fontSize: 9, fontWeight: 700, alignment: "right" }),
+    textSchema("fecha_lbl", ANCHO - 95, 78, 90, 10, { fontSize: 6.5, alignment: "right", content: "FECHA EMISIÓN" }),
+    field("fechaLimiteHeader", ANCHO - 95, 89, 90, 12, { fontSize: 8, alignment: "right" }),
   ];
 
   // Bloques de identificación (como la "Información General" / "Alcance" de los formatos).

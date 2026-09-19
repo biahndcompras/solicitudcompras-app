@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { Badge, type BadgeTone } from "@/components/Badge";
 import { SemParoBadge } from "@/components/Semaforo";
+import { TrackerEtapas } from "@/components/TrackerEtapas";
 import { duracionAtencion } from "@/lib/domain/semaforo";
 import { api, type SalidaCorta } from "@/lib/api-client";
 import type { Cotizacion, Solicitud } from "@/lib/domain/types";
@@ -203,6 +204,10 @@ function MisSolicitudesInner() {
                         <p className="text-xs text-slate-600 leading-relaxed">{detalle.solicitud.descripcion}</p>
                       </div>
                     ) : null}
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
+                      <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">Progreso</span>
+                      <TrackerEtapas estado={detalle.solicitud.estado as Parameters<typeof TrackerEtapas>[0]["estado"]} />
+                    </div>
                     <div>
                       <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">Cotizaciones ({detalle.cotizaciones.length})</span>
                       {detalle.cotizaciones.length === 0 ? (

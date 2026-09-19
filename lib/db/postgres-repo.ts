@@ -356,6 +356,32 @@ export class PostgresRepositorio implements Repositorio {
     );
   }
 
+  // Reasignación (3.4): cambia el comprador y registra el evento en la trazabilidad.
+  async reasignarCoordinador(solicitudId: string, nuevoCoordinadorId: string, actorIdentificador?: string): Promise<void> {
+    const previous = await this.pg.query(
+      "SELECT coordinador_id FROM solicitud WHERE id = $1",
+      [solicitudId]
+    );
+    const anteriorId = previous.rows[0]?.coordinador_id;
+    if (anteriorId === nuevoCoordinadorId) return;
+    await this.pg.query(
+      "UPDATE solicitud SET coordinador_id = $2 WHERE id = $1",
+      [solicitudId, nuevoCoordinadorId]
+    );
+    await this.pg.query(
+      `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, estado_anterior, estado_nuevo, actor_tipo, actor_identificador, nota, metadata)
+       VALUES ($1, 'reasignacion', $2, $3, 'admin', $4, $5, $6)`,
+      [
+        solicitudId,
+        anteriorId ?? null,
+        nuevoCoordinadorId,
+        actorIdentificador ?? null,
+        "Solicitud reasignada a otro comprador",
+        JSON.stringify({ anterior: anteriorId ?? null, nuevo: nuevoCoordinadorId }),
+      ]
+    );
+  }
+
   async listarPorEmail(email: string): Promise<Solicitud[]> {
     // Solicitante: solo referencia, título, estado y fechas (sin montos ni email expuesto).
     const res = await this.pg.query(

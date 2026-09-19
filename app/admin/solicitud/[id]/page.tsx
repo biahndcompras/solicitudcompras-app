@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/ui-ext/AdminShell";
 import { Badge, type BadgeTone } from "@/components/Badge";
 import { SemParoBadge } from "@/components/Semaforo";
 import { CancelarSolicitudButton } from "@/components/CancelarSolicitudButton";
+import { ReasignarCoordinador } from "@/components/ReasignarCoordinador";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { duracionAtencion } from "@/lib/domain/semaforo";
@@ -21,9 +22,10 @@ export default async function AdminSolicitudDetallePage({
   const s = await repo.obtenerSolicitud(id);
   if (!s) notFound();
 
-  const [coordinador, eventos] = await Promise.all([
+  const [coordinador, eventos, todosCoordinadores] = await Promise.all([
     s.coordinadorId ? repo.listarCoordinadores().then((l) => l.find((u) => u.id === s.coordinadorId)) : Promise.resolve(undefined),
     repo.listarEventos(id),
+    repo.listarCoordinadores(),
   ]);
 
   const timeline = (eventos.length ? eventos : []).map((ev) => ({
@@ -102,6 +104,15 @@ export default async function AdminSolicitudDetallePage({
               <div>
                 <span className="text-slate-500 uppercase tracking-wider font-semibold block text-[10px] mb-1">Coordinador</span>
                 <span className="font-medium text-slate-900">{coordinador?.nombre ?? "Sin asignar"}</span>
+                {["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"].includes(s.estado) ? null : (
+                  <div className="mt-2 border-t border-slate-100 pt-2">
+                    <ReasignarCoordinador
+                      solicitudId={s.id}
+                      actualId={s.coordinadorId}
+                      coordinadores={todosCoordinadores.map((c) => ({ id: c.id, nombre: c.nombre }))}
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <span className="text-slate-500 uppercase tracking-wider font-semibold block text-[10px] mb-1">Tipo y Categoría</span>

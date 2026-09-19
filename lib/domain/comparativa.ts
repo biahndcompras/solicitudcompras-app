@@ -56,6 +56,22 @@ export function detectarDiscrepancias(opts: {
   };
 }
 
+// Ahorro potencial (en moneda) de elegir la opción más económica frente a cada alternativa.
+// Devuelve map id-cotización → ahorro vs la opción más cara con precio (o null si no calculable).
+export function calcularAhorroPotencial(cotizaciones: Cotizacion[]): Record<string, number | null> {
+  const conPrecio = cotizaciones.filter((c) => c.valorTotal !== undefined);
+  if (conPrecio.length < 2) {
+    return Object.fromEntries(cotizaciones.map((c) => [c.id, null]));
+  }
+  const menor = Math.min(...conPrecio.map((c) => c.valorTotal!));
+  return Object.fromEntries(
+    cotizaciones.map((c) => [
+      c.id,
+      c.valorTotal === undefined ? null : Math.round((c.valorTotal - menor) * 100) / 100,
+    ])
+  );
+}
+
 export function generarProsContras(opts: {
   requerimiento: string;
   cotizaciones: Cotizacion[];
@@ -66,6 +82,7 @@ export function generarProsContras(opts: {
   const { cotizaciones } = opts;
   const prosContras: Record<string, ProsContras> = {};
   const conPrecio = cotizaciones.filter((c) => c.valorTotal !== undefined);
+  const ahorro = calcularAhorroPotencial(cotizaciones);
 
   for (const c of cotizaciones) {
     const pros: string[] = [];
@@ -75,6 +92,13 @@ export function generarProsContras(opts: {
     if (typeof c.valorTotal === "number") pros.push("Total con impuestos claro");
     if (c.impuestosDesglosados === true) pros.push("Impuestos desglosados");
     if (c.plazoEntrega) pros.push(`Entrega: ${c.plazoEntrega}`);
+
+    const ahorroDe = ahorro[c.id];
+    if (typeof ahorroDe === "number" && ahorroDe > 0) {
+      pros.push(
+        `Ahorro potencial de ${formato(ahorroDe)} ${c.moneda ?? ""} frente a la opción más cara`
+      );
+    }
 
     if (c.impuestosDesglosados !== true) {
       contras.push("No confirma el tratamiento de impuestos");

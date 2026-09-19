@@ -48,6 +48,8 @@ export interface Repositorio {
 
   asignarCoordinador(solicitudId: string, coordinadorId: string): Promise<void>;
 
+  reasignarCoordinador(solicitudId: string, nuevoCoordinadorId: string, actorIdentificador?: string): Promise<void>;
+
   listarPorEmail(email: string): Promise<Solicitud[]>;
 
   obtenerSolicitud(id: string): Promise<Solicitud | null>;

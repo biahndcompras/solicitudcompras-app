@@ -50,6 +50,7 @@ export type TipoEvento =
   | "acceso_link"
   | "decision"
   | "reasignacion"
+  | "edicion"
   | "cancelacion"
   | "error";
 
@@ -104,6 +105,7 @@ export type Solicitud = {
   clasificacionCorregida: boolean;
   motivoCancelacion?: string;
   notificacionFallida: boolean;
+  archivoLogoNombre?: string;
 };
 
 export type RespuestaCampo = {

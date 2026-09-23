@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { Badge, type BadgeTone } from "@/components/Badge";
 import { SemParoBadge } from "@/components/Semaforo";
-import { duracionAtencion } from "@/lib/domain/semaforo";
+import { duracionAtencion, formatoFechaLegible } from "@/lib/domain/semaforo";
 import { useSesion } from "@/lib/sesion-context";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { api } from "@/lib/api-client";
@@ -276,7 +276,7 @@ export default function PanelPage() {
                         <td className="px-6 py-4">
                           <div className="text-xs font-medium text-slate-900">{s.titulo}</div>
                           <div className="text-[11px] text-slate-500">
-                            {s.fechaRequerida ? <>Entrega requerida: <span className="font-medium text-slate-600">{s.fechaRequerida}</span></> : "Entrega por definir"}
+                            {s.fechaRequerida ? <>Entrega requerida: <span className="font-medium text-slate-600">{formatoFechaLegible(s.fechaRequerida)}</span></> : "Entrega por definir"}
                           </div>
                         </td>
                         <td className="px-6 py-4">

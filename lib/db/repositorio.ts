@@ -57,6 +57,8 @@ export interface Repositorio {
   guardarCotizacion(cotizacion: Omit<Cotizacion, "id">): Promise<Cotizacion>;
 
   obtenerArchivoCotizacion(id: string): Promise<{ bytea: Uint8Array; nombre: string } | null>;
+  guardarArchivoLogo(solicitudId: string, nombre: string, bytea: Uint8Array): Promise<void>;
+  obtenerArchivoLogo(solicitudId: string): Promise<{ bytea: Uint8Array; nombre: string } | null>;
 
   listarCotizacionesConArchivo(solicitudId: string): Promise<{ id: string; proveedorNombre: string; archivoNombreOriginal?: string; bytea: Uint8Array }[]>;
 
@@ -119,7 +121,8 @@ export interface Repositorio {
 
   actualizarCamposSolicitud(
     solicitudId: string,
-    cambios: { descripcion?: string; fechaRequerida?: string; resupuestas?: Record<string, string> }
+    cambios: { descripcion?: string; fechaRequerida?: string; respuestas?: Record<string, string> },
+    actor?: { tipo: "coordinador" | "admin"; identificador?: string }
   ): Promise<void>;
 
   guardarConfig(clave: string, valor: unknown): Promise<void>;

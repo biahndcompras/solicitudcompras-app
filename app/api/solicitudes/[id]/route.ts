@@ -52,7 +52,10 @@ export async function PATCH(
       );
     }
 
-    await repo.actualizarCamposSolicitud(id, body);
+    await repo.actualizarCamposSolicitud(id, body, {
+      tipo: auth.sesion.rol === "admin" ? "admin" : "coordinador",
+      identificador: auth.sesion.email,
+    });
     const actualizada = await repo.obtenerSolicitud(id);
     return NextResponse.json({ solicitud: actualizada });
   } catch (e) {

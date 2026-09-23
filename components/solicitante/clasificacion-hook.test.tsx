@@ -36,7 +36,8 @@ async function llenarYClasificar(hook: ReturnType<typeof useSolicitudWizard>) {
 
 beforeEach(() => {
   mockedApi.clasificarIA.mockReset();
-  window.localStorage.clear();
+  // localStorage puede no existir en jsdom bajo Node con origen opaco (flake ambiental).
+  window.localStorage?.clear?.();
 });
 
 afterEach(() => {

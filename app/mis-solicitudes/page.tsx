@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { Badge, type BadgeTone } from "@/components/Badge";
 import { SemParoBadge } from "@/components/Semaforo";
+import { formatoFechaLegible } from "@/lib/domain/semaforo";
 import { TrackerEtapas } from "@/components/TrackerEtapas";
 import { duracionAtencion } from "@/lib/domain/semaforo";
 import { api, type SalidaCorta } from "@/lib/api-client";
@@ -196,7 +197,7 @@ function MisSolicitudesInner() {
                       <DetalleCampo label="Tipo" valor={detalle.solicitud.tipo ?? "—"} />
                       <DetalleCampo label="Subtipo" valor={detalle.solicitud.subtipo ?? "—"} />
                       <DetalleCampo label="Categoría" valor={nombreCategoria(detalle.solicitud.categoria)} />
-                      <DetalleCampo label="Fecha requerida" valor={detalle.solicitud.fechaRequerida ?? "—"} />
+                      <DetalleCampo label="Fecha requerida" valor={formatoFechaLegible(detalle.solicitud.fechaRequerida)} />
                     </div>
                     {detalle.solicitud.descripcion ? (
                       <div>

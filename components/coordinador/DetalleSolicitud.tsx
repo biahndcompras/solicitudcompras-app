@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CargaCotizaciones } from "./CargaCotizaciones";
@@ -8,6 +8,7 @@ import { ComparativaView } from "./Comparativa";
 import { Recomendacion } from "./Recomendacion";
 import { api } from "@/lib/api-client";
 import { nombreCategoria } from "@/lib/domain/categorias";
+import { formatoFechaLegible, fechaInput } from "@/lib/domain/semaforo";
 import type { Cotizacion, Comparativa, Decision, Solicitud } from "@/lib/domain/types";
 
 type Etapa = 7 | 8 | 9;
@@ -30,6 +31,13 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
   const [enlaceEnviado, setEnlaceEnviado] = useState<{ token: string; url: string } | null>(null);
   const [errorEnvio, setErrorEnvio] = useState<string | null>(null);
   const [cancelando, setCancelando] = useState(false);
+  // Re-cotización (2.3/H12)
+  const [reabriendo, setReabriendo] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [editFecha, setEditFecha] = useState(fechaInput(solicitud.fechaRequerida));
+  const [editDesc, setEditDesc] = useState(solicitud.descripcion ?? "");
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const generandoRef = useRef(false);
 
   // Cancela la solicitud (3.5): disponible para coordinador y admin; registra evento CANCELADA.
   async function cancelarSolicitud() {
@@ -69,6 +77,46 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
     }
   }
 
+  // Re-cotización (2.3/H12): devuelve la solicitud a EN_COTIZACION para ajustar
+  // cotizaciones o datos y regenerar la comparativa.
+  async function reabrirCotizaciones() {
+    if (!window.confirm("¿Reabrir para re-cotizar? La solicitud vuelve a «En cotización» y se podrá editar antes de regenerar la comparativa.")) return;
+    setReabriendo(true);
+    setErrorEnvio(null);
+    try {
+      await api.transicionar({
+        solicitudId: solicitud.id,
+        hacia: "EN_COTIZACION",
+        actorTipo: "coordinador",
+        nota: "Re-cotización: se reabre para ajustes con el proveedor",
+      });
+      setComparativaData(undefined);
+      router.refresh();
+    } catch (e) {
+      setErrorEnvio(e instanceof Error ? e.message : "No se pudo reabrir para re-cotizar");
+    } finally {
+      setReabriendo(false);
+    }
+  }
+
+  // Re-cotización (2.3/H12): edita fecha requerida y/o descripción de la solicitud activa.
+  async function guardarEdicion() {
+    setGuardandoEdicion(true);
+    setErrorEnvio(null);
+    try {
+      await api.editarSolicitud(solicitud.id, {
+        descripcion: editDesc.trim() || undefined,
+        fechaRequerida: editFecha || undefined,
+      });
+      setEditando(false);
+      router.refresh();
+    } catch (e) {
+      setErrorEnvio(e instanceof Error ? e.message : "No se pudieron guardar los cambios");
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
+
   useEffect(() => {
     api
       .listarCotizaciones(solicitud.id)
@@ -86,18 +134,17 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
 
   // Genera la comparativa con IA en el SERVIDOR (route /api/solicitudes/[id]/comparativa),
   // que hace la llamada a OpenRouter con la clave y cae a fallback determinístico si falla.
+  // generandoRef evita el doble disparo al cambiar de tab 08→09 mientras aún carga (H8).
   useEffect(() => {
-    if (terminal || !tieneComparativa || comparativaData || etapa === 7) return;
-    let activo = true;
+    if (terminal || !tieneComparativa || comparativaData || etapa === 7 || generandoRef.current) return;
+    generandoRef.current = true;
     api
       .generarComparativa(solicitud.id)
-      .then((c) => {
-        if (activo) setComparativaData(c);
-      })
-      .catch(() => undefined);
-    return () => {
-      activo = false;
-    };
+      .then((c) => setComparativaData(c))
+      .catch(() => undefined)
+      .finally(() => {
+        generandoRef.current = false;
+      });
   }, [tieneComparativa, comparativaData, solicitud.id, etapa, terminal]);
 
   const tabs: { n: Etapa; label: string }[] = [
@@ -141,15 +188,36 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
         </Link>
         <div className="flex items-center gap-2">
           {terminal ? null : (
-            <button
-              type="button"
-              onClick={cancelarSolicitud}
-              disabled={cancelando}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-rose-600 hover:bg-rose-50 border border-rose-200 bg-white/70 disabled:opacity-50"
-              title="Cancela la solicitud (queda registrada como CANCELADA)"
-            >
-              {cancelando ? "Cancelando…" : "Cancelar solicitud"}
-            </button>
+            <>
+              {["COMPARATIVA_LISTA", "ENVIADA_A_SOLICITANTE"].includes(solicitud.estado) ? (
+                <button
+                  type="button"
+                  onClick={reabrirCotizaciones}
+                  disabled={reabriendo}
+                  className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-amber-700 hover:bg-amber-50 border border-amber-200 bg-white/70 disabled:opacity-50"
+                  title="Vuelve la solicitud a «En cotización» para ajustar datos o cotizaciones y regenerar la comparativa"
+                >
+                  {reabriendo ? "Reabriendo…" : "Reabrir cotizaciones"}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setEditando((v) => !v)}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-slate-700 hover:bg-white border border-slate-200 bg-white/70"
+                title="Edita la fecha requerida o la descripción para re-cotizar"
+              >
+                {editando ? "Cerrar edición" : "Editar datos"}
+              </button>
+              <button
+                type="button"
+                onClick={cancelarSolicitud}
+                disabled={cancelando}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-rose-600 hover:bg-rose-50 border border-rose-200 bg-white/70 disabled:opacity-50"
+                title="Cancela la solicitud (queda registrada como CANCELADA)"
+              >
+                {cancelando ? "Cancelando…" : "Cancelar solicitud"}
+              </button>
+            </>
           )}
           {errorEnvio ? <span className="text-[10px] text-rose-600">{errorEnvio}</span> : null}
           {tabs.map((t) => (
@@ -169,6 +237,42 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
           ))}
         </div>
       </div>
+
+      {editando && !terminal ? (
+        <div className="mb-6 bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+          <div className="text-sm font-semibold text-slate-900 mb-4">Editar datos para re-cotizar (2.3)</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="block">
+              <span className="block text-xs font-medium text-slate-700 mb-1.5">Fecha requerida</span>
+              <input
+                type="date"
+                value={editFecha}
+                onChange={(e) => setEditFecha(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+              />
+            </label>
+            <label className="block">
+              <span className="block text-xs font-medium text-slate-700 mb-1.5">Descripción</span>
+              <textarea
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                rows={2}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 resize-none"
+              />
+            </label>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={guardarEdicion}
+              disabled={guardandoEdicion}
+              className="bg-slate-900 text-white text-xs px-6 py-2.5 rounded-full font-medium hover:bg-slate-800 disabled:opacity-40"
+            >
+              {guardandoEdicion ? "Guardando…" : "Guardar cambios"}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8">
@@ -258,11 +362,24 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Fecha requerida</span>
                 {solicitud.fechaRequerida ? (
-                  <span className="font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-lg">{solicitud.fechaRequerida}</span>
+                  <span className="font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-lg">{formatoFechaLegible(solicitud.fechaRequerida)}</span>
                 ) : (
                   <span className="text-slate-400 font-medium">Por definir</span>
                 )}
               </div>
+              {solicitud.archivoLogoNombre ? (
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                  <span className="text-slate-500">Logo/archivo del producto</span>
+                  <a
+                    href={`/api/solicitudes/${solicitud.id}/logo`}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-sky-700 hover:bg-sky-50 border border-sky-200"
+                    title={`Descargar ${solicitud.archivoLogoNombre}`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    {solicitud.archivoLogoNombre}
+                  </a>
+                </div>
+              ) : null}
             </div>
           </div>
         </aside>

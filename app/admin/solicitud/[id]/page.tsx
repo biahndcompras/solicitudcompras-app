@@ -153,12 +153,13 @@ function tituloEvento(ev: { tipoEvento: string; estadoNuevo?: string }): string 
   if (ev.tipoEvento === "generacion_comparativa") return "Comparativa generada";
   if (ev.tipoEvento === "envio_correo") return "Correo enviado";
   if (ev.tipoEvento === "acceso_link") return "Acceso al enlace";
+  if (ev.tipoEvento === "edicion") return "Edición (re-cotización)";
   if (ev.tipoEvento === "cambio_estado") return estadoLegible(ev.estadoNuevo ?? "") || "Cambio de estado";
   return ev.tipoEvento;
 }
 
 function descripcionEvento(
-  ev: { tipoEvento: string; actorTipo?: string; nota?: string; estadoAnterior?: string },
+  ev: { tipoEvento: string; actorTipo?: string; nota?: string; estadoAnterior?: string; estadoNuevo?: string },
   nombreCoordinador: string
 ): string {
   const actor = ev.actorTipo === "solicitante" ? "El solicitante" : ev.actorTipo === "coordinador" ? nombreCoordinador : ev.actorTipo === "admin" ? "Administración" : "El sistema";
@@ -167,11 +168,13 @@ function descripcionEvento(
     case "creacion":
       return "Solicitud iniciada.";
     case "cambio_estado":
-      return estadoLegible(ev.estadoAnterior ?? "")
-        ? `De «${estadoLegible(ev.estadoAnterior!)}» al estado actual.`
+      return estadoLegible(ev.estadoAnterior ?? "") && estadoLegible(ev.estadoNuevo ?? "")
+        ? `De «${estadoLegible(ev.estadoAnterior!)}» a «${estadoLegible(ev.estadoNuevo!)}».`
         : "Actualización de estado.";
     case "decision":
       return "El solicitante registró su decisión.";
+    case "edicion":
+      return "Se editaron datos de la solicitud para re-cotizar.";
     case "carga_cotizacion":
       return "Se cargó una cotización de proveedor.";
     case "generacion_comparativa":

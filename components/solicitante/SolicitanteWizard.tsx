@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { useSolicitudWizard, type WizardState, type CoordinadorPublico } from "@/hooks/useSolicitudWizard";
 import { CATEGORIAS, nombreCategoria } from "@/lib/domain/categorias";
+import { formatoFechaLegible } from "@/lib/domain/semaforo";
 
 const PASOS_SIDEBAR = [
   { id: 1, label: "Captura Inicial" },
@@ -18,7 +19,7 @@ export function SolicitanteWizard() {
   const searchParams = useSearchParams();
   const nuevo = (searchParams.get("nuevo") ?? "") === "1";
   const w = useSolicitudWizard(nuevo);
-  const { estado, set, siguiente, anterior, pasoValido, envio, enviarSolicitud, guardarBorrador, cancelar, borradoAt, clasificandoIA, clasificarIA, evaluandoAssessment, evaluarAssessment, coordinadores } = w;
+  const { estado, set, siguiente, anterior, pasoValido, envio, enviarSolicitud, guardarBorrador, cancelar, borradoAt, clasificandoIA, clasificarIA, evaluandoAssessment, evaluarAssessment, coordinadores, setArchivoLogoFile } = w;
   const [confirmCancel, setConfirmCancel] = useState(false);
   const emailInicial = searchParams.get("email") ?? "";
   const nombreInicial = searchParams.get("nombre") ?? "";
@@ -148,11 +149,11 @@ export function SolicitanteWizard() {
           ) : estado.paso === 3 ? (
             <PasoClasificacion estado={estado} set={set} siguiente={siguiente} anterior={anterior} clasificandoIA={clasificandoIA} evaluarAssessment={evaluarAssessment} evaluandoAssessment={evaluandoAssessment} />
           ) : estado.paso === 4 ? (
-            <PasoDetalles estado={estado} set={set} siguiente={siguiente} anterior={anterior} pasoValido={pasoValido} />
+            <PasoDetalles estado={estado} set={set} siguiente={siguiente} anterior={anterior} pasoValido={pasoValido} evaluandoAssessment={evaluandoAssessment} setArchivoLogoFile={setArchivoLogoFile} />
           ) : estado.paso === 5 ? (
             <PasoDocumento estado={estado} set={set} enviarSolicitud={enviarSolicitud} anterior={anterior} envio={envio} coordinadores={coordinadores} />
           ) : (
-            <PasoConfirmacion estado={estado} />
+            <PasoConfirmacion estado={estado} referencia={envio.estado === "ok" ? envio.referencia : undefined} />
           )}
         </section>
       </main>
@@ -379,12 +380,16 @@ function PasoDetalles({
   siguiente,
   anterior,
   pasoValido,
+  evaluandoAssessment,
+  setArchivoLogoFile,
 }: {
   estado: ReturnType<typeof useSolicitudWizard>["estado"];
   set: ReturnType<typeof useSolicitudWizard>["set"];
   siguiente: () => void;
   anterior: () => void;
   pasoValido: boolean;
+  evaluandoAssessment: boolean;
+  setArchivoLogoFile: (f: File | null) => void;
 }) {
   return (
     <div className="flex flex-col h-full w-full step-enter">
@@ -416,11 +421,19 @@ function PasoDetalles({
         </label>
       </div>
       {estado.llevaBranding ? (
-        <button
-          type="button"
-          onClick={() => set("archivoLogo", estado.archivoLogo ? "" : "logo_oficial.svg")}
+        <label
           className={"border-2 border-dashed rounded-xl p-8 bg-white hover:bg-slate-50 transition-colors cursor-pointer mb-6 shadow-sm flex flex-col items-center justify-center " + (estado.archivoLogo ? "border-green-300 bg-green-50/50" : "border-slate-300")}
         >
+          <input
+            type="file"
+            className="sr-only"
+            accept=".png,.jpg,.jpeg,.pdf,.svg,.ai,.eps"
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              setArchivoLogoFile(f);
+              set("archivoLogo", f ? f.name : "");
+            }}
+          />
           <div className={"w-12 h-12 rounded-full flex items-center justify-center mb-3 " + (estado.archivoLogo ? "bg-green-100" : "bg-slate-100")}>
             {estado.archivoLogo ? (
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-600"><path d="M5 13l4 4L19 7"/></svg>
@@ -432,7 +445,7 @@ function PasoDetalles({
           <span className="text-[11px] text-slate-500 text-center max-w-xs leading-relaxed">
             Formatos aceptados: PNG, JPG, PDF, SVG, AI, EPS. <span className="font-semibold text-amber-600">Obligatorio</span> para que el proveedor use la versión correcta.
           </span>
-        </button>
+        </label>
       ) : null}
       {estado.camposPlantilla && estado.camposPlantilla.length > 0 ? (
         <div className="mb-6 space-y-4 border-t border-slate-100 pt-6">
@@ -546,10 +559,18 @@ function PasoDetalles({
       ) : null}
       <div className="mt-auto flex justify-between items-center pt-4">
         <button onClick={anterior} className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors px-2 py-2">Atrás</button>
-        <button onClick={siguiente} disabled={!pasoValido} className="bg-slate-900 text-white text-xs px-6 py-3 rounded-full font-medium hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2">
-          Generar documento
-          <svg className="text-sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/></svg>
-        </button>
+        <div className="flex items-center gap-3">
+          {evaluandoAssessment ? (
+            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
+              <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+              Preparando preguntas del asistente…
+            </span>
+          ) : null}
+          <button onClick={siguiente} disabled={!pasoValido || evaluandoAssessment} className="bg-slate-900 text-white text-xs px-6 py-3 rounded-full font-medium hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2">
+            Generar documento
+            <svg className="text-sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -587,7 +608,8 @@ function PasoDocumento({
             </div>
             <div>
               <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Referencia Única</span>
-              <span className="block text-sm font-mono font-semibold text-slate-900">RFQ-2026-014</span>
+              <span className="block text-sm font-mono font-semibold text-slate-400">{`${estado.clasificacion || "SOL"}-${new Date().getFullYear()}-XXXX`}</span>
+              <span className="block text-[10px] text-slate-400 mt-0.5">La referencia definitiva se asigna al enviar</span>
             </div>
           </div>
           <span className={tipoBadgeClases(estado.clasificacion)}>
@@ -620,7 +642,7 @@ function PasoDocumento({
             </div>
             <div>
               <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-semibold">Fecha requerida</span>
-              <span className="text-xs font-medium text-slate-900">{estado.fechaRequerida || "—"}</span>
+              <span className="text-sm font-medium text-slate-900">{formatoFechaLegible(estado.fechaRequerida)}</span>
             </div>
           </div>
           <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-start gap-3">
@@ -689,7 +711,7 @@ function PasoDocumento({
 }
 
 /* ---------- STEP 6: Confirmación ---------- */
-function PasoConfirmacion({ estado }: { estado: ReturnType<typeof useSolicitudWizard>["estado"] }) {
+function PasoConfirmacion({ estado, referencia }: { estado: ReturnType<typeof useSolicitudWizard>["estado"]; referencia?: string }) {
   const docUrl = estado.solicitudId ? `/api/solicitudes/${estado.solicitudId}/documento` : null;
   return (
     <div className="flex flex-col items-center justify-center h-full w-full text-center py-10 step-enter">
@@ -699,7 +721,12 @@ function PasoConfirmacion({ estado }: { estado: ReturnType<typeof useSolicitudWi
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12l5 5L20 6"/></svg>
         </div>
       </div>
-      <h2 className="text-3xl font-medium tracking-tight mb-3 text-slate-900">Tu solicitud fue enviada</h2>
+      <h2 className="text-3xl font-medium tracking-tight mb-2 text-slate-900">Tu solicitud fue enviada</h2>
+      {referencia ? (
+        <div className="mb-3 inline-flex items-center gap-2 bg-slate-900 text-white text-sm font-mono font-semibold px-4 py-2 rounded-full">
+          Referencia: {referencia}
+        </div>
+      ) : null}
       <p className="text-sm text-slate-500 mb-6 max-w-sm leading-relaxed">
         Todo listo. Te avisaremos a <span className="font-semibold text-slate-800">{estado.email || "tu correo"}</span> en cuanto haya una comparativa lista para que decidas.
       </p>

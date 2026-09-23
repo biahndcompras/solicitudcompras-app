@@ -162,6 +162,20 @@ export function formato(n: number | undefined): string {
   return typeof n === "number" ? n.toLocaleString("es-HN") : "—";
 }
 
+// 2.1/3.2: los pros deterministas (p. ej. «Ahorro potencial de …») acompañan siempre a los
+// pros de la IA — nunca se pierden si el modelo responde (antes se reemplazaban).
+export function fusionarProsContras(
+  iaPC: ProsContras | undefined,
+  detPC: ProsContras | undefined
+): ProsContras {
+  if (!iaPC) return detPC ?? { pros: [], contras: [] };
+  const ahorros = (detPC?.pros ?? []).filter((p) => p.startsWith("Ahorro"));
+  return {
+    pros: [...iaPC.pros, ...ahorros.filter((a) => !iaPC.pros.includes(a))],
+    contras: iaPC.contras,
+  };
+}
+
 // Ruta IA de la comparativa: usa el orquestador para discrepancias + pros/contras +
 // sugerencia razonada. Si falla o no está configurado, cae al motor determinístico.
 export async function generarComparativaConIA(opts: {
@@ -223,7 +237,10 @@ export async function generarComparativaConIA(opts: {
 
     const prosContrasIA: Record<string, ProsContras> = {};
     for (const c of opts.cotizaciones) {
-      prosContrasIA[c.id] = ia.prosContras[c.proveedorNombre] ?? pc.prosContras[c.id] ?? { pros: [], contras: [] };
+      prosContrasIA[c.id] = fusionarProsContras(
+        ia.prosContras[c.proveedorNombre],
+        pc.prosContras[c.id]
+      );
     }
 
     // RN-01: la IA sugiere, nunca decide. La justificación debe citar datos.

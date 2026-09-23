@@ -36,7 +36,7 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
             <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
               <div className="text-xs font-semibold text-slate-900">Enlace público (token)</div>
               <div className="mt-2 flex items-center gap-2">
-                <input readOnly defaultValue={enlace?.url ?? "Generando enlace…"} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-medium text-slate-700" />
+                <input readOnly defaultValue={enlace?.url ?? "Generando enlace…"} title={enlace?.url} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-medium text-slate-700" />
                 <button onClick={() => { if (enlace) { navigator.clipboard?.writeText(enlace.url); setCopiado(true); } }} className="text-[11px] font-semibold uppercase tracking-wider text-slate-700 hover:text-slate-900 bg-white px-3 py-2 rounded-xl border border-slate-200">{copiado ? "Copiado" : "Copiar"}</button>
               </div>
               <div className="text-[10px] text-slate-500 mt-2">Se incluye en el correo al solicitante.</div>

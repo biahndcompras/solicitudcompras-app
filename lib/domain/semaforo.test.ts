@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularSemaforo, duracionAtencion } from "./semaforo";
+import { calcularSemaforo, duracionAtencion, fechaInput, formatoFechaLegible } from "./semaforo";
 
 describe("calcularSemaforo", () => {
   const now = "2026-09-16T12:00:00Z";
@@ -65,5 +65,19 @@ describe("duracionAtencion", () => {
     const r = duracionAtencion({ now });
     expect(r.dias).toBeNull();
     expect(r.texto).toBe("—");
+  });
+});
+
+describe("formatoFechaLegible / fechaInput", () => {
+  it("formatea fechas crudas de Date.toString()", () => {
+    expect(formatoFechaLegible("Mon Oct 05 2026 00:00:00 GMT-0600 (Central Standard Time)")).toContain("2026");
+    expect(formatoFechaLegible(undefined)).toBe("—");
+  });
+
+  it("fechaInput genera YYYY-MM-DD desde cualquier representación (crítico H12)", () => {
+    expect(fechaInput("Mon Oct 05 2026 00:00:00 GMT-0600 (Central Standard Time)")).toBe("2026-10-05");
+    expect(fechaInput("2026-10-05")).toBe("2026-10-05");
+    expect(fechaInput("ilegible")).toBe("");
+    expect(fechaInput(undefined)).toBe("");
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 // Hook del wizard del solicitante — usa la capa de dominio (cerebro) y persiste vía API.
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { SubtipoSolicitud, TipoSolicitud } from "@/lib/domain/types";
 import { bloqueoB2Activo } from "@/lib/domain/rules";
@@ -88,6 +88,11 @@ export function useSolicitudWizard(nuevo = false) {
   const [clasificandoIA, setClasificandoIA] = useState(false);
   const [evaluandoAssessment, setEvaluandoAssessment] = useState(false);
   const [coordinadores, setCoordinadores] = useState<CoordinadorPublico[]>([]);
+  // H2: archivo real del logo (File vive en memoria; solo el nombre se persiste en el borrador).
+  const archivoLogoFileRef = useRef<File | null>(null);
+  const setArchivoLogoFile = useCallback((f: File | null) => {
+    archivoLogoFileRef.current = f;
+  }, []);
 
   // Cargar compradores disponibles y preseleccionar por categoría al llegar al paso de documento.
   useEffect(() => {
@@ -214,7 +219,11 @@ export function useSolicitudWizard(nuevo = false) {
         subtipo: estado.subtipo,
         fechaRequerida: estado.fechaRequerida,
       });
-      await api.transicionar({
+      // H2: subir el logo/archivo real del producto (si el solicitante lo adjuntó).
+      if (archivoLogoFileRef.current) {
+        await api.subirArchivoLogo(creada.id, archivoLogoFileRef.current);
+      }
+      const transicion = await api.transicionar({
         solicitudId: creada.id,
         hacia: "ENVIADA_A_COMPRAS",
         actorTipo: "solicitante",
@@ -235,7 +244,8 @@ export function useSolicitudWizard(nuevo = false) {
           ),
         },
       });
-      setEnvio({ estado: "ok", referencia: creada.numeroReferencia });
+      // La referencia real se genera en la transición a ENVIADA_A_COMPRAS, no al crear.
+      setEnvio({ estado: "ok", referencia: transicion.solicitud.numeroReferencia });
       setEstado((s) => ({ ...s, paso: 6, maxAlcanzado: 6, solicitudId: creada.id }));
     } catch (e) {
       setEnvio({
@@ -306,6 +316,7 @@ export function useSolicitudWizard(nuevo = false) {
     evaluandoAssessment,
     evaluarAssessment,
     coordinadores,
+    setArchivoLogoFile,
     guardarBorrador: guardarBorradorActual,
     cancelar,
     borradoAt,

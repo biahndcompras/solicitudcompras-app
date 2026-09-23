@@ -7,6 +7,22 @@ export type NivelSemaforo = "ok" | "riesgo" | "retraso";
 
 const TERMINALES = new Set(["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"]);
 
+// Fecha legible tolerante: "YYYY-MM-DD", Date.toString() ("Mon Oct 05 2026…") o ISO.
+export function formatoFechaLegible(valor?: string): string {
+  if (!valor) return "—";
+  const d = new Date(valor);
+  if (Number.isNaN(d.getTime())) return valor;
+  return d.toLocaleDateString("es-HN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// Valor para <input type="date"> (YYYY-MM-DD) a partir de cualquier representación.
+export function fechaInput(valor?: string): string {
+  if (!valor) return "";
+  const d = new Date(valor);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
 export function calcularSemaforo(input: {
   estado: EstadoSolicitud;
   fechaRequerida?: string;

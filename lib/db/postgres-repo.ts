@@ -48,6 +48,7 @@ function filaSolicitud(f: Record<string, unknown>): Solicitud {
     clasificacionConfianza: f.clasificacion_confianza != null ? Number(f.clasificacion_confianza) : undefined,
     clasificacionCorregida: Boolean(f.clasificacion_corregida),
     notificacionFallida: Boolean(f.notificacion_fallida),
+    archivoLogoNombre: (f.archivo_logo_nombre as string) ?? undefined,
   };
 }
 
@@ -137,16 +138,21 @@ export class PostgresRepositorio implements Repositorio {
   // fecha requerida y/o respuestas) para volver a cotizar con el proveedor original.
   async actualizarCamposSolicitud(
     solicitudId: string,
-    cambios: { descripcion?: string; fechaRequerida?: string; respuestas?: Record<string, string> }
+    cambios: { descripcion?: string; fechaRequerida?: string; respuestas?: Record<string, string> },
+    actor?: { tipo: "coordinador" | "admin"; identificador?: string }
   ): Promise<void> {
+    const editados: string[] = [];
     if (cambios.descripcion !== undefined || cambios.fechaRequerida !== undefined) {
       await this.pg.query(
         `UPDATE solicitud SET descripcion = COALESCE($2, descripcion), fecha_requerida = COALESCE($3, fecha_requerida)
          WHERE id = $1`,
         [solicitudId, cambios.descripcion ?? null, cambios.fechaRequerida ?? null]
       );
+      if (cambios.descripcion !== undefined) editados.push("descripción");
+      if (cambios.fechaRequerida !== undefined) editados.push("fecha requerida");
     }
     if (cambios.respuestas && Object.keys(cambios.respuestas).length > 0) {
+      editados.push("respuestas");
       const filas = this.pg.query(
         `SELECT * FROM campo_catalogo WHERE campo_key = ANY($1::text[])`,
         [Object.keys(cambios.respuestas)]
@@ -165,6 +171,19 @@ export class PostgresRepositorio implements Repositorio {
         };
       });
       await this.guardarRespuestas(solicitudId, respuestas);
+    }
+    // Trazabilidad (RF-49): toda edición de re-cotización queda registrada.
+    if (editados.length > 0) {
+      await this.pg.query(
+        `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota)
+         VALUES ($1, 'edicion', $2, $3, $4)`,
+        [
+          solicitudId,
+          actor?.tipo ?? "coordinador",
+          actor?.identificador ?? null,
+          `Edición para re-cotizar: ${editados.join(", ")}`,
+        ]
+      );
     }
   }
 
@@ -386,7 +405,7 @@ export class PostgresRepositorio implements Repositorio {
     // Solicitante: solo referencia, título, estado y fechas (sin montos ni email expuesto).
     const res = await this.pg.query(
       `SELECT id, numero_referencia, titulo, estado, fecha_creacion, fecha_cierre,
-              tipo, area_solicitante
+              fecha_requerida, tipo, area_solicitante, categoria
        FROM solicitud WHERE solicitante_email = $1 ORDER BY fecha_creacion DESC`,
       [email.toLowerCase()]
     );
@@ -397,8 +416,10 @@ export class PostgresRepositorio implements Repositorio {
       estado: f.estado as Solicitud["estado"],
       fechaCreacion: String(f.fecha_creacion),
       fechaCierre: f.fecha_cierre ? String(f.fecha_cierre) : undefined,
+      fechaRequerida: f.fecha_requerida ? String(f.fecha_requerida) : undefined,
       tipo: (f.tipo as Solicitud["tipo"]) ?? undefined,
       areaSolicitante: (f.area_solicitante as string) ?? undefined,
+      categoria: (f.categoria as string) ?? undefined,
     })) as Solicitud[];
   }
 
@@ -516,6 +537,25 @@ export class PostgresRepositorio implements Repositorio {
     if (!f || !f.archivo_original_bytea) return null;
     const buf = f.archivo_original_bytea as Buffer;
     return { bytea: new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength), nombre: (f.archivo_original_nombre as string) ?? "cotizacion" };
+  }
+
+  // Logo/archivo del producto de la solicitud (H2): binario + nombre original.
+  async guardarArchivoLogo(solicitudId: string, nombre: string, bytea: Uint8Array): Promise<void> {
+    await this.pg.query(
+      `UPDATE solicitud SET archivo_logo_nombre = $2, archivo_logo_bytea = $3 WHERE id = $1`,
+      [solicitudId, nombre, Buffer.from(bytea)]
+    );
+  }
+
+  async obtenerArchivoLogo(solicitudId: string): Promise<{ bytea: Uint8Array; nombre: string } | null> {
+    const res = await this.pg.query(
+      `SELECT archivo_logo_bytea, archivo_logo_nombre FROM solicitud WHERE id = $1`,
+      [solicitudId]
+    );
+    const f = res.rows[0];
+    if (!f || !f.archivo_logo_bytea) return null;
+    const buf = f.archivo_logo_bytea as Buffer;
+    return { bytea: new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength), nombre: (f.archivo_logo_nombre as string) ?? "logo" };
   }
 
   // Cotizaciones que tienen archivo original, con su binario (para adjuntar al envío de comparativa).

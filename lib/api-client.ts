@@ -62,6 +62,28 @@ export const api = {
     }).then((r) => json(r));
   },
 
+  // Re-cotización (2.3/H12): edita campos clave de una solicitud activa.
+  editarSolicitud(
+    solicitudId: string,
+    cambios: { descripcion?: string; fechaRequerida?: string; respuestas?: Record<string, string> }
+  ): Promise<{ solicitud: Solicitud }> {
+    return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cambios),
+    }).then((r) => json(r));
+  },
+
+  // H2: logo/archivo real del producto.
+  subirArchivoLogo(solicitudId: string, archivo: File): Promise<{ ok: boolean; nombre: string }> {
+    const form = new FormData();
+    form.append("archivo", archivo);
+    return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}/logo`, {
+      method: "POST",
+      body: form,
+    }).then((r) => json(r));
+  },
+
   listarSolicitudes(coordinadorId: string): Promise<Solicitud[]> {
     return fetch(`/api/solicitudes?coordinadorId=${encodeURIComponent(coordinadorId)}`).then(
       (r) => json<Solicitud[]>(r)

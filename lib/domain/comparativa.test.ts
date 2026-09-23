@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { construirComparativa, detectarDiscrepancias, generarProsContras } from "./comparativa";
+import { construirComparativa, detectarDiscrepancias, fusionarProsContras, generarProsContras } from "./comparativa";
 import type { Cotizacion } from "./types";
 
 function cot(id: string, nombre: string, ofertado: Record<string, string>, precios: {
@@ -90,6 +90,33 @@ describe("pros/contras y sugerencia", () => {
       cotizaciones: [cot("c1", "A", { material: "x" }, { total: 100 })],
     });
     expect(sugerencia).toBeNull();
+  });
+});
+
+describe("fusionarProsContras (2.1/3.2 — H7)", () => {
+  it("conserva la línea de ahorro determinista junto a los pros de la IA", () => {
+    const fusion = fusionarProsContras(
+      { pros: ["Entrega: 10 días"], contras: ["Sin desglose"] },
+      { pros: ["Ahorro potencial de 20 HNL frente a la opción más cara", "Total claro"], contras: [] }
+    );
+    expect(fusion.pros).toContain("Entrega: 10 días");
+    expect(fusion.pros.some((p) => p.startsWith("Ahorro potencial"))).toBe(true);
+    expect(fusion.contras).toEqual(["Sin desglose"]);
+  });
+
+  it("no duplica el ahorro si la IA ya lo menciona", () => {
+    const linea = "Ahorro potencial de 20 HNL frente a la opción más cara";
+    const fusion = fusionarProsContras(
+      { pros: [linea], contras: [] },
+      { pros: [linea], contras: [] }
+    );
+    expect(fusion.pros.filter((p) => p === linea)).toHaveLength(1);
+  });
+
+  it("usa deterministas si la IA no responde, y vacío si no hay nada", () => {
+    expect(fusionarProsContras(undefined, { pros: ["A"], contras: ["B"] })).toEqual({ pros: ["A"], contras: ["B"] });
+    expect(fusionarProsContras(undefined, undefined)).toEqual({ pros: [], contras: [] });
+    expect(fusionarProsContras({ pros: ["IA"], contras: [] }, undefined)).toEqual({ pros: ["IA"], contras: [] });
   });
 });
 

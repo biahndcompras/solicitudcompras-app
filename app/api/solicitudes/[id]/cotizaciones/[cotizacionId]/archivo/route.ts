@@ -24,11 +24,32 @@ export async function GET(
     return new NextResponse(Buffer.from(archivo.bytea), {
       status: 200,
       headers: {
-        "Content-Type": "application/octet-stream",
+        "Content-Type": tipoContenido(archivo.nombre),
         "Content-Disposition": `attachment; filename="${nombreSeguro}"`,
       },
     });
   } catch {
     return NextResponse.json({ error: "Error al descargar el archivo" }, { status: 500 });
+  }
+}
+
+function tipoContenido(nombre: string): string {
+  const ext = nombre.toLowerCase().split(".").pop();
+  switch (ext) {
+    case "pdf":
+      return "application/pdf";
+    case "doc":
+      return "application/msword";
+    case "docx":
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    case "png":
+      return "image/png";
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "svg":
+      return "image/svg+xml";
+    default:
+      return "application/octet-stream";
   }
 }

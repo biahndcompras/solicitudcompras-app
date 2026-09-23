@@ -3,6 +3,7 @@ import { DetalleSolicitud } from "@/components/coordinador/DetalleSolicitud";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { Badge, type BadgeTone } from "@/components/Badge";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
+import { formatoFechaLegible } from "@/lib/domain/semaforo";
 import type { Decision } from "@/lib/domain/types";
 
 const repo = new PostgresRepositorio();
@@ -44,7 +45,7 @@ export default async function SolicitudDetallePage({
                   {solicitud.fechaRequerida ? (
                     <>
                       <span className="text-slate-300">•</span>
-                      <span className="inline-flex items-center gap-1.5">Entrega requerida: {solicitud.fechaRequerida}</span>
+                      <span className="inline-flex items-center gap-1.5">Entrega requerida: {formatoFechaLegible(solicitud.fechaRequerida)}</span>
                     </>
                   ) : null}
                   {solicitud.fechaCierre ? (

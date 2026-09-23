@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
-import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
 
@@ -31,14 +30,13 @@ export async function POST(
   }
 }
 
-// GET: descarga del logo/archivo del producto. Coordinador/admin.
+// GET: descarga del logo/archivo del producto. El solicitante lo sube sin sesión
+// (flujo sin contraseñas) y el id uuid protege el acceso, igual que la creación.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = await guardApi(["coordinador", "admin"]);
-    if (auth.negada) return auth.negada;
     const { id } = await params;
     const archivo = await repo.obtenerArchivoLogo(id);
     if (!archivo) {

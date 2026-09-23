@@ -76,6 +76,8 @@ describe("Orquestador IA", () => {
       sin_preguntas_pendientes: false,
     }));
     const res = await assessment({
+      titulo: "Pelota de fútbol",
+      descripcion: "Pelota de futbol para una actividad de marketing",
       tipo: "RFQ",
       subtipo: "producto",
       categoria: "materia_prima",
@@ -86,6 +88,39 @@ describe("Orquestador IA", () => {
       }],
     });
     expect(res?.preguntas.map((p) => p.campoKey)).toEqual(["material"]);
+  });
+
+  it("assessment propaga contexto_insuficiente y trunca sugerencias largas", async () => {
+    vi.stubGlobal("fetch", mockOpenRouterResponde({
+      preguntas: [
+        {
+          campoKey: "material",
+          pregunta: "¿Material?",
+          por_que: "Para cotizar",
+          critica: false,
+          sugerencias: ["x".repeat(200), "cuero sintético TPU"],
+        },
+      ],
+      contexto_investigado: "",
+      sin_preguntas_pendientes: false,
+      contexto_insuficiente: true,
+      preguntas_contexto: ["¿Para qué se usará?", "¿Qué tamaño necesitás?"],
+    }));
+    const res = await assessment({
+      titulo: "???",
+      descripcion: "una cosa",
+      tipo: "RFQ",
+      subtipo: "producto",
+      categoria: "otra",
+      camposCapturados: {},
+      catalogo: [{
+        campoKey: "material", label: "Material", tipoDato: "texto", obligatorio: false,
+        origen: "assessment", orden: 1, activo: true,
+      }],
+    });
+    expect(res?.contexto_insuficiente).toBe(true);
+    expect(res?.preguntas_contexto).toHaveLength(2);
+    expect(res?.preguntas[0].sugerencias?.[0].length).toBeLessThanOrEqual(80);
   });
 
   it("extraerCotizacion extrae los campos con confianza", async () => {

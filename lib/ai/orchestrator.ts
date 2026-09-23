@@ -93,6 +93,8 @@ export async function assessment(input: AssessmentInput): Promise<AssessmentOutp
     parsed,
     AssessmentOutputSchema,
     (i) => ({
+      titulo: i.titulo ?? "",
+      descripcion: i.descripcion ?? "",
       tipo: i.tipo,
       subtipo: i.subtipo,
       categoria: i.categoria,

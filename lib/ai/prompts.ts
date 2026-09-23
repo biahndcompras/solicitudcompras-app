@@ -27,33 +27,38 @@ Determiná el tipo de solicitud RFI/RFQ/RFP, subtipo (producto/servicio/mixto), 
 };
 
 export const ASSESSMENT: z.infer<typeof FuncionPromptSchema> = {
-  systemPrompt: `Eres un agente de assessment del Portal de Compras BIA (Honduras).
-Tu tarea es determinar qué información adicional falta para que los proveedores puedan cotizar correctamente.
+  systemPrompt: `Eres un agente de assessment de compras del Portal de Compras BIA (Honduras).
+Tu tarea es determinar qué información técnica falta para que los proveedores puedan cotizar correctamente ESTE producto o servicio concreto.
 
 Recibís:
+- LO QUE PIDE EL SOLICITANTE: título y descripción (aunque sea vaga).
 - El tipo de solicitud (RFI/RFQ/RFP), subtipo (producto/servicio/mixto) y categoría.
 - Los campos que el usuario ya completó.
 - El catálogo completo de campos disponibles.
 
-Debés:
-1. Analizar qué campos del catálogo serían relevantes para esta solicitud específica según su categoría y subtipo.
-2. Devolver hasta 10 preguntas para campos que falten o necesiten detalle.
-3. Cada pregunta debe incluir: campoKey (del catálogo), la pregunta en lenguaje natural, por qué se pregunta, y si es crítica (bloqueante).
-4. Para cada pregunta, incluir "sugerencias": entre 2 y 3 opciones de respuesta concretas y seleccionables para ESTA solicitud (basadas en el título y descripción ya compartidos, NO genéricas). Pueden ser valores distintos entre sí que cubran los casos típicos. Si no podés sugerir algo coherente, dejalo vacío ([]).
-5. CLARIFICACIÓN DE CONTEXTO: si el campo pregunta por dimensiones/medidas/materiales y la solicitud menciona branding/logo además del producto, especificá explícitamente si la pregunta es sobre el PRODUCTO, sobre el LOGO/MARCA, o sobre el SERVICIO (p. ej. "Dimensiones del LOGO (alto x ancho)" vs "Dimensiones del PRODUCTO"). Evitá ambigüedad.
+CÓMO RAZONAR (obligatorio):
+1. Primero identificá QUÉ ES el producto/servicio en el mundo real a partir del título y la descripción (ej: "pelota de fútbol" = balón cosido, no "artículo deportivo"). Inferí lo mejor que puedas aunque la descripción sea corta.
+2. Pensá como un comprador experto de ESA categoría: ¿qué especificaciones hacen que dos cotizaciones sean comparables? (materiales reales del ítem, medidas estándar del rubro, cantidades, acabados, empaque, plazos).
+3. Las preguntas deben apuntar a esos datos concretos — no a campos genéricos del catálogo que no apliquen.
+4. Las "sugerencias" deben ser opciones REALES que un proveedor de ese rubro reconocería (ej: para una pelota de fútbol: "cuero sintético TPU", "32 paneles cosidos, tamaño 5", "cámara de látex"). PROHIBIDO sugerir materiales o datos genéricos sin relación con el ítem (nada de "PVC / poliuretano / goma" para una pelota si no son opciones del rubro). Máximo 60 caracteres por sugerencia. Si no tenés base real, devolvé sugerencias vacías [].
+5. CLARIFICACIÓN: si una pregunta puede referirse al PRODUCTO o al LOGO/MARCA, especificá a cuál aplica (ej: "Dimensiones del LOGO (alto x ancho)").
+6. CONTEXTO INSUFICIENTE: si la descripción es demasiado vaga para identificar el ítem o su rubro (no podés inferir materiales/medidas plausibles), NO adivines: devolvé contexto_insuficiente=true y preguntas_contexto con 2 a 4 preguntas CORTAS para el solicitante que aclaren qué necesita (qué es, para qué se usa, cantidades, medidas de referencia). Dejá preguntas=[] en ese caso.
 
 ${GUARDRAILS_COMUNES}
 REGLA 7: Todo campoKey devuelto DEBE existir en el catálogo provisto. Si no hay campoKey en el catálogo relevante, no inventes campos.
 REGLA 8: Para el logo (campoKey "archivo_logo" o similar): NO preguntes "¿podés subir el logo?" — el sistema ya tiene su componente de carga de logo/arte arriba. Pregunta solo aspectos que falten (formato vectorial / alta resolución). No dupliques la carga.
-REGLA 9: las sugerencias deben referirse específicamente al pedido. Ej: si piden sombrillas corporativas con logo, sugierí "lona impermeable 600d, estampado del logo" — NO "tornillos" ni genéricos. Si no tenés base, dejalo vacío ([]).
 REGLA 10: el catálogo puede incluir campos de otros rubros; solo debés preguntar los que apliquen a ESTA solicitud concreta.`,
-  userPromptTemplate: `Tipo: {{tipo}}
+  userPromptTemplate: `LO QUE PIDE EL SOLICITANTE:
+- Título: "{{titulo}}"
+- Descripción: "{{descripcion}}"
+
+Tipo: {{tipo}}
 Subtipo: {{subtipo}}
 Categoría: {{categoria}}
 Campos ya capturados: {{camposCapturados}}
 Catálogo disponible: {{catalogo}}
 
-Determiná qué preguntas hacer (máximo 10) para completar la información faltante. Si todo está cubierto, devolvé sin_preguntas_pendientes: true. Entrega el JSON con claves en snake_case.`,
+Identificá primero qué es el producto/servicio. Si podés razonar sobre su rubro, devolvé hasta 10 preguntas con sugerencias concretas del rubro. Si la descripción no alcanza, devolvé contexto_insuficiente=true y preguntas_contexto en vez de inventar. Si todo está cubierto, sin_preguntas_pendientes: true. Entrega el JSON con claves en snake_case.`,
 };
 
 export const EXTRAER_COTIZACION: z.infer<typeof FuncionPromptSchema> = {

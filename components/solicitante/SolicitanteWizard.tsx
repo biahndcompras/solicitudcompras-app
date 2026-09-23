@@ -19,7 +19,7 @@ export function SolicitanteWizard() {
   const searchParams = useSearchParams();
   const nuevo = (searchParams.get("nuevo") ?? "") === "1";
   const w = useSolicitudWizard(nuevo);
-  const { estado, set, siguiente, anterior, pasoValido, envio, enviarSolicitud, guardarBorrador, cancelar, borradoAt, clasificandoIA, clasificarIA, evaluandoAssessment, evaluarAssessment, coordinadores, setArchivoLogoFile } = w;
+  const { estado, set, siguiente, anterior, pasoValido, envio, enviarSolicitud, guardarBorrador, cancelar, borradoAt, clasificandoIA, clasificarIA, evaluandoAssessment, evaluarAssessment, reintentarConContexto, coordinadores, setArchivoLogoFile } = w;
   const [confirmCancel, setConfirmCancel] = useState(false);
   const emailInicial = searchParams.get("email") ?? "";
   const nombreInicial = searchParams.get("nombre") ?? "";
@@ -149,7 +149,7 @@ export function SolicitanteWizard() {
           ) : estado.paso === 3 ? (
             <PasoClasificacion estado={estado} set={set} siguiente={siguiente} anterior={anterior} clasificandoIA={clasificandoIA} evaluarAssessment={evaluarAssessment} evaluandoAssessment={evaluandoAssessment} />
           ) : estado.paso === 4 ? (
-            <PasoDetalles estado={estado} set={set} siguiente={siguiente} anterior={anterior} pasoValido={pasoValido} evaluandoAssessment={evaluandoAssessment} setArchivoLogoFile={setArchivoLogoFile} />
+            <PasoDetalles estado={estado} set={set} siguiente={siguiente} anterior={anterior} pasoValido={pasoValido} evaluandoAssessment={evaluandoAssessment} setArchivoLogoFile={setArchivoLogoFile} reintentarConContexto={reintentarConContexto} />
           ) : estado.paso === 5 ? (
             <PasoDocumento estado={estado} set={set} enviarSolicitud={enviarSolicitud} anterior={anterior} envio={envio} coordinadores={coordinadores} />
           ) : (
@@ -382,6 +382,7 @@ function PasoDetalles({
   pasoValido,
   evaluandoAssessment,
   setArchivoLogoFile,
+  reintentarConContexto,
 }: {
   estado: ReturnType<typeof useSolicitudWizard>["estado"];
   set: ReturnType<typeof useSolicitudWizard>["set"];
@@ -390,13 +391,48 @@ function PasoDetalles({
   pasoValido: boolean;
   evaluandoAssessment: boolean;
   setArchivoLogoFile: (f: File | null) => void;
+  reintentarConContexto: (extra: string) => Promise<void>;
 }) {
+  const [contextoExtra, setContextoExtra] = useState("");
   return (
-    <div className="flex flex-col h-full w-full step-enter">
+    <div className="flex flex-col min-h-full w-full step-enter pb-4">
       <div className="mb-6">
         <h2 className="text-2xl font-medium tracking-tight mb-1">Detalles para cotizar</h2>
         <p className="text-xs text-slate-500">Completá la información técnica requerida para tu solicitud.</p>
       </div>
+      {/* F2: la IA necesita más contexto antes de preguntar */}
+      {estado.contextoInsuficiente ? (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
+          <div className="text-sm font-semibold text-amber-900 mb-1">Necesitamos un poco más de contexto</div>
+          <p className="text-xs text-amber-800 leading-relaxed mb-3">
+            Para hacer las preguntas correctas a los proveedores, contanos un poco más de lo que necesitás:
+          </p>
+          {estado.preguntasContexto.length > 0 ? (
+            <ul className="list-disc pl-5 mb-3 space-y-1">
+              {estado.preguntasContexto.map((p, i) => (
+                <li key={i} className="text-xs text-amber-900">{p}</li>
+              ))}
+            </ul>
+          ) : null}
+          <textarea
+            value={contextoExtra}
+            onChange={(e) => setContextoExtra(e.target.value)}
+            rows={3}
+            placeholder="Ej.: pelota de fútbol tamaño 5, para torneo juvenil al aire libre, con los colores de la marca…"
+            className="w-full bg-white border border-amber-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none"
+          />
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              disabled={!contextoExtra.trim() || evaluandoAssessment}
+              onClick={() => { reintentarConContexto(contextoExtra); setContextoExtra(""); }}
+              className="bg-amber-600 text-white text-xs px-5 py-2.5 rounded-full font-medium hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              {evaluandoAssessment ? "Reanalizando…" : "Reintentar con más detalle"}
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div className="bg-white rounded-2xl border border-slate-200/60 p-5 md:p-6 mb-4 shadow-sm">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Información de tu solicitud</span>
@@ -523,8 +559,9 @@ function PasoDetalles({
                           <button
                             key={sug}
                             type="button"
+                            title={sug}
                             onClick={() => set("assessmentRespuestas", { ...estado.assessmentRespuestas, [aq.campoKey]: { valor: activa ? "" : sug, noSe: false } })}
-                            className={"text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all " + (activa ? "bg-sky-500 text-white border-sky-500" : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700")}
+                            className={"text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all max-w-[240px] truncate " + (activa ? "bg-sky-500 text-white border-sky-500" : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700")}
                           >
                             {sug}
                           </button>
@@ -557,7 +594,7 @@ function PasoDetalles({
           })}
         </div>
       ) : null}
-      <div className="mt-auto flex justify-between items-center pt-4">
+      <div className="mt-auto flex justify-between items-center pt-6 pb-4 gap-4">
         <button onClick={anterior} className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors px-2 py-2">Atrás</button>
         <div className="flex items-center gap-3">
           {evaluandoAssessment ? (
@@ -594,12 +631,14 @@ function PasoDocumento({
 }) {
   const coordSeleccionado = coordinadores.find((c) => c.id === estado.coordinadorId);
   return (
-    <div className="flex flex-col h-full w-full step-enter">
+    // min-h-full (no h-full): con h-full los flex-hijos se comprimían y la tarjeta
+    // con overflow-hidden recortaba el contenido tras la descripción (bug reportado).
+    <div className="flex flex-col min-h-full w-full step-enter">
       <div className="mb-8">
         <h2 className="text-2xl font-medium tracking-tight mb-1">Tu solicitud está lista</h2>
         <p className="text-xs text-slate-500">Revisá el resumen antes de enviar a Compras.</p>
       </div>
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 relative mx-auto w-full max-w-md overflow-hidden mb-8">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 relative mx-auto w-full max-w-md overflow-hidden mb-8 shrink-0">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-200 to-sky-500" />
         <div className="flex justify-between items-start mb-6 mt-2 border-b border-slate-100 pb-5">
           <div className="flex items-center gap-3">
@@ -658,9 +697,42 @@ function PasoDocumento({
               </span>
             </div>
           </div>
+          {(estado.archivoLogo || estado.camposPlantilla?.length || estado.assessmentPreguntas.length) ? (
+            <div className="border-t border-slate-100 pt-4 space-y-2.5">
+              <span className="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Detalles de la solicitud</span>
+              {estado.archivoLogo ? (
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-slate-500">Logo / arte del producto</span>
+                  <span className="font-medium text-slate-900 text-right truncate max-w-[60%]" title={estado.archivoLogo}>{estado.archivoLogo}</span>
+                </div>
+              ) : null}
+              {estado.camposPlantilla?.map((cp) => {
+                const r = estado.assessmentRespuestas[cp.campoKey];
+                return (
+                  <div key={cp.campoKey} className="flex items-start justify-between gap-3 text-xs border-b border-slate-50 pb-1.5">
+                    <span className="text-slate-500 shrink-0 max-w-[45%]">{cp.label}</span>
+                    <span className={"font-medium text-right " + (r?.noSe ? "text-slate-400 italic" : "text-slate-900")}>
+                      {r?.noSe ? "(no lo sé)" : r?.valor?.trim() ? r.valor : "—"}
+                    </span>
+                  </div>
+                );
+              })}
+              {estado.assessmentPreguntas.map((q) => {
+                const r = estado.assessmentRespuestas[q.campoKey];
+                return (
+                  <div key={q.campoKey} className="flex items-start justify-between gap-3 text-xs border-b border-slate-50 pb-1.5">
+                    <span className="text-slate-500 shrink-0 max-w-[45%]">{q.pregunta}</span>
+                    <span className={"font-medium text-right " + (r?.noSe ? "text-slate-400 italic" : "text-slate-900")}>
+                      {r?.noSe ? "(no lo sé)" : r?.valor?.trim() ? r.valor : "—"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       </div>
-      <div className="bg-white rounded-2xl border border-slate-200/70 shadow-sm p-5 md:p-6 mb-4">
+      <div className="bg-white rounded-2xl border border-slate-200/70 shadow-sm p-5 md:p-6 mb-4 shrink-0">
         <div className="flex items-center gap-2 mb-1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-sky-500"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">¿A qué comprador va dirigida la solicitud?</span>

@@ -17,6 +17,8 @@ export type ClasificarInput = z.infer<typeof ClasificarInputSchema>;
 export type ClasificarOutput = z.infer<typeof ClasificarOutputSchema>;
 
 export const AssessmentInputSchema = z.object({
+  titulo: z.string().default(""),
+  descripcion: z.string().default(""),
   tipo: z.enum(["RFI", "RFQ", "RFP"]),
   subtipo: z.enum(["producto", "servicio", "mixto"]),
   categoria: z.string(),
@@ -53,17 +55,26 @@ export const PreguntaAssessmentSchema = z.object({
   por_que: z.string().default(""),
   critica: z.boolean().default(false),
   ejemplo_respuesta: z.string().optional(),
-  sugerencias: z.array(z.string()).max(3).optional(),
+  sugerencias: z
+    .array(z.string().transform((s) => s.trim().slice(0, 80)).pipe(z.string().max(80)))
+    .max(3)
+    .optional(),
 });
 
 export const AssessmentOutputSchema = z.object({
   preguntas: z.array(z.preprocess(normalizarPregunta, PreguntaAssessmentSchema)).max(10),
   contexto_investigado: z.string().default(""),
   sin_preguntas_pendientes: z.boolean().optional(),
+  // F2: si la descripción no alcanza para razonar sobre el producto/rubro, el modelo
+  // lo declara en vez de inventar sugerencias genéricas; el wizard pide más contexto.
+  contexto_insuficiente: z.boolean().default(false),
+  preguntas_contexto: z.array(z.string()).max(5).default([]),
 }).transform((d) => ({
   preguntas: d.preguntas,
   contexto_investigado: d.contexto_investigado,
   sin_preguntas_pendientes: d.sin_preguntas_pendientes ?? d.preguntas.length === 0,
+  contexto_insuficiente: d.contexto_insuficiente,
+  preguntas_contexto: d.preguntas_contexto,
 }));
 
 export type AssessmentInput = z.infer<typeof AssessmentInputSchema>;

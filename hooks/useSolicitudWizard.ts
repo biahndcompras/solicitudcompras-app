@@ -34,6 +34,8 @@ export type WizardState = {
   archivoLogo: string;
   assessmentListo: boolean;
   assessmentPreguntas: { campoKey: string; pregunta: string; ejemplo?: string; sugerencias?: string[] }[];
+  contextoInsuficiente: boolean;
+  preguntasContexto: string[];
   camposPlantilla?: { campoKey: string; label: string; tipoDato: string; ayuda?: string; obligatorio: boolean; seccionPdf?: string }[];
   assessmentRespuestas: Record<string, { valor: string; noSe: boolean }>;
   solicitudId: string | null;
@@ -60,6 +62,8 @@ function estadoInicial(nuevo: boolean): WizardState {
     archivoLogo: "",
     assessmentListo: false,
     assessmentPreguntas: [],
+    contextoInsuficiente: false,
+    preguntasContexto: [],
     camposPlantilla: [],
     assessmentRespuestas: {},
     solicitudId: null,
@@ -161,18 +165,22 @@ export function useSolicitudWizard(nuevo = false) {
   }, [estado.titulo, estado.descripcion, estado.tipoNecesidad]);
 
   // Assessment IA del solicitante (P3→P4). Llamada server-side vía API.
-  const evaluarAssessment = useCallback(async () => {
+  // `opts.descripcion` permite re-evaluar con una descripción ampliada (F2: más contexto).
+  const evaluarAssessment = useCallback(async (opts?: { descripcion?: string }) => {
+    const descripcion = opts?.descripcion ?? estado.descripcion;
     setEvaluandoAssessment(true);
     try {
       const { api } = await import("@/lib/api-client");
       const catalogo: import("@/lib/domain/types").CampoCatalogo[] = [];
       const res = await api.assessmentIA({
+        titulo: estado.titulo,
+        descripcion,
         tipo: estado.clasificacion,
         subtipo: estado.subtipo,
         categoria: estado.tipoNecesidad,
         camposCapturados: [
           { campoKey: "titulo", valor: estado.titulo },
-          { campoKey: "descripcion", valor: estado.descripcion },
+          { campoKey: "descripcion", valor: descripcion },
           { campoKey: "tipoNecesidad", valor: estado.tipoNecesidad },
         ],
         catalogo,
@@ -182,6 +190,7 @@ export function useSolicitudWizard(nuevo = false) {
       if (res) {
         setEstado((s) => ({
           ...s,
+          descripcion,
           assessmentPreguntas: res.preguntas.map((p) => ({
             campoKey: p.campoKey,
             pregunta: p.pregunta,
@@ -190,16 +199,25 @@ export function useSolicitudWizard(nuevo = false) {
           })),
           camposPlantilla: res.camposPlantilla ?? [],
           assessmentListo: res.sin_preguntas_pendientes,
+          contextoInsuficiente: res.contexto_insuficiente ?? false,
+          preguntasContexto: res.preguntas_contexto ?? [],
         }));
       } else {
-        setEstado((s) => ({ ...s, assessmentListo: true }));
+        setEstado((s) => ({ ...s, descripcion, assessmentListo: true, contextoInsuficiente: false, preguntasContexto: [] }));
       }
     } catch {
-      setEstado((s) => ({ ...s, assessmentListo: true }));
+      setEstado((s) => ({ ...s, descripcion, assessmentListo: true, contextoInsuficiente: false, preguntasContexto: [] }));
     } finally {
       setEvaluandoAssessment(false);
     }
   }, [estado.titulo, estado.descripcion, estado.tipoNecesidad, estado.clasificacion, estado.subtipo, estado.llevaBranding, estado.archivoLogo]);
+
+  // F2: el solicitante amplía la descripción y re-ejecuta el assessment.
+  const reintentarConContexto = useCallback(async (extra: string) => {
+    const ampliada = `${estado.descripcion ? estado.descripcion.trim() + "\n" : ""}${extra.trim()}`;
+    setEstado((s) => ({ ...s, contextoInsuficiente: false, preguntasContexto: [] }));
+    await evaluarAssessment({ descripcion: ampliada });
+  }, [estado.descripcion, evaluarAssessment]);
 
   // Persiste la solicitud al pasar del paso 5 (documento) al 6 (confirmación).
   const enviarSolicitud = useCallback(async () => {
@@ -315,6 +333,7 @@ export function useSolicitudWizard(nuevo = false) {
     clasificarIA,
     evaluandoAssessment,
     evaluarAssessment,
+    reintentarConContexto,
     coordinadores,
     setArchivoLogoFile,
     guardarBorrador: guardarBorradorActual,

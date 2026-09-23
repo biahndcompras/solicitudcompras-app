@@ -18,10 +18,15 @@ export type ResultadoAssessment = {
   preguntas: PreguntaAssessment[];
   contexto_investigado: string;
   sin_preguntas_pendientes: boolean;
+  contexto_insuficiente?: boolean;
+  preguntas_contexto?: string[];
   camposPlantilla?: CampoCatalogo[];
 };
 
 export type AssessmentInput = {
+  titulo?: string;
+  descripcion?: string;
+  categoria?: string;
   camposCapturados: { campoKey: string; valor?: string }[];
   camposDisponiblesCatalogo: CampoCatalogo[];
   tipo?: string;
@@ -46,9 +51,13 @@ export async function assessment_requerimiento(input: AssessmentInput): Promise<
     }
 
     const iaResultado = await assessmentIA({
+      titulo: input.titulo ?? "",
+      descripcion: input.descripcion ?? "",
       tipo: (input.tipo ?? "RFQ") as "RFI" | "RFQ" | "RFP",
       subtipo: (input.subtipo ?? "producto") as "producto" | "servicio" | "mixto",
-      categoria: input.camposDisponiblesCatalogo[0]?.seccionPdf ?? "general",
+      // Categoría REAL del pedido (antes se mandaba seccionPdf del primer campo del
+      // catálogo y la IA razonaba a ciegas).
+      categoria: input.categoria ?? "general",
       camposCapturados: camposCapturadosObj,
       catalogo: iaCatalogo.map((c) => ({
         campoKey: c.campoKey,
@@ -63,7 +72,7 @@ export async function assessment_requerimiento(input: AssessmentInput): Promise<
       })),
     });
 
-    if (iaResultado && iaResultado.preguntas.length > 0) {
+    if (iaResultado && (iaResultado.preguntas.length > 0 || iaResultado.contexto_insuficiente)) {
       return {
         preguntas: iaResultado.preguntas.map((p) => ({
           campoKey: p.campoKey,
@@ -75,6 +84,8 @@ export async function assessment_requerimiento(input: AssessmentInput): Promise<
         })),
         contexto_investigado: iaResultado.contexto_investigado,
         sin_preguntas_pendientes: iaResultado.sin_preguntas_pendientes,
+        contexto_insuficiente: iaResultado.contexto_insuficiente,
+        preguntas_contexto: iaResultado.preguntas_contexto,
       };
     }
   } catch {

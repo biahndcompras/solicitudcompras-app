@@ -7,20 +7,31 @@ export type NivelSemaforo = "ok" | "riesgo" | "retraso";
 
 const TERMINALES = new Set(["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"]);
 
+// Parseo robusto de fecha: "YYYY-MM-DD" (sin zona, se interpreta como LOCAL),
+// Date.toString() ("Mon Oct 05 2026…") o ISO completo.
+export function parseFechaRobusta(valor?: string): Date | null {
+  if (!valor) return null;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
+  if (iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+  const d = new Date(valor);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 // Fecha legible tolerante: "YYYY-MM-DD", Date.toString() ("Mon Oct 05 2026…") o ISO.
 export function formatoFechaLegible(valor?: string): string {
   if (!valor) return "—";
-  const d = new Date(valor);
-  if (Number.isNaN(d.getTime())) return valor;
+  const d = parseFechaRobusta(valor);
+  if (!d) return valor;
   return d.toLocaleDateString("es-HN", { day: "numeric", month: "short", year: "numeric" });
 }
 
 // Valor para <input type="date"> (YYYY-MM-DD) a partir de cualquier representación.
 export function fechaInput(valor?: string): string {
   if (!valor) return "";
-  const d = new Date(valor);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString().slice(0, 10);
+  const d = parseFechaRobusta(valor);
+  if (!d) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 export function calcularSemaforo(input: {

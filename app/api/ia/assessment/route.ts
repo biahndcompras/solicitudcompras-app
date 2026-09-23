@@ -7,6 +7,8 @@ import type { CampoCatalogo, TipoDatoCampo, OrigenCampo } from "@/lib/domain/typ
 const repo = new PostgresRepositorio();
 
 const schema = z.object({
+  titulo: z.string().optional().default(""),
+  descripcion: z.string().optional().default(""),
   tipo: z.enum(["RFI", "RFQ", "RFP"]),
   subtipo: z.enum(["producto", "servicio", "mixto"]),
   categoria: z.string(),
@@ -62,6 +64,9 @@ export async function POST(request: Request) {
     }
 
     const res = await assessment_requerimiento({
+      titulo: body.titulo,
+      descripcion: body.descripcion,
+      categoria: body.categoria,
       tipo: body.tipo,
       subtipo: body.subtipo,
       camposCapturados: body.camposCapturados,

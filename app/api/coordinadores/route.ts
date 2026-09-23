@@ -9,12 +9,16 @@ const repo = new PostgresRepositorio();
 export async function GET() {
   try {
     const coordinadores = await repo.listarCoordinadores();
+    // Solo los compradores reales del piloto: la cuenta QA catch-all
+    // (coordinador@biafoods.co) no se ofrece como destino de solicitudes.
     return NextResponse.json(
-      coordinadores.map((c) => ({
-        id: c.id,
-        nombre: c.nombre,
-        categorias: (c.categoriasAsignadas ?? []).map((cat) => String(cat)),
-      }))
+      coordinadores
+        .filter((c) => c.email !== "coordinador@biafoods.co")
+        .map((c) => ({
+          id: c.id,
+          nombre: c.nombre,
+          categorias: (c.categoriasAsignadas ?? []).map((cat) => String(cat)),
+        }))
     );
   } catch {
     return NextResponse.json({ error: "Error al listar coordinadores" }, { status: 500 });

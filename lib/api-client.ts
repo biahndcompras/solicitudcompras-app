@@ -216,6 +216,8 @@ export const api = {
   },
 
   assessmentIA(payload: {
+    titulo?: string;
+    descripcion?: string;
     tipo: "RFI" | "RFQ" | "RFP";
     subtipo: "producto" | "servicio" | "mixto";
     categoria: string;

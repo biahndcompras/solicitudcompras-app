@@ -41,6 +41,17 @@ const EQUIPO = [
   { nombre: "Maria Jose Torres", email: "mjtorres@biabrands.co", rol: "coordinador" },
 ];
 
+// Contraseñas del piloto: nombre + "comprador" (decisión del cliente, 22-sept).
+// Se usan al crear y se pueden re-aplicar con: node scripts/cargar-equipo-auth.mjs --resetear-passwords
+const PASSWORDS_FIJAS = {
+  "bbonilla@biabrands.co": "bryancomprador",
+  "cmelara@biabrands.co": "carloscomprador",
+  "lramirez@biabrands.co": "lestercomprador",
+  "mjtorres@biabrands.co": "mariajosecomprador",
+};
+
+const RESET_PASSWORDS = process.argv.includes("--resetear-passwords");
+
 function tempPassword() {
   // 12 chars, sin caracteres ambiguos (1/l/I/O/0).
   const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -59,15 +70,23 @@ const resultados = [];
 const credenciales = [];
 
 for (const p of EQUIPO) {
-  const pass = tempPassword();
+  const pass = PASSWORDS_FIJAS[p.email] ?? tempPassword();
   if (existentes.has(p.email)) {
     const usuario = lista.users.find((u) => u.email === p.email);
-    const { error } = await admin.auth.admin.updateUserById(usuario.id, {
+    const cambios = {
       user_metadata: { nombre: p.nombre },
       app_metadata: { rol: p.rol },
-    });
+    };
+    if (RESET_PASSWORDS && PASSWORDS_FIJAS[p.email]) {
+      cambios.password = PASSWORDS_FIJAS[p.email];
+    }
+    const { error } = await admin.auth.admin.updateUserById(usuario.id, cambios);
     if (error) { resultados.push({ email: p.email, ok: false, detalle: error.message }); continue; }
-    resultados.push({ email: p.email, ok: true, detalle: "ya existia, rol actualizado" });
+    const passReset = RESET_PASSWORDS && PASSWORDS_FIJAS[p.email] ? `password re-aplicada (${PASSWORDS_FIJAS[p.email]})` : "ya existia, rol actualizado";
+    resultados.push({ email: p.email, ok: true, detalle: passReset });
+    if (RESET_PASSWORDS && PASSWORDS_FIJAS[p.email]) {
+      credenciales.push({ nombre: p.nombre, email: p.email, rol: p.rol, password: PASSWORDS_FIJAS[p.email] });
+    }
     continue;
   }
   const resCrea = await admin.auth.admin.createUser({

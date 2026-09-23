@@ -80,4 +80,10 @@ describe("formatoFechaLegible / fechaInput", () => {
     expect(fechaInput("ilegible")).toBe("");
     expect(fechaInput(undefined)).toBe("");
   });
+
+  it("YYYY-MM-DD se interpreta como fecha local (sin corrimiento de un día)", () => {
+    expect(formatoFechaLegible("2026-11-15")).toContain("15");
+    expect(formatoFechaLegible("2026-11-15")).not.toContain("14");
+    expect(fechaInput("2026-11-15")).toBe("2026-11-15");
+  });
 });

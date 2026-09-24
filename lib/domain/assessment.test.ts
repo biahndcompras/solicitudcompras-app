@@ -50,14 +50,15 @@ describe("assessment_requerimiento", () => {
     expect(r.sin_preguntas_pendientes).toBe(true);
   });
 
-  it("marca crítico el logo cuando hay branding sin archivo (B2)", async () => {
+  it("no pregunta el logo ni el toggle de branding (los cubre la UI — REGLA 8/B2)", async () => {
     const r = await assessment_requerimiento({
       camposCapturados: capturados(["dimensiones", "materiales"]),
       camposDisponiblesCatalogo: catalogo,
       llevaBranding: true,
     });
-    const logo = r.preguntas.find((p) => p.campoKey === "archivo_logo");
-    expect(logo?.critica).toBe(true);
+    const keys = r.preguntas.map((p) => p.campoKey);
+    expect(keys).not.toContain("archivo_logo");
+    expect(keys).not.toContain("marca_branding");
   });
 
   it("descarta campos no existentes en el catálogo (validación dura)", async () => {
@@ -75,10 +76,66 @@ describe("assessment_requerimiento", () => {
       camposCapturados: [],
       camposDisponiblesCatalogo: plantilla,
       tipo: "RFQ",
-      subtipo: "servicio",
+      subtipo: "producto",
     });
     const keys = r.preguntas.map((p) => p.campoKey);
     // Los campos de plantilla (assessment) lideran el orden de preguntas.
     expect(keys).toContain("dimensiones");
+  });
+
+  it("filtra campos por subtipo (producto no ve campos de servicio)", async () => {
+    const conServicio: CampoCatalogo[] = [
+      ...catalogo,
+      { campoKey: "alcance_servicio", label: "Alcance del servicio", tipoDato: "texto_largo", obligatorio: false, origen: "assessment", orden: 5, activo: true },
+      { campoKey: "periodicidad", label: "Periodicidad", tipoDato: "seleccion", obligatorio: false, origen: "assessment", orden: 6, activo: true },
+    ];
+    const producto = await assessment_requerimiento({
+      camposCapturados: [],
+      camposDisponiblesCatalogo: conServicio,
+      titulo: "Pintura de aceite para fachada",
+      subtipo: "producto",
+    });
+    const keys = producto.preguntas.map((p) => p.campoKey);
+    expect(keys).not.toContain("alcance_servicio");
+    expect(keys).not.toContain("periodicidad");
+
+    const servicio = await assessment_requerimiento({
+      camposCapturados: [],
+      camposDisponiblesCatalogo: conServicio,
+      titulo: "Servicio de limpieza",
+      subtipo: "servicio",
+    });
+    const keysServicio = servicio.preguntas.map((p) => p.campoKey);
+    expect(keysServicio).not.toContain("dimensiones");
+    expect(keysServicio).toContain("alcance_servicio");
+  });
+
+  it("redacta preguntas en lenguaje natural con el producto en contexto (nunca labels crudos)", async () => {
+    const r = await assessment_requerimiento({
+      camposCapturados: [],
+      camposDisponiblesCatalogo: catalogo,
+      titulo: "Pintura de aceite para fachada de almacen",
+      subtipo: "producto",
+    });
+    expect(r.preguntas.length).toBeGreaterThan(0);
+    for (const p of r.preguntas) {
+      expect(p.pregunta).toMatch(/[¿?]/); // es una pregunta, no un label
+      expect(p.pregunta.length).toBeGreaterThan(p.campoKey.length + 5);
+    }
+    expect(r.preguntas.some((p) => /pintura/i.test(p.pregunta))).toBe(true);
+  });
+
+  it("ofrece sugerencias del catálogo como chips cuando hay opciones", async () => {
+    const conOpciones: CampoCatalogo[] = [
+      { campoKey: "calidad", label: "Calidad", tipoDato: "seleccion", catalogoOpciones: "Estándar,Premium", obligatorio: false, origen: "assessment", orden: 1, activo: true },
+    ];
+    const r = await assessment_requerimiento({
+      camposCapturados: [],
+      camposDisponiblesCatalogo: conOpciones,
+      titulo: "Pintura",
+      subtipo: "producto",
+    });
+    const calidad = r.preguntas.find((p) => p.campoKey === "calidad");
+    expect(calidad?.sugerencias).toEqual(["Estándar", "Premium"]);
   });
 });

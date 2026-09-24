@@ -41,7 +41,7 @@ async function ejecutarUna<I, O>(
     { role: "user", content: reemplazar(prompt.userPromptTemplate, renderVars(input)) },
   ];
 
-  const modelos = [getModel(), getFallbackModel()];
+  const modelos = [getModel(funcion), getFallbackModel()];
 
   for (const modelo of modelos) {
     const controller = new AbortController();
@@ -57,17 +57,35 @@ async function ejecutarUna<I, O>(
       const validado = schemaSalida.parse(parsed);
       return validado;
     } catch (e) {
+      const detalle = e instanceof Error ? e.message : String(e);
       if (modelo === modelos[modelos.length - 1]) {
-        console.warn(`[IA] ${funcion} falló (modelo=${modelo}):`, e);
+        console.warn(`[IA] ${funcion} falló (modelo=${modelo}): ${detalle}`);
         return null;
       }
-      console.warn(`[IA] ${funcion} falló con ${modelo}, reintentando fallback…`);
+      console.warn(`[IA] ${funcion} falló con ${modelo}: ${detalle} — reintentando con ${getFallbackModel()}…`);
     } finally {
       clearTimeout(timer);
     }
   }
 
   return null;
+}
+
+// Re-mapea un campoKey devuelto por la IA al catálogo vigente (tolerante a variantes
+// como "Material" vs "materiales" o "color" vs "color_acabado"). Antes, un solo campoKey
+// no exacto hacía descartar la pregunta EN SILENCIO y el usuario caía al fallback genérico.
+export function resolverCampoKey(clave: string, catalogo: string[]): string | null {
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  const exacta = catalogo.find((c) => c === clave);
+  if (exacta) return exacta;
+  const n = norm(clave);
+  const porNorm = catalogo.find((c) => norm(c) === n);
+  if (porNorm) return porNorm;
+  const porContencion = catalogo.find((c) => {
+    const cn = norm(c);
+    return cn.includes(n) || n.includes(cn);
+  });
+  return porContencion ?? null;
 }
 
 export async function clasificar(input: ClasificarInput): Promise<ClasificarOutput | null> {
@@ -104,8 +122,22 @@ export async function assessment(input: AssessmentInput): Promise<AssessmentOutp
     getTimeout("assessment"),
   );
   if (!salida) return null;
-  // RN-02: filtramos cualquier campoKey devuelto fuera del catálogo vigente.
-  const preguntas = salida.preguntas.filter((p) => clavesValidas.has(p.campoKey));
+  // RN-02: todo campoKey debe existir en el catálogo vigente — pero se intenta
+  // re-mapear variantes antes de descartar, y lo descartado queda en el log.
+  const catalogoClaves = [...clavesValidas];
+  const preguntas: typeof salida.preguntas = [];
+  const descartadas: string[] = [];
+  for (const p of salida.preguntas) {
+    const resuelta = resolverCampoKey(p.campoKey, catalogoClaves);
+    if (resuelta) {
+      preguntas.push({ ...p, campoKey: resuelta });
+    } else {
+      descartadas.push(p.campoKey);
+    }
+  }
+  if (descartadas.length > 0) {
+    console.warn(`[IA] assessment: ${descartadas.length} pregunta(s) descartada(s) por campoKey fuera del catálogo: ${descartadas.join(", ")}`);
+  }
   return { ...salida, preguntas };
 }
 

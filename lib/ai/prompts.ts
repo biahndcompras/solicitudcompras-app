@@ -47,7 +47,25 @@ CÓMO RAZONAR (obligatorio):
 ${GUARDRAILS_COMUNES}
 REGLA 7: Todo campoKey devuelto DEBE existir en el catálogo provisto. Si no hay campoKey en el catálogo relevante, no inventes campos.
 REGLA 8: Para el logo (campoKey "archivo_logo" o similar): NO preguntes "¿podés subir el logo?" — el sistema ya tiene su componente de carga de logo/arte arriba. Pregunta solo aspectos que falten (formato vectorial / alta resolución). No dupliques la carga.
-REGLA 10: el catálogo puede incluir campos de otros rubros; solo debés preguntar los que apliquen a ESTA solicitud concreta.`,
+REGLA 10: el catálogo puede incluir campos de otros rubros; solo debés preguntar los que apliquen a ESTA solicitud concreta.
+REGLA 11: PROHIBIDO devolver el label del catálogo tal cual como pregunta ("Dimensiones", "Materiales"). Redactá SIEMPRE la pregunta en lenguaje natural mencionando el producto.
+REGLA 12: si el producto/servicio es identificable a partir del título o la descripción, NUNCA devuelvas contexto_insuficiente=true; razoná sobre su rubro aunque la descripción sea corta.
+
+EJEMPLOS DEL NIVEL ESPERADO:
+
+Ejemplo A — Título: "Pintura de aceite para fachada de almacen" / Descripción: "Pintura de aceite para pintar la fachada del almacén que tenga protección contra agua y humedades":
+- campoKey: "materiales" → pregunta: "¿Qué tipo de pintura preferís para la fachada: esmalte sintético, oleo o línea acrílica con protección antimoho?" sugerencias: ["Esmalte sintético", "Óleo al aceite", "Acrílica antimoho"]
+- campoKey: "cantidad" → pregunta: "¿Cuántos galones de pintura necesitás y a cuántos m² por galón debe rendir?" sugerencias: ["5 galones", "10 galones", "Según m² de fachada"]
+- campoKey: "color_acabado" → pregunta: "¿Qué color y acabado debe tener la pintura de fachada?" sugerencias: ["Blanco mate", "Beige satinado", "Color corporativo"]
+- campoKey: "calidad" → pregunta: "¿Qué nivel de durabilidad esperás para exterior (estándar 2 años o premium 5 años)?" sugerencias: ["Estándar", "Premium"]
+
+Ejemplo B — Título: "Servicio de limpieza de oficinas" / Descripción: "Limpieza diaria de oficinas":
+- campoKey: "alcance_servicio" → pregunta: "¿Qué áreas incluye la limpieza diaria (pisos, baños, cocina, ventanas)?" sugerencias: ["Áreas comunes", "Oficinas + baños", "Integral incluye ventanas"]
+- campoKey: "periodicidad" → pregunta: "¿Con qué frecuencia se necesita la limpieza?" sugerencias: ["Diaria", "3 veces por semana", "Semanal"]
+
+Ejemplo C — Título: "Pelota de fútbol" (Descripción: "pelota de futbol para una actividad de marketing"):
+- campoKey: "cantidad" → pregunta: "¿Cuántas pelotas de fútbol se requieren?" sugerencias: ["50 unidades", "100 unidades", "200 unidades"]
+- campoKey: "materiales" → pregunta: "¿De qué material deben ser las pelotas?" sugerencias: ["Cuero sintético", "TPU", "PVC"]`,
   userPromptTemplate: `LO QUE PIDE EL SOLICITANTE:
 - Título: "{{titulo}}"
 - Descripción: "{{descripcion}}"
@@ -58,7 +76,7 @@ Categoría: {{categoria}}
 Campos ya capturados: {{camposCapturados}}
 Catálogo disponible: {{catalogo}}
 
-Identificá primero qué es el producto/servicio. Si podés razonar sobre su rubro, devolvé hasta 10 preguntas con sugerencias concretas del rubro. Si la descripción no alcanza, devolvé contexto_insuficiente=true y preguntas_contexto en vez de inventar. Si todo está cubierto, sin_preguntas_pendientes: true. Entrega el JSON con claves en snake_case.`,
+Identificá primero qué es el producto/servicio. Seguí el nivel de los EJEMPLOS: preguntas concretas del rubro con sugerencias reales seleccionables. Si la descripción no alcanza para identificar el rubro (nada del EJEMPLO A/B/C aplica), devolvé contexto_insuficiente=true y preguntas_contexto en vez de inventar. Si todo está cubierto, sin_preguntas_pendientes: true. Entrega el JSON con claves en snake_case.`,
 };
 
 export const EXTRAER_COTIZACION: z.infer<typeof FuncionPromptSchema> = {

@@ -49,26 +49,55 @@ const normalizarPregunta = (raw: unknown): unknown => {
   return o;
 };
 
+// Las sugerencias vienen como strings, pero algunos modelos devuelven objetos
+// ({texto} / {valor} / {sugerencia}) o strings vacíos. Normalizamos y limpiamos
+// sin descartar la pregunta entera.
+const normalizarSugerencias = (raw: unknown): unknown => {
+  if (!Array.isArray(raw)) return raw;
+  return raw
+    .map((s) => {
+      if (typeof s === "string") return s;
+      if (s && typeof s === "object") {
+        const o = s as Record<string, unknown>;
+        return String(o.texto ?? o.valor ?? o.sugerencia ?? o.label ?? o.text ?? "");
+      }
+      return String(s ?? "");
+    })
+    .filter((s) => s.trim().length > 0);
+};
+
+// Booleanos tolerantes: "true"/"false"/1/0 → boolean.
+const booleanoTolerante = z.preprocess(
+  (v) => (v === "true" ? true : v === "false" ? false : v === 1 ? true : v === 0 ? false : v),
+  z.boolean()
+);
+
 export const PreguntaAssessmentSchema = z.object({
   campoKey: z.string().min(1),
   pregunta: z.string().default(""),
   por_que: z.string().default(""),
-  critica: z.boolean().default(false),
+  critica: booleanoTolerante.default(false),
   ejemplo_respuesta: z.string().optional(),
-  sugerencias: z
-    .array(z.string().transform((s) => s.trim().slice(0, 80)).pipe(z.string().max(80)))
-    .max(3)
-    .optional(),
-});
+  sugerencias: z.preprocess(normalizarSugerencias, z.array(z.string()).max(6)).optional(),
+}).transform((p) => ({
+  ...p,
+  sugerencias: p.sugerencias
+    ?.map((s) => s.trim().slice(0, 80))
+    .filter((s) => s.length > 0)
+    .slice(0, 3),
+}));
 
 export const AssessmentOutputSchema = z.object({
   preguntas: z.array(z.preprocess(normalizarPregunta, PreguntaAssessmentSchema)).max(10),
   contexto_investigado: z.string().default(""),
-  sin_preguntas_pendientes: z.boolean().optional(),
+  sin_preguntas_pendientes: booleanoTolerante.optional(),
   // F2: si la descripción no alcanza para razonar sobre el producto/rubro, el modelo
   // lo declara en vez de inventar sugerencias genéricas; el wizard pide más contexto.
-  contexto_insuficiente: z.boolean().default(false),
-  preguntas_contexto: z.array(z.string()).max(5).default([]),
+  contexto_insuficiente: booleanoTolerante.default(false),
+  preguntas_contexto: z.preprocess(
+    (v) => (Array.isArray(v) ? v.map((s) => String(s)).filter((s) => s.trim().length > 0) : v),
+    z.array(z.string()).max(5)
+  ).default([]),
 }).transform((d) => ({
   preguntas: d.preguntas,
   contexto_investigado: d.contexto_investigado,

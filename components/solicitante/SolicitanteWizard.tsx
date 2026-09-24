@@ -395,7 +395,21 @@ function PasoDetalles({
 }) {
   const [contextoExtra, setContextoExtra] = useState("");
   return (
-    <div className="flex flex-col min-h-full w-full step-enter pb-4">
+    <div className="flex flex-col min-h-full w-full step-enter pb-4 relative">
+      {/* P5: loader grande y centrado mientras el asistente genera las preguntas */}
+      {evaluandoAssessment ? (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-5 bg-white/80 backdrop-blur-[3px] rounded-2xl" role="status" aria-live="polite">
+          <svg className="animate-spin text-sky-600" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <circle cx="12" cy="12" r="10" opacity="0.2" />
+            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+          </svg>
+          <div className="text-xl font-bold text-slate-900">Preparando preguntas del asistente…</div>
+          <div className="text-sm text-slate-500">Analizando tu solicitud para preguntar lo que los proveedores necesitan</div>
+          <div className="w-56 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+            <div className="h-full w-1/3 rounded-full bg-sky-500 animate-pulse" />
+          </div>
+        </div>
+      ) : null}
       <div className="mb-6">
         <h2 className="text-2xl font-medium tracking-tight mb-1">Detalles para cotizar</h2>
         <p className="text-xs text-slate-500">Completá la información técnica requerida para tu solicitud.</p>
@@ -597,12 +611,6 @@ function PasoDetalles({
       <div className="mt-auto flex justify-between items-center pt-6 pb-4 gap-4">
         <button onClick={anterior} className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors px-2 py-2">Atrás</button>
         <div className="flex items-center gap-3">
-          {evaluandoAssessment ? (
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-              <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
-              Preparando preguntas del asistente…
-            </span>
-          ) : null}
           <button onClick={siguiente} disabled={!pasoValido || evaluandoAssessment} className="bg-slate-900 text-white text-xs px-6 py-3 rounded-full font-medium hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2">
             Generar documento
             <svg className="text-sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/></svg>

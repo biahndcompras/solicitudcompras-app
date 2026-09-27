@@ -34,7 +34,7 @@ export function ComparativaView({ solicitudId, comparativa, cotizaciones, onCont
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
           <h3 className="text-lg font-semibold tracking-tight text-slate-900">08 · Comparativa generada</h3>
-          <p className="text-[11px] text-slate-500 mt-1">Moneda original por proveedor. Si no desglosa impuestos: «⚠ no especifica» (RN-06).</p>
+          <p className="text-xs text-slate-500 mt-1">Moneda original por proveedor. Si no desglosa impuestos: «⚠ no especifica» (RN-06).</p>
         </div>
         <div className="flex items-center gap-2">
           <a
@@ -57,7 +57,7 @@ export function ComparativaView({ solicitudId, comparativa, cotizaciones, onCont
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 20V9M10 20V4M16 20v-9M22 20H2"/></svg>
             Observación de especificación
           </div>
-          <div className="text-[11px] text-amber-800 mt-1">{comparativa.discrepanciasDetectadas[0]?.explicacion}</div>
+          <div className="text-xs text-amber-800 mt-1">{comparativa.discrepanciasDetectadas[0]?.explicacion}</div>
         </div>
       ) : null}
 

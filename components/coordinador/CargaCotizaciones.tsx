@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { Cotizacion } from "@/lib/domain/types";
 import { api } from "@/lib/api-client";
+import { Modal } from "./Modal";
 
 type CargaCotizacionesProps = {
   solicitudId: string;
@@ -138,12 +139,28 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
 
   return (
     <div className="step-enter">
-      <div className="flex items-start justify-between gap-4 mb-5">
+      {/* Cabecera: en una solicitud terminal la vista es de consulta. Sin imperativos
+          ni umbral de "mínimo 2": el ciclo ya terminó y no hay nada que hacer acá (P1-4). */}
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
-          <h3 className="text-xl font-bold tracking-tight text-slate-900">Cotizaciones de proveedores</h3>
-          <p className="text-sm text-slate-500 mt-1">Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea.</p>
+          <h3 className="text-xl font-bold tracking-tight text-slate-900">
+            {soloLectura ? "Cotizaciones registradas" : "Cotizaciones de proveedores"}
+          </h3>
+          <p className="text-sm text-slate-500 mt-1">
+            {soloLectura
+              ? count === 0
+                ? "No se registraron ofertas de proveedores para comparar. El ciclo está cerrado."
+                : `Estas son las ${count} ${count === 1 ? "oferta cargada" : "ofertas cargadas"} con las que se comparó esta solicitud. El ciclo está cerrado.`
+              : "Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea."}
+          </p>
         </div>
-        <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl">Mínimo 2 para comparativa</div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl">
+          {soloLectura
+            ? count === 0
+              ? "Sin ofertas"
+              : `${count} ${count === 1 ? "registrada" : "registradas"}`
+            : "Mínimo 2 para comparativa"}
+        </div>
       </div>
 
       {error ? (
@@ -157,7 +174,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
           <button
             type="button"
             onClick={() => { setMostrandoForm((v) => !v); setError(null); }}
-            className="w-full mb-5 border-2 border-dashed border-slate-300 rounded-2xl py-5 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:border-sky-400 hover:text-sky-600 hover:bg-sky-50/40 transition-all"
+            className="w-full mb-5 border-2 border-dashed border-slate-300 rounded-2xl py-5 min-h-[44px] flex items-center justify-center gap-2 text-sm font-semibold text-sky-800 hover:border-sky-400 hover:text-sky-900 hover:bg-sky-50/40 transition-all"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
             {mostrandoForm ? "Cancelar" : "Agregar cotización manual"}
@@ -249,12 +266,14 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
       <div className="space-y-4">
         {cotizaciones.map((c, idx) => {
           const esEditando = editandoId === c.id;
+          const bajaConfianza = camposBajaConfianza(c);
+          const observacionFiscal = c.observacionesFiscales;
           return (
             <div key={c.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="flex items-start justify-between gap-4 p-5">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 p-5">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={"px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider border " + (c.formatoOriginal === "manual" ? "bg-slate-100 text-slate-600 border-slate-200" : "bg-sky-50 text-sky-700 border-sky-200")}>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className={"px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border " + tonoFormato(c)}>
                       {c.formatoOriginal === "manual" ? "Manual" : c.formatoOriginal.toUpperCase()}
                     </span>
                     <span className="text-base font-semibold text-slate-900">{c.proveedorNombre}</span>
@@ -268,31 +287,49 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
                     {c.fechaCarga ? <span className="text-xs text-slate-400">({new Date(c.fechaCarga).toLocaleDateString("es-HN")})</span> : null}
                   </div>
 
-                  {camposBajaConfianza(c).length > 0 ? (
-                    <div className="mt-3 flex items-start gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                      <span className="text-sm">
-                        Revisión manual requerida: campos con baja confianza de extracción — <span className="font-semibold">{camposBajaConfianza(c).join(", ")}</span>. Verificá estos datos antes de generar la comparativa.
-                      </span>
-                    </div>
+                  {bajaConfianza.length > 0 ? (
+                    /* Aviso accionable solo si la solicitud sigue viva: en una terminal
+                       se convierte en registro de lo que se detectó (P1-4). */
+                    soloLectura ? (
+                      <div className="mt-3 flex items-start gap-2 text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 shrink-0 text-slate-500"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <span className="text-sm">
+                          Campos que la IA marcó con baja confianza de extracción: <span className="font-semibold">{bajaConfianza.join(", ")}</span>. El ciclo está cerrado, así que no queda acción pendiente sobre ellos.
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="mt-3 flex items-start gap-2 text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <span className="text-sm">
+                          Revisión manual requerida: campos con baja confianza de extracción — <span className="font-semibold">{bajaConfianza.join(", ")}</span>. Verificá estos datos antes de generar la comparativa.
+                        </span>
+                      </div>
+                    )
                   ) : null}
 
                   {mostrarConfianza(c) ? (
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                       <span className="uppercase tracking-wider text-slate-400 font-semibold">Confianza IA:</span>
                       {Object.entries(c.confianzaExtraccion ?? {}).filter(([, v]) => v !== undefined).map(([k, v]) => (
-                        <span key={k} className={"inline-flex items-center gap-1 px-2 py-0.5 rounded-full border " + (v! < 0.5 ? "bg-amber-50 border-amber-200 text-amber-700" : v! < 0.8 ? "bg-slate-50 border-slate-200 text-slate-600" : "bg-emerald-50 border-emerald-200 text-emerald-700")}>
+                        <span key={k} className={"inline-flex items-center gap-1 px-2 py-0.5 rounded-full border " + tonoConfianza(v!)}>
                           {nombreCampo(k)} {Math.round(v! * 100)}%
                         </span>
                       ))}
                     </div>
                   ) : null}
 
-                  {c.observacionesFiscales ? (
-                    <div className="mt-3 flex items-start gap-2 text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 shrink-0"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                      <span className="text-sm"><span className="font-semibold">Revisión fiscal:</span> {c.observacionesFiscales}</span>
-                    </div>
+                  {observacionFiscal ? (
+                    soloLectura ? (
+                      <div className="mt-3 flex items-start gap-2 text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 shrink-0 text-slate-500"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                        <span className="text-sm">El análisis de esta oferta quedó con una observación fiscal. El detalle está en el historial de la solicitud; como el ciclo está cerrado, no queda ninguna acción pendiente.</span>
+                      </div>
+                    ) : (
+                      <div className="mt-3 flex items-start gap-2 text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 shrink-0"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                        <span className="text-sm"><span className="font-semibold">Revisión fiscal:</span> {observacionFiscal}</span>
+                      </div>
+                    )
                   ) : null}
 
                   {faseSubida === c.id ? (
@@ -303,12 +340,12 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
                   ) : null}
                 </div>
 
-                <div className="shrink-0 flex items-center gap-2">
+                <div className="w-full sm:w-auto sm:shrink-0 flex flex-wrap items-center gap-2 sm:justify-end">
                   {!soloLectura ? (
                     <>
                       <label
                         htmlFor={`file-${c.id}`}
-                        className={"inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl border shadow-sm transition-colors cursor-pointer " + (c.formatoOriginal !== "manual" ? "text-green-700 bg-green-50/60 border-green-200" : "text-slate-700 hover:text-slate-900 bg-white border-slate-200")}
+                        className={"inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl border shadow-sm transition-colors cursor-pointer " + tonoAdjuntar(c)}
                       >
                         {c.formatoOriginal !== "manual" ? (
                           <>
@@ -355,7 +392,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
                       <button
                         type="button"
                         onClick={() => setBorrandoId(c.id)}
-                        className="inline-flex items-center p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 p-2 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors"
                         aria-label={`Eliminar ${c.proveedorNombre}`}
                       >
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14"/></svg>
@@ -382,15 +419,24 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
             <div className="mx-auto w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center mb-3">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M9 12h6M9 16h6M9 8h1"/></svg>
             </div>
-            <div className="text-base font-semibold text-slate-900">Todavía no hay cotizaciones</div>
-            <div className="text-sm text-slate-500 mt-1">Agregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.</div>
+            {soloLectura ? (
+              <>
+                <div className="text-base font-semibold text-slate-900">No se registraron cotizaciones</div>
+                <div className="text-sm text-slate-500 mt-1">Esta solicitud se cerró sin ofertas de proveedores cargadas.</div>
+              </>
+            ) : (
+              <>
+                <div className="text-base font-semibold text-slate-900">Todavía no hay cotizaciones</div>
+                <div className="text-sm text-slate-500 mt-1">Agregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.</div>
+              </>
+            )}
           </div>
         ) : null}
       </div>
 
       {!soloLectura ? (
         <div className="mt-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
             <div>
               <div className="text-base font-semibold text-slate-900">Generar comparativa</div>
               {count < 2 ? (
@@ -406,7 +452,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
               type="button"
               disabled={count < 2}
               onClick={() => setConfirmarGenerar(true)}
-              className="bg-slate-900 text-white text-sm px-6 py-3 rounded-full font-semibold hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              className="w-full sm:w-auto justify-center bg-slate-900 text-white text-sm px-6 py-3 min-h-[44px] rounded-full font-semibold hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
             >
               Generar comparativa
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
@@ -417,8 +463,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
 
       {/* Confirmación de borrado */}
       {borrandoId ? (
-        <Modal onCerrar={() => setBorrandoId(null)}>
-          <div className="text-base font-semibold text-slate-900">¿Eliminar esta cotización?</div>
+        <Modal onCerrar={() => setBorrandoId(null)} titulo="¿Eliminar esta cotización?">
           <p className="text-sm text-slate-500 mt-2">La oferta de {cotizaciones.find((c) => c.id === borrandoId)?.proveedorNombre} se quitará de la solicitud. No se puede deshacer.</p>
           <div className="mt-6 flex justify-end gap-3">
             <button type="button" onClick={() => setBorrandoId(null)} className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
@@ -433,8 +478,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
 
       {/* Confirmación de generar comparativa */}
       {confirmarGenerar ? (
-        <Modal onCerrar={() => setConfirmarGenerar(false)}>
-          <div className="text-base font-semibold text-slate-900">Generar comparativa?</div>
+        <Modal onCerrar={() => setConfirmarGenerar(false)} titulo="Generar comparativa?">
           <p className="text-sm text-slate-500 mt-2">La IA analizará las {count} cotizaciones cargadas. Podés volver a esta vista y seguir editando después.</p>
           <div className="mt-6 flex justify-end gap-3">
             <button type="button" onClick={() => setConfirmarGenerar(false)} className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
@@ -446,17 +490,6 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
           </div>
         </Modal>
       ) : null}
-    </div>
-  );
-}
-
-function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onCerrar} />
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md relative z-10 p-6 step-enter">
-        {children}
-      </div>
     </div>
   );
 }
@@ -510,6 +543,24 @@ function numero(s?: string): number | null {
   if (!s || s.trim() === "") return null;
   const n = Number(s.replace(/[^\d.-]/g, ""));
   return Number.isFinite(n) ? n : null;
+}
+
+// Tonos de los badges. Cada matiz usa su primer tono sobre su fondo tintado: un
+// `text-slate-*` sobre `bg-*-50` se lava (P3-12).
+function tonoFormato(c: Cotizacion): string {
+  if (c.formatoOriginal === "manual") return "bg-slate-100 text-slate-700 border-slate-200";
+  return "bg-sky-50 text-sky-800 border-sky-200";
+}
+
+function tonoConfianza(v: number): string {
+  if (v < 0.5) return "bg-amber-50 border-amber-200 text-amber-800";
+  if (v < 0.8) return "bg-slate-50 border-slate-200 text-slate-700";
+  return "bg-emerald-50 border-emerald-200 text-emerald-800";
+}
+
+function tonoAdjuntar(c: Cotizacion): string {
+  if (c.formatoOriginal !== "manual") return "text-green-800 bg-green-50/60 border-green-200";
+  return "text-slate-700 hover:text-slate-900 bg-white border-slate-200";
 }
 
 function camposBajaConfianza(c: Cotizacion): string[] {

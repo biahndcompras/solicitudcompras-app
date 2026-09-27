@@ -28,7 +28,7 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
       <div className="step-enter bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm relative overflow-hidden">
         <div className="absolute -top-16 -left-20 w-72 h-72 rounded-full bg-gradient-to-r from-emerald-200/30 to-sky-500/10 blur-[70px]" />
         <div className="relative">
-          <div className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-green-700 bg-green-100 px-2.5 py-1.5 rounded-xl">ENVIADA_A_SOLICITANTE</div>
+          <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-green-800 bg-green-100 px-2.5 py-1.5 rounded-xl">ENVIADA_A_SOLICITANTE</div>
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 mt-2">Comparativa enviada</h2>
           <p className="text-sm text-slate-500 mt-2 max-w-2xl">La solicitud queda en espera de la decisión del solicitante. El ciclo del coordinador termina aquí.</p>
 
@@ -36,20 +36,20 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
             <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
               <div className="text-xs font-semibold text-slate-900">Enlace público (token)</div>
               <div className="mt-2 flex items-center gap-2">
-                <input readOnly defaultValue={enlace?.url ?? "Generando enlace…"} title={enlace?.url} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-medium text-slate-700" />
-                <button onClick={() => { if (enlace) { navigator.clipboard?.writeText(enlace.url); setCopiado(true); } }} className="text-[11px] font-semibold uppercase tracking-wider text-slate-700 hover:text-slate-900 bg-white px-3 py-2 rounded-xl border border-slate-200">{copiado ? "Copiado" : "Copiar"}</button>
+                <input readOnly defaultValue={enlace?.url ?? "Generando enlace…"} title={enlace?.url} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700" />
+                <button onClick={() => { if (enlace) { navigator.clipboard?.writeText(enlace.url); setCopiado(true); } }} className="text-xs font-semibold uppercase tracking-wider text-slate-700 hover:text-slate-900 bg-white px-3 py-2 min-h-[44px] rounded-xl border border-slate-200">{copiado ? "Copiado" : "Copiar"}</button>
               </div>
-              <div className="text-[10px] text-slate-500 mt-2">Se incluye en el correo al solicitante.</div>
+              <div className="text-xs text-slate-500 mt-2">Se incluye en el correo al solicitante.</div>
             </div>
             <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
               <div className="text-xs font-semibold text-slate-900">Estado</div>
-              <div className="mt-2 text-[11px] text-slate-600 leading-relaxed">Transición: <span className="font-semibold text-slate-900">COMPARATIVA_LISTA → ENVIADA_A_SOLICITANTE</span></div>
-              <div className="mt-2 text-[11px] text-slate-600">Siguiente: <span className="font-semibold">Decisión del solicitante</span></div>
+              <div className="mt-2 text-xs text-slate-600 leading-relaxed">Transición: <span className="font-semibold text-slate-900">COMPARATIVA_LISTA → ENVIADA_A_SOLICITANTE</span></div>
+              <div className="mt-2 text-xs text-slate-600">Siguiente: <span className="font-semibold">Decisión del solicitante</span></div>
             </div>
             <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
               <div className="text-xs font-semibold text-slate-900">Notificación</div>
-              <div className="mt-2 text-[11px] text-slate-600 leading-relaxed">Correo 3 disparado al solicitante con el enlace público.</div>
-              <div className="mt-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              <div className="mt-2 text-xs text-slate-600 leading-relaxed">Correo 3 disparado al solicitante con el enlace público.</div>
+              <div className="mt-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
                 Entregado (simulado)
               </div>
@@ -64,7 +64,7 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
     <div className="step-enter">
       <div className="mb-4">
         <h3 className="text-lg font-semibold tracking-tight text-slate-900">09 · Recomendación</h3>
-        <p className="text-[11px] text-slate-500 mt-1">Punto de control humano (RN-01). Podés contradecir la sugerencia de la IA sin fricción.</p>
+        <p className="text-xs text-slate-500 mt-1">Punto de control humano (RN-01). Podés contradecir la sugerencia de la IA sin fricción.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
@@ -73,8 +73,8 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
           return (
             <div key={c.id} className={"bg-white rounded-2xl border p-4 shadow-sm " + (c.id === cotizacionSugeridaId ? "border-sky-200 ring-1 ring-sky-500/20" : "border-slate-200/60")}>
               <div className="text-xs font-semibold text-slate-900">{c.proveedorNombre}</div>
-              <div className="text-[11px] text-slate-500 mt-1">Total: <span className="font-semibold text-slate-900">{c.moneda ?? "L"} {formato(c.valorTotal)}</span></div>
-              <div className="mt-3 text-[11px]">
+              <div className="text-xs text-slate-500 mt-1">Total: <span className="font-semibold text-slate-900">{c.moneda ?? "L"} {formato(c.valorTotal)}</span></div>
+              <div className="mt-3 text-xs">
                 <div className="text-green-700 font-semibold">✓ Pros</div>
                 <ul className="mt-1 space-y-1 text-slate-600">{(pc?.pros ?? []).map((p) => <li key={p}>{p}</li>)}</ul>
                 <div className="mt-2 text-rose-700 font-semibold">✗ Contras</div>
@@ -90,14 +90,14 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
           <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-sky-500/10 blur-[45px]" />
           <div className="relative">
             <div className="flex items-center gap-2 mb-2">
-              <span className="bg-sky-500 text-white text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wider flex items-center gap-1">
+              <span className="bg-sky-700 text-white text-xs font-semibold px-2 py-1 rounded uppercase tracking-wider flex items-center gap-1">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 3 3 5 6 1-4 4 1 6-6-2-6 2 1-6-4-4 6-1z"/></svg>
                 Sugerencia del asistente (IA)
               </span>
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Solo un insumo</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Solo un insumo</span>
             </div>
             <div className="text-sm font-semibold text-slate-900">Proveedor sugerido: {sugerida?.proveedorNombre ?? "—"}</div>
-            <div className="text-[11px] text-slate-600 mt-1 leading-relaxed">{sugerenciaIA}</div>
+            <div className="text-xs text-slate-600 mt-1 leading-relaxed">{sugerenciaIA}</div>
           </div>
         </div>
       ) : null}
@@ -114,7 +114,7 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:bg-white transition-all resize-none"
         />
         {bloqueado ? (
-          <div className="mt-2 text-[11px] text-amber-700 flex items-start gap-2">
+          <div className="mt-2 text-xs text-amber-800 flex items-start gap-2">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-[1px]"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
             Escribí tu recomendación antes de enviar. El solicitante decide, pero tu criterio es lo que más le sirve para decidir.
           </div>
@@ -138,9 +138,9 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
           </button>
         </div>
         {errorEnvio ? (
-          <div className="mt-2 rounded-xl px-3 py-2 text-[11px] text-rose-700 bg-rose-50 border border-rose-200">{errorEnvio}</div>
+          <div className="mt-2 rounded-xl px-3 py-2 text-xs text-rose-700 bg-rose-50 border border-rose-200">{errorEnvio}</div>
         ) : (
-          <div className="mt-2 text-[10px] text-slate-500">Bloqueo duro B3: se valida también en el servidor.</div>
+          <div className="mt-2 text-xs text-slate-500">Bloqueo duro B3: se valida también en el servidor.</div>
         )}
       </div>
     </div>

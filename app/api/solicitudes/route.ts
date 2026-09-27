@@ -2,8 +2,25 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { guardApi } from "@/lib/api-guard";
+import { ESTADOS_SOLICITUD, type EstadoSolicitud, type Solicitud } from "@/lib/domain/types";
 
 const repo = new PostgresRepositorio();
+
+// La bandeja del coordinador solo debe mostrar solicitudes ya enviadas a Compras.
+// Cualquier estado previo a `ENVIADA_A_COMPRAS` es trabajo en curso del solicitante:
+// no tiene categoría asignada, no se puede cotizar ni comparar, y en el panel se veía
+// como "gestión sana" que nunca avanza. Se excluye en la API (no en la UI) para que
+// ningún cliente — panel, export o integración — pueda leer un borrador ajeno (P1-3).
+// El conjunto se deriva del orden del ciclo de vida en `ESTADOS_SOLICITUD`, así que un
+// estado nuevo insertado antes de `ENVIADA_A_COMPRAS` se excluye solo (hoy: BORRADOR).
+const ESTADOS_PRE_ENVIO: EstadoSolicitud[] = ESTADOS_SOLICITUD.slice(
+  0,
+  ESTADOS_SOLICITUD.indexOf("ENVIADA_A_COMPRAS")
+);
+
+function soloEnviadasACompras(solicitudes: Solicitud[]): Solicitud[] {
+  return solicitudes.filter((s) => !ESTADOS_PRE_ENVIO.includes(s.estado));
+}
 
 const crearSchema = z.object({
   titulo: z.string().min(1),
@@ -57,6 +74,7 @@ export async function GET(request: Request) {
   if (auth.negada) return auth.negada;
   try {
     if (coordinadorId === "all") {
+      // Admin: vista de proceso completo, incluye borradores (los necesita para operar).
       const todas = await repo.listarTodas();
       return NextResponse.json(todas);
     }
@@ -66,7 +84,7 @@ export async function GET(request: Request) {
         { status: 400 }
       );
     }
-    const solicitudes = await repo.listarPorCoordinador(coordinadorId);
+    const solicitudes = soloEnviadasACompras(await repo.listarPorCoordinador(coordinadorId));
     return NextResponse.json(solicitudes);
   } catch {
     return NextResponse.json(

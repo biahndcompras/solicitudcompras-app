@@ -76,7 +76,9 @@ Categoría: {{categoria}}
 Campos ya capturados: {{camposCapturados}}
 Catálogo disponible: {{catalogo}}
 
-Identificá primero qué es el producto/servicio. Seguí el nivel de los EJEMPLOS: preguntas concretas del rubro con sugerencias reales seleccionables. Si la descripción no alcanza para identificar el rubro (nada del EJEMPLO A/B/C aplica), devolvé contexto_insuficiente=true y preguntas_contexto en vez de inventar. Si todo está cubierto, sin_preguntas_pendientes: true. Entrega el JSON con claves en snake_case.`,
+Identificá primero qué es el producto/servicio. Seguí el nivel de los EJEMPLOS: preguntas concretas del rubro con sugerencias reales seleccionables. Si la descripción no alcanza para identificar el rubro (nada del EJEMPLO A/B/C aplica), devolvé contexto_insuficiente=true y preguntas_contexto en vez de inventar. Si todo está cubierto, sin_preguntas_pendientes: true.
+
+contexto_investigado: dos o tres frases en segunda persona que le expliquen al solicitante QUÉ entendiste de su solicitud y POR QUÉ le preguntas eso. Tratá siempre de "vos" (necesitás, podés, contanos), nunca de "usted" ni en tercera persona. Ej.: "Entendí que necesitás pintar una fachada exterior de unos 800 m² con pintura epóxica. Las condiciones del clima y el rendimiento del material cambian cuánto vas a necesitar, así que te pregunto eso." Sin listas, sin repetir las preguntas, sin mencionar que eres una IA. Si no pudiste determinar el rubro, describe ahí la duda concreta. Entrega el JSON con claves en snake_case.`,
 };
 
 export const EXTRAER_COTIZACION: z.infer<typeof FuncionPromptSchema> = {

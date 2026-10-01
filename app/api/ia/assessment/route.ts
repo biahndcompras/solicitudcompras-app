@@ -71,15 +71,21 @@ export async function POST(request: Request) {
       subtipo: body.subtipo,
       camposCapturados: body.camposCapturados,
       camposDisponiblesCatalogo: catalogoFinal,
+      camposYaPreguntados: camposPlantilla.map((c) => c.campoKey),
       llevaBranding: body.llevaBranding,
       archivoLogo: body.archivoLogo,
     });
     return NextResponse.json({ ...res, camposPlantilla });
-    return NextResponse.json(res);
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: "Entrada inválida", detalles: e.issues }, { status: 400 });
     }
-    return NextResponse.json(null);
+    // Fallo del asistente o de infraestructura: 503 con mensaje genérico. Antes devolvía
+    // 200 + `null`, lo que hacía indistinguible "la IA no Late" de "el solicitante mandó
+    // basura" y ocultaba el error en cualquier monitoreo. El texto nunca sale de aquí.
+    return NextResponse.json(
+      { error: "El asistente no está disponible en este momento." },
+      { status: 503 }
+    );
   }
 }

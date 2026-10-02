@@ -1,0 +1,212 @@
+[
+  {
+    "tag": "desktop",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "tag": "movil390",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_ABORTED /solicitud/nueva?nuevo=1&email=mj.e2e%40biabrands.co&nombre=Solicitante%20E2E&area=Trade%20Marketing&_rsc=MNv2Sha2FkSS0rmE"
+  },
+  {
+    "tag": "movil390",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_ABORTED /solicitud/nueva?nuevo=1&email=mj.e2e%40biabrands.co&nombre=Solicitante%20E2E&area=Trade%20Marketing&_rsc=MNv2Sha2FkSS0rmE"
+  },
+  {
+    "tag": "errores",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_INTERNET_DISCONNECTED /_next/static/chunks/lib_api-client_ts_001lp54._.js"
+  },
+  {
+    "tag": "errores",
+    "tipo": "error",
+    "texto": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+  },
+  {
+    "tag": "errores",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_INTERNET_DISCONNECTED /_next/static/chunks/lib_api-client_ts_001lp54._.js"
+  },
+  {
+    "tag": "errores",
+    "tipo": "error",
+    "texto": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+  },
+  {
+    "tag": "errores",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_INTERNET_DISCONNECTED /_next/static/chunks/lib_api-client_ts_001lp54._.js"
+  },
+  {
+    "tag": "errores",
+    "tipo": "error",
+    "texto": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+  },
+  {
+    "tag": "errores",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_INTERNET_DISCONNECTED /_next/static/chunks/lib_api-client_ts_001lp54._.js"
+  },
+  {
+    "tag": "errores",
+    "tipo": "error",
+    "texto": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+  },
+  {
+    "tag": "errores",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_ABORTED /solicitud/nueva?nuevo=1&email=mj.e2e%40biabrands.co&nombre=Solicitante%20E2E&area=Trade%20Marketing&_rsc=MNv2Sha2FkSS0rmE"
+  },
+  {
+    "tag": "errores",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_ABORTED /solicitud/nueva?nuevo=1&email=mj.e2e%40biabrands.co&nombre=Solicitante%20E2E&area=Trade%20Marketing&_rsc=MNv2Sha2FkSS0rmE"
+  },
+  {
+    "tag": "errores",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_INTERNET_DISCONNECTED /api/solicitudes"
+  },
+  {
+    "tag": "errores",
+    "tipo": "error",
+    "texto": "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "tag": "MD",
+    "tipo": "pageerror",
+    "texto": "Error: ./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\""
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MD",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MM",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "tag": "MM",
+    "tipo": "pageerror",
+    "texto": "Error: ./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\""
+  },
+  {
+    "tag": "MM",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MM",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MM",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  },
+  {
+    "tag": "MM",
+    "tipo": "pageerror",
+    "texto": "Error: ./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\""
+  },
+  {
+    "tag": "MM",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MM",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MM",
+    "tipo": "error",
+    "texto": "./components/coordinador/CargaCotizaciones.tsx:454:10\nError: the name `Modal` is defined multiple times\n  452 | }\n  453 |\n> 454 | function Modal({ children, onCerrar }: { children: React.ReactNode; onCerrar: () => void ...\n      |          ^^^^^\n  455 |   return (\n  456 |     <div className=\"fixed i"
+  },
+  {
+    "tag": "MM",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_ABORTED /mis-solicitudes/d50dd0ba-3636-4458-99ff-866e6f43914c?email=mj.e2e%40biabrands.co&_rsc=veguLowWkMERhSoa"
+  },
+  {
+    "tag": "MM",
+    "tipo": "requestfailed",
+    "texto": "net::ERR_ABORTED /mis-solicitudes/ec31204d-2006-40b1-aef3-e91e343c320e?_rsc=vk5nIvbT1R5ePhCf"
+  },
+  {
+    "tag": "PD",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "tag": "PD",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "tag": "PM",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "tag": "PM",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "tag": "PS",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "tag": "PS",
+    "tipo": "error",
+    "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  }
+]

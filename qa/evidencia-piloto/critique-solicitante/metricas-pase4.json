@@ -1,0 +1,103 @@
+{
+  "P4-360x740-sin-scroll": {
+    "mainTop": 69,
+    "mainBottom": 735,
+    "sectionTop": 556,
+    "sectionBottom": 734,
+    "sectionH": 179,
+    "ctaTop": 786,
+    "ctaBottom": 826,
+    "ctaDentroDelViewport": false,
+    "ctaRecortadoPorElContenedor": true,
+    "pxDelCtaCortados": 91,
+    "sectionScrollTop": 470,
+    "sectionMaxScroll": 562,
+    "documentScrollY": 0,
+    "pageScrollable": true
+  },
+  "P4-360x740-con-scroll": {
+    "ctaTop": 694,
+    "ctaBottom": 734,
+    "viewportBottom": 740,
+    "mainBottom": 735,
+    "cta100pctVisible": true,
+    "hitTest": "Continuar"
+  },
+  "P4-360x740-paso3-cta": {
+    "sinScroll": {
+      "ctaTop": 701,
+      "ctaBottom": 757,
+      "mainBottom": 735,
+      "visible": false,
+      "recortadoPx": 22
+    },
+    "alturaTarjetaIA": {
+      "clientH": 56,
+      "scrollH": 368,
+      "pctVisible": 15,
+      "altoRender": 58
+    },
+    "mapaSidebar": {
+      "activo": [
+        "Captura Inicial",
+        "Clasificación [ACTIVO]",
+        "Detalles técnicos",
+        "Documento"
+      ],
+      "chip": "ESTADO ACTUAL | Borrador activo | Guardar borrador | Cancel"
+    }
+  },
+  "P4-390x844-sin-scroll": {
+    "mainTop": 74,
+    "mainBottom": 834,
+    "sectionTop": 561,
+    "sectionBottom": 833,
+    "sectionH": 272,
+    "ctaTop": 876,
+    "ctaBottom": 916,
+    "ctaDentroDelViewport": false,
+    "ctaRecortadoPorElContenedor": true,
+    "pxDelCtaCortados": 83,
+    "sectionScrollTop": 370,
+    "sectionMaxScroll": 454,
+    "documentScrollY": 0,
+    "pageScrollable": true
+  },
+  "P4-390x844-con-scroll": {
+    "ctaTop": 792,
+    "ctaBottom": 832,
+    "viewportBottom": 844,
+    "mainBottom": 834,
+    "cta100pctVisible": true,
+    "hitTest": "Continuar"
+  },
+  "P4-390x844-paso3-cta": {
+    "sinScroll": {
+      "ctaTop": 793,
+      "ctaBottom": 833,
+      "mainBottom": 834,
+      "visible": true,
+      "recortadoPx": 0
+    },
+    "alturaTarjetaIA": {
+      "clientH": 56,
+      "scrollH": 336,
+      "pctVisible": 17,
+      "altoRender": 58
+    },
+    "mapaSidebar": {
+      "activo": [
+        "Captura Inicial",
+        "Clasificación [ACTIVO]",
+        "Detalles técnicos",
+        "Documento"
+      ],
+      "chip": "ESTADO ACTUAL | Borrador activo | Guardar borrador | Cancel"
+    }
+  },
+  "P4-doble-envio": {
+    "postsACrearSolicitud": 1,
+    "msEntrePosts": [],
+    "pantallaFinal": "Tu solicitud fue enviada | Referencia: RFQ-2026-0013 |  | Todo listo. Te avisaremos a mj.e2e@biabrands.co en cuanto haya una comparativa lista para que decidas. |  | DOCUMENTO GENERADO | RFQ | Verificación final de alc"
+  }
+}

@@ -33,6 +33,10 @@ export async function GET(
       comparativa,
       cotizaciones,
       solicitudId: comparativa.solicitudId,
+      // La vista pública dice "este enlace vence el X": sin esto el solicitante no
+      // puede saber si tiene tiempo para decidir.
+      fechaExpiracion: link.fechaExpiracion ?? null,
+      vecesAccedido: link.vecesAccedido ?? 0,
     });
   } catch {
     return NextResponse.json({ error: "Error al resolver el enlace" }, { status: 500 });

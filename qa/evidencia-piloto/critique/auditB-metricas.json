@@ -1,0 +1,1635 @@
+{
+  "startedAt": "2026-09-25T17:41:01.517Z",
+  "base": "http://localhost:3001",
+  "viewport": "1440x900",
+  "profile": "/tmp/auditB-mrggp9",
+  "pasos": [
+    {
+      "step": "login-cargado",
+      "url": "http://localhost:3001/login/coordinador"
+    },
+    {
+      "step": "teclado-15-tabs",
+      "paradas": 15,
+      "conIndicador": 9,
+      "sinIndicador": 6
+    },
+    {
+      "step": "login-hecho",
+      "url": "http://localhost:3001/panel"
+    },
+    {
+      "step": "panel",
+      "filas": 7,
+      "botones": 10,
+      "resultados": 60
+    },
+    {
+      "step": "panel-filtro-cerradas",
+      "filas": 1,
+      "active": "text-left bg-white rounded-2xl border p-4 md:p-5 shadow-sm hover:shadow transition-all flex items-start gap-3 ring-2 bg-emerald-500/10 text-emerald-600"
+    },
+    {
+      "step": "panel-busqueda-vacia",
+      "filas": 0,
+      "muestraVacio": true
+    },
+    {
+      "step": "rfq0010",
+      "ref": "RFQ-2026-0010",
+      "estado": null,
+      "tieneAgregarManual": true,
+      "filasCotizaciones": 0,
+      "longitud": 838
+    },
+    {
+      "step": "rfq0008",
+      "ref": "RFQ-2026-0008",
+      "estado": null
+    },
+    {
+      "step": "form-manual-abierto",
+      "campos": 8
+    },
+    {
+      "step": "dialog-registrado",
+      "tipo": "confirm",
+      "mensaje": "¿Cancelar esta solicitud? El proceso se cerrará y quedará registrado como CANCELADA.",
+      "accion": "dismiss (no se acepta)"
+    },
+    {
+      "step": "editar-datos-abierto",
+      "fechas": 1,
+      "textareas": 1
+    },
+    {
+      "step": "dialog-registrado",
+      "tipo": "confirm",
+      "mensaje": "¿Cancelar esta solicitud? El proceso se cerrará y quedará registrado como CANCELADA.",
+      "accion": "dismiss (no se acepta)"
+    },
+    {
+      "step": "confirm-cancelar",
+      "dialogosNuevos": 1,
+      "dialogos": [
+        {
+          "pantalla": "rfq0008-confirm-cancelar",
+          "tipo": "confirm",
+          "mensaje": "¿Cancelar esta solicitud? El proceso se cerrará y quedará registrado como CANCELADA."
+        }
+      ],
+      "estadoTrasDismiss": "sin cambios (correcto)"
+    },
+    {
+      "step": "cancelar-tras-dismiss",
+      "sigueCOMPARATIVA_LISTA": false,
+      "muestraCANCELADA": false
+    },
+    {
+      "step": "tab08",
+      "tieneTabla": 0,
+      "tieneGanadora": true,
+      "texto": "RFQ-2026-0008\nComparativa lista\nVerificación fixes QA\nSolicitante E2E\n•\nTrade Marketing\n•\nEntrega requerida: 25 oct 2026\nVolver al panel\nReabrir cotizaciones\nEditar datos\nCancelar solicitud\n07 · Cotizaciones\n08 · Comparativa\n09 · Recomendación\n\nGenerando comparativa…\n\nSolicitante E2E\nTrade Marketing\nSolicitud para verificar fixes H12\nmj.e2e@biabrands.co\nDetalles de la solicitud\nCategoría\nMercadeo y publicidad\nSubtipo\nProducto\nFecha requerida\n25 oct 2026"
+    },
+    {
+      "step": "tab09-bloqueo",
+      "disabled": true,
+      "opacity": "0.4",
+      "cursor": "not-allowed",
+      "pointerEvents": "auto",
+      "title": null,
+      "ariaDisabled": null,
+      "textareaAccesible": {
+        "id": null,
+        "ariaLabel": null,
+        "enLabel": false,
+        "labelText": null,
+        "placeholder": "Escribí tu criterio para el solicitante: qué conviene, riesgos, qué falta confirmar, etc."
+      }
+    },
+    {
+      "step": "intento-envio-sin-recomendacion",
+      "muestraEnviada": false,
+      "mensajeAyuda": true,
+      "mensajeBloqueoB3": true
+    },
+    {
+      "step": "tras-escribir-recomendacion",
+      "disabled": false,
+      "opacity": "1"
+    },
+    {
+      "step": "rfq0007",
+      "ref": "RFQ-2026-0007",
+      "estado": null,
+      "hayBotonEditar": 0,
+      "hayBotonCancelar": 0,
+      "hayBotonAgregarManual": 0
+    },
+    {
+      "step": "rfq0007-t09",
+      "muestraDecision": true,
+      "texto": "RFQ-2026-0007\nCerrada\nLapiceros branding Vía — activación canal tradicional\nSolicitante E2E\n•\nTrade Marketing\n•\nEntrega requerida: 5 oct 2026\n•\nCerrada: 22/9/2026\nSolicitud cerrada con decisión\nEl solicitante eligió Imprenta CostaPrint S. de R.L. · 22/9/2026.\nVolver al panel\n07 · Cotizaciones\n08 · Comparativa\n09 · Recomendación\n09 · Recomendación\n\nPunto de control humano (RN-01). Podés contradecir la sugerencia de la IA sin fricción.\n\nProveedora Norte S.A.\nTotal: HNL 57,500\n✓ Pros\n✗ Contras\nImprenta CostaPrint S. de R.L.\nTotal: HNL 42,000\n✓ Pros\n✗ Contras\nPapelera del Valle S.A.\nTotal: HNL 399,000\n✓ Pros\n✗ Contras\nRecomendación del coordinador *\nEscribí tu recomendación antes de enviar. El solicitante decide, pero tu criterio es lo que más le sirve para decidir.\nEnviar comparativa al solicitante\nBloqueo duro B3: se valida también en el servidor.\nSolicitante E2E\nTrade Marketing\n500 lapice"
+    }
+  ],
+  "pantallas": {
+    "login": {
+      "title": "Portal de Compras BIA",
+      "url": "/login/coordinador",
+      "h1": [],
+      "h2": [
+        "Iniciar sesión"
+      ],
+      "countButtons": 1,
+      "countInputs": 2,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 3,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 2,
+      "inputsSinLabelDetalle": [
+        {
+          "tag": "INPUT",
+          "type": "email",
+          "placeholder": "usuario@compras.bia.local",
+          "id": null,
+          "aria": null,
+          "dentroDeLabel": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "placeholder": "••••••••",
+          "id": null,
+          "aria": null,
+          "dentroDeLabel": false
+        }
+      ],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Enterprise",
+          "fs": "10px",
+          "c": "lab(44.4871 -41.0396 11.0361)"
+        }
+      ],
+      "textosPequenosTotal": 1,
+      "botonesDisabled": [],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 0,
+        "unicos": 0,
+        "muestras": []
+      }
+    },
+    "panel": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel",
+      "h1": [
+        "Panel de Compras"
+      ],
+      "h2": [],
+      "countButtons": 10,
+      "countInputs": 1,
+      "countRows": 7,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 13,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 1,
+      "inputsSinLabelDetalle": [
+        {
+          "tag": "INPUT",
+          "type": null,
+          "placeholder": "Buscar por referencia, título o solicitante...",
+          "id": null,
+          "aria": null,
+          "dentroDeLabel": false
+        }
+      ],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Coordinador",
+          "fs": "10px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Carlos Melara",
+          "fs": "11px",
+          "c": "lab(16.132 -0.318035 -14.6672)"
+        },
+        {
+          "t": "Equipo de Compras",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Salir",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Activas",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "en curso",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Esperando cotizaciones",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "pend.",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Esperando decisión",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "solic.",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Cerradas",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "cerradas",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        }
+      ],
+      "textosPequenosTotal": 60,
+      "botonesDisabled": [],
+      "tablasSinCaption": 1,
+      "thSinScope": 6,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 1,
+      "contraste": {
+        "total": 0,
+        "unicos": 0,
+        "muestras": []
+      }
+    },
+    "panel-cerradas": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel",
+      "h1": [
+        "Panel de Compras"
+      ],
+      "h2": [],
+      "countButtons": 10,
+      "countInputs": 1,
+      "countRows": 1,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 7,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 1,
+      "inputsSinLabelDetalle": [
+        {
+          "tag": "INPUT",
+          "type": null,
+          "placeholder": "Buscar por referencia, título o solicitante...",
+          "id": null,
+          "aria": null,
+          "dentroDeLabel": false
+        }
+      ],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Coordinador",
+          "fs": "10px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Carlos Melara",
+          "fs": "11px",
+          "c": "lab(16.132 -0.318035 -14.6672)"
+        },
+        {
+          "t": "Equipo de Compras",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Salir",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Activas",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "en curso",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Esperando cotizaciones",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "pend.",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Esperando decisión",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "solic.",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Cerradas",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "cerradas",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        }
+      ],
+      "textosPequenosTotal": 24,
+      "botonesDisabled": [],
+      "tablasSinCaption": 1,
+      "thSinScope": 6,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 1,
+      "contraste": {
+        "total": 1,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "Cerradas",
+            "fs": "12px",
+            "fw": "600",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.05,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "panel-busqueda-vacia": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel",
+      "h1": [
+        "Panel de Compras"
+      ],
+      "h2": [],
+      "countButtons": 11,
+      "countInputs": 1,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 8,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 1,
+      "inputsSinLabelDetalle": [
+        {
+          "tag": "INPUT",
+          "type": null,
+          "placeholder": "Buscar por referencia, título o solicitante...",
+          "id": null,
+          "aria": null,
+          "dentroDeLabel": false
+        }
+      ],
+      "targetsPequenos": [
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 24,
+          "w": 24
+        }
+      ],
+      "targetsPequenosTotal": 1,
+      "textosPequenos": [
+        {
+          "t": "Coordinador",
+          "fs": "10px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Carlos Melara",
+          "fs": "11px",
+          "c": "lab(16.132 -0.318035 -14.6672)"
+        },
+        {
+          "t": "Equipo de Compras",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Salir",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Activas",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "en curso",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Esperando cotizaciones",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "pend.",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Esperando decisión",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "solic.",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "Cerradas",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "cerradas",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        }
+      ],
+      "textosPequenosTotal": 14,
+      "botonesDisabled": [],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 1,
+      "contraste": {
+        "total": 1,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "Cerradas",
+            "fs": "12px",
+            "fw": "600",
+            "color": "rgb(255, 255, 255)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.05,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0010-paso07-sin-cotizaciones": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+      "h1": [],
+      "h2": [
+        "Pelota de fútbol"
+      ],
+      "countButtons": 7,
+      "countInputs": 0,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 9,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 0,
+      "inputsSinLabelDetalle": [],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Activa",
+          "fs": "11px",
+          "c": "lab(41.6013 -9.10804 -42.5647)"
+        }
+      ],
+      "textosPequenosTotal": 1,
+      "botonesDisabled": [
+        {
+          "t": "08 · Comparativa",
+          "opacity": "1",
+          "cursor": "default"
+        },
+        {
+          "t": "Generar comparativa",
+          "opacity": "0.4",
+          "cursor": "not-allowed"
+        }
+      ],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 2,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0010-texto": {
+      "extracto": "RFQ-2026-0010\nActiva\nPelota de fútbol\nEdgar Calderon\n•\nIntelia\n•\nEntrega requerida: 15 nov 2026\nVolver al panel\nEditar datos\nCancelar solicitud\n07 · Cotizaciones\n08 · Comparativa\n09 · Recomendación\nCotizaciones de proveedores\n\nCargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea.\n\nMÍNIMO 2 PARA COMPARATIVA\nAgregar cotización manual\nTodavía no hay cotizaciones\nAgregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.\nGenerar comparativa\nSe necesitan al menos 2 cotizaciones para generar una comparativa.\nGenerar comparativa\nEdgar Calderon\nIntelia\npelota de futbol para una actividad de marketing\nedgar.calderon@intelia.com\nDetalles de la solicitud\nCategoría\nMercadeo y publicidad\nSubtipo\nProducto\nFecha requerida\n15 nov 2026\nLogo/archivo del producto\ncotizacion-sombrillas.pdf"
+    },
+    "rfq0008-paso07": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+      "h1": [],
+      "h2": [
+        "Verificación fixes QA"
+      ],
+      "countButtons": 12,
+      "countInputs": 2,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 12,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 0,
+      "inputsSinLabelDetalle": [],
+      "targetsPequenos": [
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 31,
+          "w": 31
+        },
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 31,
+          "w": 31
+        }
+      ],
+      "targetsPequenosTotal": 2,
+      "textosPequenos": [
+        {
+          "t": "Comparativa lista",
+          "fs": "11px",
+          "c": "lab(47.2709 42.9082 69.2966)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        }
+      ],
+      "textosPequenosTotal": 3,
+      "botonesDisabled": [],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 2,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0008-form-manual": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+      "h1": [],
+      "h2": [
+        "Verificación fixes QA"
+      ],
+      "countButtons": 14,
+      "countInputs": 8,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 12,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 0,
+      "inputsSinLabelDetalle": [],
+      "targetsPequenos": [
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 31,
+          "w": 31
+        },
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 31,
+          "w": 31
+        }
+      ],
+      "targetsPequenosTotal": 2,
+      "textosPequenos": [
+        {
+          "t": "Comparativa lista",
+          "fs": "11px",
+          "c": "lab(47.2709 42.9082 69.2966)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        }
+      ],
+      "textosPequenosTotal": 3,
+      "botonesDisabled": [
+        {
+          "t": "Guardar cotización",
+          "opacity": "0.4",
+          "cursor": "not-allowed"
+        }
+      ],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 2,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0008-editar-datos": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+      "h1": [],
+      "h2": [
+        "Verificación fixes QA"
+      ],
+      "countButtons": 15,
+      "countInputs": 10,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 12,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 0,
+      "inputsSinLabelDetalle": [],
+      "targetsPequenos": [
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 31,
+          "w": 31
+        },
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 31,
+          "w": 31
+        }
+      ],
+      "targetsPequenosTotal": 2,
+      "textosPequenos": [
+        {
+          "t": "Comparativa lista",
+          "fs": "11px",
+          "c": "lab(47.2709 42.9082 69.2966)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        }
+      ],
+      "textosPequenosTotal": 3,
+      "botonesDisabled": [
+        {
+          "t": "Guardar cotización",
+          "opacity": "0.4",
+          "cursor": "not-allowed"
+        }
+      ],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 2,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0008-confirm-cancelar": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+      "h1": [],
+      "h2": [
+        "Verificación fixes QA"
+      ],
+      "countButtons": 14,
+      "countInputs": 8,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 12,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 0,
+      "inputsSinLabelDetalle": [],
+      "targetsPequenos": [
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 31,
+          "w": 31
+        },
+        {
+          "t": "",
+          "tag": "BUTTON",
+          "h": 31,
+          "w": 31
+        }
+      ],
+      "targetsPequenosTotal": 2,
+      "textosPequenos": [
+        {
+          "t": "Comparativa lista",
+          "fs": "11px",
+          "c": "lab(47.2709 42.9082 69.2966)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        }
+      ],
+      "textosPequenosTotal": 3,
+      "botonesDisabled": [
+        {
+          "t": "Guardar cotización",
+          "opacity": "0.4",
+          "cursor": "not-allowed"
+        }
+      ],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 2,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0008-t08-comparativa": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+      "h1": [],
+      "h2": [
+        "Verificación fixes QA"
+      ],
+      "countButtons": 6,
+      "countInputs": 0,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 5,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 0,
+      "inputsSinLabelDetalle": [],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Comparativa lista",
+          "fs": "11px",
+          "c": "lab(47.2709 42.9082 69.2966)"
+        }
+      ],
+      "textosPequenosTotal": 1,
+      "botonesDisabled": [],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 2,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0008-t09-recomendacion": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+      "h1": [],
+      "h2": [
+        "Verificación fixes QA"
+      ],
+      "countButtons": 7,
+      "countInputs": 1,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 6,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 1,
+      "inputsSinLabelDetalle": [
+        {
+          "tag": "TEXTAREA",
+          "type": null,
+          "placeholder": "Escribí tu criterio para el solicitante: qué conviene, riesgos, qué falta confirmar, etc.",
+          "id": null,
+          "aria": null,
+          "dentroDeLabel": false
+        }
+      ],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Comparativa lista",
+          "fs": "11px",
+          "c": "lab(47.2709 42.9082 69.2966)"
+        },
+        {
+          "t": "Punto de control humano (RN-01). Podés c",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "HNL 100,000",
+          "fs": "11px",
+          "c": "rgb(15, 23, 42)"
+        },
+        {
+          "t": "✓ Pros",
+          "fs": "11px",
+          "c": "lab(47.0329 -47.0239 31.4788)"
+        },
+        {
+          "t": "✗ Contras",
+          "fs": "11px",
+          "c": "lab(41.1651 71.6251 30.3087)"
+        },
+        {
+          "t": "HNL 80,000",
+          "fs": "11px",
+          "c": "rgb(15, 23, 42)"
+        },
+        {
+          "t": "✓ Pros",
+          "fs": "11px",
+          "c": "lab(47.0329 -47.0239 31.4788)"
+        },
+        {
+          "t": "✗ Contras",
+          "fs": "11px",
+          "c": "lab(41.1651 71.6251 30.3087)"
+        },
+        {
+          "t": "Bloqueo duro B3: se valida también en el",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        }
+      ],
+      "textosPequenosTotal": 9,
+      "botonesDisabled": [
+        {
+          "t": "Enviar comparativa al solicitante",
+          "opacity": "0.4",
+          "cursor": "not-allowed"
+        }
+      ],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 2,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0008-estado-antes": {
+      "extracto": "RFQ-2026-0008\nComparativa lista\nVerificación fixes QA\nSolicitante E2E\n•\nTrade Marketing\n•\nEntrega requerida: 25 oct 2026\nVolver al panel\nReabrir cotizaciones\nEditar datos\nCancelar solicitud\n07 · Cotizaciones\n08 · Comparativa\n09 · Recomendación\n09 · Recomendación\n\nPunto de control humano (RN-01). Pod"
+    },
+    "rfq0007-paso07-terminal": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/57ad1bbb-928c-446c-8c01-eb1ac3dde27b",
+      "h1": [],
+      "h2": [
+        "Lapiceros branding Vía — activación canal tradicional"
+      ],
+      "countButtons": 3,
+      "countInputs": 0,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 7,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 0,
+      "inputsSinLabelDetalle": [],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Cerrada",
+          "fs": "11px",
+          "c": "lab(44.4871 -41.0396 11.0361)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "Manual",
+          "fs": "11px",
+          "c": "rgb(71, 85, 105)"
+        },
+        {
+          "t": "PDF",
+          "fs": "11px",
+          "c": "lab(41.6013 -9.10804 -42.5647)"
+        }
+      ],
+      "textosPequenosTotal": 4,
+      "botonesDisabled": [],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 3,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0007-t08": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/57ad1bbb-928c-446c-8c01-eb1ac3dde27b",
+      "h1": [],
+      "h2": [
+        "Lapiceros branding Vía — activación canal tradicional"
+      ],
+      "countButtons": 3,
+      "countInputs": 0,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 6,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 0,
+      "inputsSinLabelDetalle": [],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Cerrada",
+          "fs": "11px",
+          "c": "lab(44.4871 -41.0396 11.0361)"
+        }
+      ],
+      "textosPequenosTotal": 1,
+      "botonesDisabled": [],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 3,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    },
+    "rfq0007-t09": {
+      "title": "Panel de Compras — Portal de Compras BIA",
+      "url": "/panel/solicitud/57ad1bbb-928c-446c-8c01-eb1ac3dde27b",
+      "h1": [],
+      "h2": [
+        "Lapiceros branding Vía — activación canal tradicional"
+      ],
+      "countButtons": 4,
+      "countInputs": 1,
+      "countRows": 0,
+      "missingAlt": 0,
+      "imgsTotal": 0,
+      "svgsSinRoleNiAriaHidden": 7,
+      "buttonsSinNombre": 0,
+      "buttonsSinNombreDetalle": [],
+      "inputsSinLabel": 1,
+      "inputsSinLabelDetalle": [
+        {
+          "tag": "TEXTAREA",
+          "type": null,
+          "placeholder": "Escribí tu criterio para el solicitante: qué conviene, riesgos, qué falta confirmar, etc.",
+          "id": null,
+          "aria": null,
+          "dentroDeLabel": false
+        }
+      ],
+      "targetsPequenos": [],
+      "targetsPequenosTotal": 0,
+      "textosPequenos": [
+        {
+          "t": "Cerrada",
+          "fs": "11px",
+          "c": "lab(44.4871 -41.0396 11.0361)"
+        },
+        {
+          "t": "Punto de control humano (RN-01). Podés c",
+          "fs": "11px",
+          "c": "rgb(100, 116, 139)"
+        },
+        {
+          "t": "HNL 57,500",
+          "fs": "11px",
+          "c": "rgb(15, 23, 42)"
+        },
+        {
+          "t": "✓ Pros",
+          "fs": "11px",
+          "c": "lab(47.0329 -47.0239 31.4788)"
+        },
+        {
+          "t": "✗ Contras",
+          "fs": "11px",
+          "c": "lab(41.1651 71.6251 30.3087)"
+        },
+        {
+          "t": "HNL 42,000",
+          "fs": "11px",
+          "c": "rgb(15, 23, 42)"
+        },
+        {
+          "t": "✓ Pros",
+          "fs": "11px",
+          "c": "lab(47.0329 -47.0239 31.4788)"
+        },
+        {
+          "t": "✗ Contras",
+          "fs": "11px",
+          "c": "lab(41.1651 71.6251 30.3087)"
+        },
+        {
+          "t": "HNL 399,000",
+          "fs": "11px",
+          "c": "rgb(15, 23, 42)"
+        },
+        {
+          "t": "✓ Pros",
+          "fs": "11px",
+          "c": "lab(47.0329 -47.0239 31.4788)"
+        },
+        {
+          "t": "✗ Contras",
+          "fs": "11px",
+          "c": "lab(41.1651 71.6251 30.3087)"
+        },
+        {
+          "t": "Bloqueo duro B3: se valida también en el",
+          "fs": "10px",
+          "c": "rgb(100, 116, 139)"
+        }
+      ],
+      "textosPequenosTotal": 12,
+      "botonesDisabled": [
+        {
+          "t": "Enviar comparativa al solicitante",
+          "opacity": "0.4",
+          "cursor": "not-allowed"
+        }
+      ],
+      "tablasSinCaption": 0,
+      "thSinScope": 0,
+      "skipLink": false,
+      "mainLandmark": 1,
+      "h1Count": 0,
+      "contraste": {
+        "total": 3,
+        "unicos": 1,
+        "muestras": [
+          {
+            "t": "•",
+            "fs": "14px",
+            "fw": "400",
+            "color": "rgb(203, 213, 225)",
+            "bg": "rgb(248,249,250)",
+            "ratio": 1.41,
+            "min": 4.5,
+            "grande": false
+          }
+        ]
+      }
+    }
+  },
+  "foco": [
+    {
+      "tab": 1,
+      "tag": "INPUT",
+      "type": "email",
+      "text": "usuario@compras.bia.local",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(15, 23, 42)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "oklab(0.928755 -0.0031155 -0.0121984)",
+      "rect": {
+        "w": 442,
+        "h": 46
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 2,
+      "tag": "INPUT",
+      "type": "password",
+      "text": "••••••••",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(15, 23, 42)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "oklab(0.928755 -0.0031155 -0.0121984)",
+      "rect": {
+        "w": 442,
+        "h": 46
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 3,
+      "tag": "BUTTON",
+      "type": "submit",
+      "text": "Entrar al panel",
+      "outlineStyle": "auto",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(255, 255, 255)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "rgb(255, 255, 255)",
+      "rect": {
+        "w": 182,
+        "h": 48
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 4,
+      "tag": "NEXTJS-PORTAL",
+      "type": null,
+      "text": "",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(117, 117, 117)",
+      "outlineOffset": "0px",
+      "boxShadow": "none",
+      "borderColor": "rgb(117, 117, 117)",
+      "rect": {
+        "w": 0,
+        "h": 0
+      },
+      "visible": false,
+      "indicadorVisible": false
+    },
+    {
+      "tab": 5,
+      "tag": "BODY",
+      "type": null,
+      "text": "BIAComprasEnterpriseIniciar sesiónRol: C",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(15, 23, 42)",
+      "outlineOffset": "0px",
+      "boxShadow": "none",
+      "borderColor": "rgb(15, 23, 42)",
+      "rect": {
+        "w": 1440,
+        "h": 900
+      },
+      "visible": true,
+      "indicadorVisible": false
+    },
+    {
+      "tab": 6,
+      "tag": "INPUT",
+      "type": "email",
+      "text": "usuario@compras.bia.local",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(15, 23, 42)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "oklab(0.928755 -0.0031155 -0.0121984)",
+      "rect": {
+        "w": 442,
+        "h": 46
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 7,
+      "tag": "INPUT",
+      "type": "password",
+      "text": "••••••••",
+      "outlineStyle": "none",
+      "outlineWidth": "1px",
+      "outlineColor": "rgb(0, 94, 203)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "oklab(0.686708 -0.0906285 -0.141316)",
+      "rect": {
+        "w": 442,
+        "h": 46
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 8,
+      "tag": "BUTTON",
+      "type": "submit",
+      "text": "Entrar al panel",
+      "outlineStyle": "auto",
+      "outlineWidth": "1px",
+      "outlineColor": "rgb(0, 95, 204)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "rgb(255, 255, 255)",
+      "rect": {
+        "w": 182,
+        "h": 48
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 9,
+      "tag": "NEXTJS-PORTAL",
+      "type": null,
+      "text": "",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(117, 117, 117)",
+      "outlineOffset": "0px",
+      "boxShadow": "none",
+      "borderColor": "rgb(117, 117, 117)",
+      "rect": {
+        "w": 0,
+        "h": 0
+      },
+      "visible": false,
+      "indicadorVisible": false
+    },
+    {
+      "tab": 10,
+      "tag": "BODY",
+      "type": null,
+      "text": "BIAComprasEnterpriseIniciar sesiónRol: C",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(15, 23, 42)",
+      "outlineOffset": "0px",
+      "boxShadow": "none",
+      "borderColor": "rgb(15, 23, 42)",
+      "rect": {
+        "w": 1440,
+        "h": 900
+      },
+      "visible": true,
+      "indicadorVisible": false
+    },
+    {
+      "tab": 11,
+      "tag": "INPUT",
+      "type": "email",
+      "text": "usuario@compras.bia.local",
+      "outlineStyle": "none",
+      "outlineWidth": "1px",
+      "outlineColor": "rgb(0, 95, 204)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "lab(63.3038 -18.433 -51.0407)",
+      "rect": {
+        "w": 442,
+        "h": 46
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 12,
+      "tag": "INPUT",
+      "type": "password",
+      "text": "••••••••",
+      "outlineStyle": "none",
+      "outlineWidth": "1px",
+      "outlineColor": "rgb(0, 95, 204)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "lab(63.3038 -18.433 -51.0407)",
+      "rect": {
+        "w": 442,
+        "h": 46
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 13,
+      "tag": "BUTTON",
+      "type": "submit",
+      "text": "Entrar al panel",
+      "outlineStyle": "auto",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(255, 255, 255)",
+      "outlineOffset": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+      "borderColor": "rgb(255, 255, 255)",
+      "rect": {
+        "w": 182,
+        "h": 48
+      },
+      "visible": true,
+      "indicadorVisible": true
+    },
+    {
+      "tab": 14,
+      "tag": "NEXTJS-PORTAL",
+      "type": null,
+      "text": "",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(117, 117, 117)",
+      "outlineOffset": "0px",
+      "boxShadow": "none",
+      "borderColor": "rgb(117, 117, 117)",
+      "rect": {
+        "w": 0,
+        "h": 0
+      },
+      "visible": false,
+      "indicadorVisible": false
+    },
+    {
+      "tab": 15,
+      "tag": "BODY",
+      "type": null,
+      "text": "BIAComprasEnterpriseIniciar sesiónRol: C",
+      "outlineStyle": "none",
+      "outlineWidth": "3px",
+      "outlineColor": "rgb(15, 23, 42)",
+      "outlineOffset": "0px",
+      "boxShadow": "none",
+      "borderColor": "rgb(15, 23, 42)",
+      "rect": {
+        "w": 1440,
+        "h": 900
+      },
+      "visible": true,
+      "indicadorVisible": false
+    }
+  ],
+  "dialogos": [
+    {
+      "pantalla": "rfq0008-form-manual",
+      "tipo": "confirm",
+      "mensaje": "¿Cancelar esta solicitud? El proceso se cerrará y quedará registrado como CANCELADA."
+    },
+    {
+      "pantalla": "rfq0008-confirm-cancelar",
+      "tipo": "confirm",
+      "mensaje": "¿Cancelar esta solicitud? El proceso se cerrará y quedará registrado como CANCELADA."
+    }
+  ],
+  "consola": {
+    "login": [
+      {
+        "tipo": "warning",
+        "texto": "%c%s%c Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which auth"
+      },
+      {
+        "tipo": "warning",
+        "texto": "%c%s%c Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which auth"
+      }
+    ],
+    "panel": [
+      {
+        "tipo": "warning",
+        "texto": "%c%s%c Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which auth"
+      }
+    ],
+    "rfq0010": [
+      {
+        "tipo": "warning",
+        "texto": "%c%s%c Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which auth"
+      }
+    ],
+    "rfq0008": [
+      {
+        "tipo": "warning",
+        "texto": "%c%s%c Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which auth"
+      }
+    ],
+    "rfq0007": [
+      {
+        "tipo": "warning",
+        "texto": "%c%s%c Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which auth"
+      }
+    ]
+  },
+  "erroresJS": [],
+  "requestsFallidos": [
+    {
+      "pantalla": "ruta-inexistente",
+      "url": "http://localhost:3001/panel/solicitud/00000000-0000-0000-0000-000000000000",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "contraste": {},
+  "pasosFallidos": [
+    {
+      "pantalla": "ruta-inexistente",
+      "step": "ruta-inexistente",
+      "motivo": "page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3001/panel/solicitud/00000000-0000-0000-0000-000000000000\", waiting until \"domcontentloaded\"\n",
+      "fallback": "sin captura de 404"
+    }
+  ]
+}

@@ -1,0 +1,620 @@
+{
+  "login": {
+    "title": "Portal de Compras BIA",
+    "url": "/login/coordinador",
+    "h1": [
+      "Iniciar sesión"
+    ],
+    "buttons": 1,
+    "inputs": 2,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Enterprise",
+        "fs": "10px"
+      }
+    ],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "panel": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel",
+    "h1": [
+      "Panel de Compras"
+    ],
+    "buttons": 6,
+    "inputs": 1,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Referencia",
+        "fs": "10px"
+      },
+      {
+        "t": "Solicitante",
+        "fs": "10px"
+      },
+      {
+        "t": "Necesidad",
+        "fs": "10px"
+      },
+      {
+        "t": "Categoría",
+        "fs": "10px"
+      },
+      {
+        "t": "Estado",
+        "fs": "10px"
+      },
+      {
+        "t": "Acción",
+        "fs": "10px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Activa",
+        "fs": "11px"
+      },
+      {
+        "t": "50 días de margen",
+        "fs": "9px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Activa",
+        "fs": "11px"
+      },
+      {
+        "t": "36 días de margen",
+        "fs": "9px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Esperando cotizaciones",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 1,
+    "filasTabla": 4,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "panel-filtro-cerradas": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel",
+    "h1": [
+      "Panel de Compras"
+    ],
+    "buttons": 6,
+    "inputs": 1,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Referencia",
+        "fs": "10px"
+      },
+      {
+        "t": "Solicitante",
+        "fs": "10px"
+      },
+      {
+        "t": "Necesidad",
+        "fs": "10px"
+      },
+      {
+        "t": "Categoría",
+        "fs": "10px"
+      },
+      {
+        "t": "Estado",
+        "fs": "10px"
+      },
+      {
+        "t": "Acción",
+        "fs": "10px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Cerrada",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 1,
+    "filasTabla": 1,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "panel-filtro-esperando-cotizaciones": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel",
+    "h1": [
+      "Panel de Compras"
+    ],
+    "buttons": 6,
+    "inputs": 1,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Referencia",
+        "fs": "10px"
+      },
+      {
+        "t": "Solicitante",
+        "fs": "10px"
+      },
+      {
+        "t": "Necesidad",
+        "fs": "10px"
+      },
+      {
+        "t": "Categoría",
+        "fs": "10px"
+      },
+      {
+        "t": "Estado",
+        "fs": "10px"
+      },
+      {
+        "t": "Acción",
+        "fs": "10px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Esperando cotizaciones",
+        "fs": "11px"
+      },
+      {
+        "t": "29 días de margen",
+        "fs": "9px"
+      }
+    ],
+    "tablas": 1,
+    "filasTabla": 1,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "panel-filtro-esperando-decisión": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel",
+    "h1": [
+      "Panel de Compras"
+    ],
+    "buttons": 6,
+    "inputs": 1,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "panel-filtro-activas": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel",
+    "h1": [
+      "Panel de Compras"
+    ],
+    "buttons": 6,
+    "inputs": 1,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Referencia",
+        "fs": "10px"
+      },
+      {
+        "t": "Solicitante",
+        "fs": "10px"
+      },
+      {
+        "t": "Necesidad",
+        "fs": "10px"
+      },
+      {
+        "t": "Categoría",
+        "fs": "10px"
+      },
+      {
+        "t": "Estado",
+        "fs": "10px"
+      },
+      {
+        "t": "Acción",
+        "fs": "10px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Activa",
+        "fs": "11px"
+      },
+      {
+        "t": "50 días de margen",
+        "fs": "9px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Activa",
+        "fs": "11px"
+      },
+      {
+        "t": "36 días de margen",
+        "fs": "9px"
+      }
+    ],
+    "tablas": 1,
+    "filasTabla": 2,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "panel-busqueda-vacia": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel",
+    "h1": [
+      "Panel de Compras"
+    ],
+    "buttons": 8,
+    "inputs": 1,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [
+      {
+        "t": "",
+        "h": 24
+      }
+    ],
+    "textosMenores12px": [],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "detalle-0010-paso7": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+    "h1": [
+      "Pelota de fútbol"
+    ],
+    "buttons": 8,
+    "inputs": 0,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Activa",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [
+      "08Comparativa",
+      "Generar comparativa"
+    ],
+    "overflowX": false
+  },
+  "tab08-disabled-en-0010": {
+    "disabled": true,
+    "click": "rechazado"
+  },
+  "detalle-0010-form-manual": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+    "h1": [
+      "Pelota de fútbol"
+    ],
+    "buttons": 10,
+    "inputs": 6,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Activa",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [
+      "08Comparativa",
+      "Guardar cotización",
+      "Generar comparativa"
+    ],
+    "overflowX": false
+  },
+  "detalle-0010-editar-datos": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+    "h1": [
+      "Pelota de fútbol"
+    ],
+    "buttons": 11,
+    "inputs": 8,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Activa",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [
+      "08Comparativa",
+      "Guardar cotización",
+      "Generar comparativa"
+    ],
+    "overflowX": false
+  },
+  "modal-cancelar": {
+    "abierto": true
+  },
+  "detalle-0008-paso7": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+    "h1": [
+      "Verificación fixes QA"
+    ],
+    "buttons": 13,
+    "inputs": 2,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [
+      {
+        "t": "",
+        "h": 31
+      },
+      {
+        "t": "",
+        "h": 31
+      }
+    ],
+    "textosMenores12px": [
+      {
+        "t": "Comparativa lista",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "modal-reabrir": {
+    "abierto": true
+  },
+  "detalle-0008-paso8-comparativa": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+    "h1": [
+      "Verificación fixes QA"
+    ],
+    "buttons": 8,
+    "inputs": 0,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Comparativa lista",
+        "fs": "11px"
+      },
+      {
+        "t": "Concepto",
+        "fs": "10px"
+      },
+      {
+        "t": "Prov Cara SA",
+        "fs": "10px"
+      },
+      {
+        "t": "Prov Barata SA",
+        "fs": "10px"
+      }
+    ],
+    "tablas": 1,
+    "filasTabla": 7,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "detalle-0008-paso9-recomendacion": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+    "h1": [
+      "Verificación fixes QA"
+    ],
+    "buttons": 8,
+    "inputs": 1,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Comparativa lista",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [
+      "Enviar comparativa al solicitante"
+    ],
+    "overflowX": false
+  },
+  "enviar-bloqueado": {
+    "disabled": true
+  },
+  "detalle-0007-cerrada": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel/solicitud/57ad1bbb-928c-446c-8c01-eb1ac3dde27b",
+    "h1": [
+      "Lapiceros branding Vía — activación canal tradicional"
+    ],
+    "buttons": 3,
+    "inputs": 0,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Cerrada",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "movil-panel": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel",
+    "h1": [
+      "Panel de Compras"
+    ],
+    "buttons": 6,
+    "inputs": 1,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Referencia",
+        "fs": "10px"
+      },
+      {
+        "t": "Solicitante",
+        "fs": "10px"
+      },
+      {
+        "t": "Necesidad",
+        "fs": "10px"
+      },
+      {
+        "t": "Categoría",
+        "fs": "10px"
+      },
+      {
+        "t": "Estado",
+        "fs": "10px"
+      },
+      {
+        "t": "Acción",
+        "fs": "10px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Activa",
+        "fs": "11px"
+      },
+      {
+        "t": "50 días de margen",
+        "fs": "9px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Activa",
+        "fs": "11px"
+      },
+      {
+        "t": "36 días de margen",
+        "fs": "9px"
+      },
+      {
+        "t": "Mercadeo y publicidad",
+        "fs": "11px"
+      },
+      {
+        "t": "Esperando cotizaciones",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 1,
+    "filasTabla": 4,
+    "disabledButtons": [],
+    "overflowX": false
+  },
+  "movil-detalle": {
+    "title": "Panel de Compras — Portal de Compras BIA",
+    "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+    "h1": [
+      "Verificación fixes QA"
+    ],
+    "buttons": 13,
+    "inputs": 2,
+    "imgsSinAlt": [],
+    "botonesSinNombre": [],
+    "inputsSinLabel": [],
+    "targetsPequenos": [],
+    "textosMenores12px": [
+      {
+        "t": "Comparativa lista",
+        "fs": "11px"
+      }
+    ],
+    "tablas": 0,
+    "filasTabla": 0,
+    "disabledButtons": [],
+    "overflowX": false
+  }
+}

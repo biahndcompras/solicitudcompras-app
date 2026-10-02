@@ -61,22 +61,28 @@ export function SolicitanteWizard() {
   );
   const w = useSolicitudWizard(nuevo, identidad);
   const {
-    estado, set, siguiente, anterior, irA, pasoValido, faltantes, obligatoriosPendientes, envio, enviarSolicitud,
+    estado, set, siguiente, anterior, irA, pasoValido, faltantes, obligatoriosPendientes, assessmentIncompleto, envio, enviarSolicitud,
     guardarBorrador, cancelar, borradoAt, persistenciaOk, clasificandoIA, clasificarIA, evaluandoAssessment,
     evaluarAssessment, reintentarConContexto, coordinadores, elegirArchivoLogo, errorArchivo,
     limpiarErrorArchivo, pendienteBorrador, retomarBorrador, descartarBorrador,
   } = w;
   const [confirmCancel, setConfirmCancel] = useState(false);
-  const [confirmObligatorios, setConfirmObligatorios] = useState(false);
-  // El envío nunca se bloquea en silencio: si faltan obligatorios se avisa y la decisión
-  // final es del solicitante, que es quien sabe si puede resolverlo antes de la fecha.
+  // Un solo modal para las dos condiciones del envío: pueden ocurrir a la vez (faltan
+  // obligatorios Y el assessment no se preparó) y dos overlays encima del otro serían
+  // innavegables.
+  const [gateEnvio, setGateEnvio] = useState(false);
+  const faltanObligatorios = obligatoriosPendientes.length > 0;
+  const assessmentRoto = assessmentIncompleto !== null;
+  const hayAviso = faltanObligatorios || assessmentRoto;
+  // El envío nunca se bloquea en silencio: se avisa y la decisión final es del solicitante,
+  // que es quien sabe si puede resolverlo antes de la fecha.
   const intentarEnviar = useCallback(() => {
-    if (obligatoriosPendientes.length > 0) {
-      setConfirmObligatorios(true);
+    if (hayAviso) {
+      setGateEnvio(true);
       return;
     }
     enviarSolicitud();
-  }, [obligatoriosPendientes.length, enviarSolicitud]);
+  }, [hayAviso, enviarSolicitud]);
   const listo = estado.paso >= 6;
   const indicePaso = PASOS.findIndex((p) => p.id === estado.paso);
   const pasoVisible = PASOS[indicePaso] ?? PASOS[0];
@@ -344,28 +350,33 @@ export function SolicitanteWizard() {
         </Modal>
       ) : null}
 
-      {confirmObligatorios ? (
+      {gateEnvio ? (
         <Modal
           open
-          onClose={() => setConfirmObligatorios(false)}
-          title={`Faltan ${obligatoriosPendientes.length} ${obligatoriosPendientes.length === 1 ? "dato obligatorio" : "datos obligatorios"}`}
+          onClose={() => setGateEnvio(false)}
+          title={
+            assessmentRoto
+              ? "No pudimos preparar las preguntas"
+              : `Faltan ${obligatoriosPendientes.length} ${obligatoriosPendientes.length === 1 ? "dato obligatorio" : "datos obligatorios"}`
+          }
           className="max-w-md"
           footer={
             <div className="flex flex-col gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  setConfirmObligatorios(false);
+                  setGateEnvio(false);
                   irA(4);
+                  if (assessmentRoto) void evaluarAssessment();
                 }}
                 className="w-full min-h-[44px] rounded-full bg-slate-900 px-4 text-[13px] font-semibold text-white hover:bg-slate-800"
               >
-                Completar los datos
+                {assessmentRoto ? "Reintentar el asistente" : "Completar los datos"}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setConfirmObligatorios(false);
+                  setGateEnvio(false);
                   enviarSolicitud();
                 }}
                 className="w-full min-h-[44px] rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
@@ -375,25 +386,39 @@ export function SolicitanteWizard() {
             </div>
           }
         >
-          <p className="text-[13px] leading-relaxed text-slate-500">
-            Compras necesita estos datos para que los proveedores coticen de forma comparable.
-            Podés enviarla igual, pero la solicitud llegará incompleta.
-          </p>
-          <ul className="mt-3 space-y-1.5" role="list">
-            {obligatoriosPendientes.slice(0, 8).map((p) => (
-              <li key={p.campoKey} className="flex items-start gap-2 text-[13px] text-slate-700">
-                <span aria-hidden="true" className="mt-[3px] h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-                <span>
-                  {p.etiqueta.length > 96 ? `${p.etiqueta.slice(0, 96).trimEnd()}…` : p.etiqueta}
-                  {p.noSe ? <span className="text-slate-400"> — marcado como «No lo sé»</span> : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {obligatoriosPendientes.length > 8 ? (
-            <p className="mt-2 text-xs text-slate-400">
-              y {obligatoriosPendientes.length - 8} más.
-            </p>
+          {assessmentRoto ? (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/70 p-3">
+              <p className="text-[13px] leading-relaxed text-amber-900">
+                {assessmentIncompleto === "error"
+                  ? "El asistente no pudo preparar las preguntas. Si enviás ahora, tu solicitud llega a Compras solo con el título y la descripción: los proveedores cotizarían cosas distintas y la comparativa no serviría."
+                  : "Las preguntas del asistente todavía no están listas. Si enviás ahora, tu solicitud llega a Compras sin los detalles técnicos que hacen comparables las cotizaciones."}
+              </p>
+            </div>
+          ) : null}
+
+          {faltanObligatorios ? (
+            <>
+              <p className="text-[13px] leading-relaxed text-slate-500">
+                Compras necesita estos datos para que los proveedores coticen de forma comparable.
+                Podés enviarla igual, pero la solicitud llegará incompleta.
+              </p>
+              <ul className="mt-3 space-y-1.5" role="list">
+                {obligatoriosPendientes.slice(0, 8).map((p) => (
+                  <li key={p.campoKey} className="flex items-start gap-2 text-[13px] text-slate-700">
+                    <span aria-hidden="true" className="mt-[3px] h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                    <span>
+                      {p.etiqueta.length > 96 ? `${p.etiqueta.slice(0, 96).trimEnd()}…` : p.etiqueta}
+                      {p.noSe ? <span className="text-slate-400"> — marcado como «No lo sé»</span> : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {obligatoriosPendientes.length > 8 ? (
+                <p className="mt-2 text-xs text-slate-400">
+                  y {obligatoriosPendientes.length - 8} más.
+                </p>
+              ) : null}
+            </>
           ) : null}
         </Modal>
       ) : null}

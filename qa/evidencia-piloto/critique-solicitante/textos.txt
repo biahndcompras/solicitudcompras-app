@@ -1,0 +1,1413 @@
+
+
+========== D-01-home ==========
+BIA
+Compras
+SOLICITUDES
+Nueva solicitud de cotización
+
+Ingresá tus datos básicos para comenzar. Sin contraseñas.
+
+Tu correo institucional
+Tu nombre completo
+Área / departamento
+Mis solicitudes
+Continuar
+
+
+========== D-02-captura ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Borrador activo
+Guardar borrador
+Cancelar y descartar
+¿Qué necesitás?
+
+Describí brevemente tu solicitud.
+
+Título de la solicitud
+Tipo de necesidad
+Seleccioná una opción
+Materia prima y empaque
+Servicios logísticos
+Compras administrativas
+Mercadeo y publicidad
+CAPEX e indirectos de manufactura
+Tecnología
+Otra
+¿Producto o servicio?
+Producto
+Bien físico: materiales, empaques, artículos.
+Servicio
+Trabajo o actividad: logística, diseño, consultoría.
+¿Para cuándo lo necesitás?
+Descripción breve
+Área: Trade Marketing
+Continuar
+
+
+========== D-03-clasificacion ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Borrador activo
+Guardar borrador
+Cancelar y descartar
+Clasificación de tu solicitud
+
+Nuestro sistema ha analizado tus datos.
+
+SUGERENCIA IA
+90% CONFIANZA
+Esto parece una RFQ
+
+Solicitud de Cotización
+
+Ya sabés exactamente qué necesitás — solo nos falta cotizar el precio con los proveedores del mercado.
+
+Razón: Se solicita un producto específico (pelotas de fútbol) con características definidas (tamaño, marca, cantidad), lo que indica una solicitud de cotización directa.
+
+¿No te parece correcto? Podés cambiarlo con un clic:
+
+RFI — Solicitud de Información
+«Todavía estoy explorando opciones, no sé qué existe en el mercado.»
+RFQ — Solicitud de Cotización
+«Ya sé qué necesito, solo me falta comparar precio y tiempos.»
+RFP — Solicitud de Propuesta
+«Tengo un problema o proyecto amplio, busco que el proveedor proponga una solución.»
+Atrás
+Confirmar clasificación
+
+
+========== D-04-detalles ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Borrador activo
+Guardar borrador
+Cancelar y descartar
+Detalles para cotizar
+
+Completá la información técnica requerida para tu solicitud.
+
+INFORMACIÓN DE TU SOLICITUD
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+Necesitamos 200 pelotas de fútbol tamaño 5official con los colores de la marca, para torneo juvenil al aire libre en Tegucigalpa.
+¿Lleva marca o branding?
+Material POP, uniformes, empaques, etc.
+Subir arte o logo oficial
+Formatos aceptados: PNG, JPG, PDF, SVG, AI, EPS. Obligatorio para que el proveedor use la versión correcta.
+EL ASISTENTE NECESITA ESTOS DETALLES (6)
+
+¿De qué material deben ser las pelotas de fútbol para el torneo juvenil?
+
+PENDIENTE
+SUGERIDO:
+Cuero sintético
+TPU (Poliuretano termoplástico)
+PVC (Cloruro de polivinilo)
+o escribí tu propia respuesta:
+No lo sé
+
+¿Cuáles son los colores específicos de la marca BIA que deben llevar las pelotas de fútbol?
+
+PENDIENTE
+No lo sé
+
+¿Qué nivel de calidad se espera para las pelotas de fútbol, considerando que son para un torneo juvenil al aire libre?
+
+PENDIENTE
+SUGERIDO:
+Entrenamiento
+Partido (semi-profesional)
+Profesional
+o escribí tu propia respuesta:
+No lo sé
+
+¿Se requiere que las pelotas de fútbol lleven la marca BIA impresa o grabada?
+
+PENDIENTE
+No lo sé
+
+¿El logo de la marca BIA está disponible en formato vectorial o de alta resolución para la impresión en las pelotas?
+
+PENDIENTE
+No lo sé
+
+¿Cuál es el plazo de entrega esperado para las 200 pelotas de fútbol?
+
+PENDIENTE
+SUGERIDO:
+15 días hábiles
+30 días hábiles
+A convenir
+o escribí tu propia respuesta:
+No lo sé
+Atrás
+Generar documento
+
+
+========== D-05-documento ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Lista para envío
+Guardar borrador
+Cancelar y descartar
+Tu solicitud está lista
+
+Revisá el resumen antes de enviar a Compras.
+
+BIA
+REFERENCIA ÚNICA
+RFQ-2026-XXXX
+La referencia definitiva se asigna al enviar
+RFQ
+TÍTULO DE LA SOLICITUD
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+DESCRIPCIÓN
+Necesitamos 200 pelotas de fútbol tamaño 5official con los colores de la marca, para torneo juvenil al aire libre en Tegucigalpa.
+SOLICITANTE
+Solicitante E2E
+ÁREA
+Trade Marketing
+TIPO DE NECESIDAD
+Materia prima y empaque
+FECHA REQUERIDA
+22 oct 2026
+CLASIFICACIÓN ASIGNADA
+RFQ — Solicitud de Cotización
+DETALLES DE LA SOLICITUD
+¿De qué material deben ser las pelotas de fútbol para el torneo juvenil?
+—
+¿Cuáles son los colores específicos de la marca BIA que deben llevar las pelotas de fútbol?
+—
+¿Qué nivel de calidad se espera para las pelotas de fútbol, considerando que son para un torneo juvenil al aire libre?
+—
+¿Se requiere que las pelotas de fútbol lleven la marca BIA impresa o grabada?
+—
+¿El logo de la marca BIA está disponible en formato vectorial o de alta resolución para la impresión en las pelotas?
+—
+¿Cuál es el plazo de entrega esperado para las 200 pelotas de fútbol?
+—
+¿A QUÉ COMPRADOR VA DIRIGIDA LA SOLICITUD?
+Bryan Bonilla
+Servicios logísticos · Compras administrativas
+Carlos Melara
+Mercadeo y publicidad · Tecnología
+Lester Ramirez
+Compras administrativas · Mercadeo y publicidad
+Maria Jose Torres
+CAPEX e indirectos de manufactura · Tecnología
+
+Irá asignada a
+Bryan Bonilla
+
+Atrás
+Enviar solicitud
+
+
+========== D-06-confirmacion ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Enviada
+Tu solicitud fue enviada
+Referencia: RFQ-2026-0011
+
+Todo listo. Te avisaremos a mj.e2e@biabrands.co en cuanto haya una comparativa lista para que decidas.
+
+DOCUMENTO GENERADO
+RFQ
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+Solicitud de Cotización
+•
+mj.e2e@biabrands.co
+Ver PDF
+Descargar
+COORDINADOR ASIGNADO
+Equipo Compras BIA
+Ver mis solicitudes
+
+
+========== M-01-home ==========
+BIA
+Compras
+Nueva solicitud de cotización
+
+Ingresá tus datos básicos para comenzar. Sin contraseñas.
+
+Tu correo institucional
+Tu nombre completo
+Área / departamento
+Mis solicitudes
+Continuar
+
+
+========== M-02-captura ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Borrador activo
+Guardar borrador
+Cancelar y descartar
+¿Qué necesitás?
+
+Describí brevemente tu solicitud.
+
+Título de la solicitud
+Tipo de necesidad
+Seleccioná una opción
+Materia prima y empaque
+Servicios logísticos
+Compras administrativas
+Mercadeo y publicidad
+CAPEX e indirectos de manufactura
+Tecnología
+Otra
+¿Producto o servicio?
+Producto
+Bien físico: materiales, empaques, artículos.
+Servicio
+Trabajo o actividad: logística, diseño, consultoría.
+¿Para cuándo lo necesitás?
+Descripción breve
+Área: Trade Marketing
+Continuar
+
+
+========== M-03-clasificacion ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Borrador activo
+Guardar borrador
+Cancelar y descartar
+Clasificación de tu solicitud
+
+Nuestro sistema ha analizado tus datos.
+
+SUGERENCIA IA
+90% CONFIANZA
+Esto parece una RFQ
+
+Solicitud de Cotización
+
+Ya sabés exactamente qué necesitás — solo nos falta cotizar el precio con los proveedores del mercado.
+
+Razón: Se especifican claramente las características del producto (pelotas de fútbol tamaño 5, 200 unidades, colores de marca), lo que indica una solicitud de cotización directa para un producto estándar.
+
+¿No te parece correcto? Podés cambiarlo con un clic:
+
+RFI — Solicitud de Información
+«Todavía estoy explorando opciones, no sé qué existe en el mercado.»
+RFQ — Solicitud de Cotización
+«Ya sé qué necesito, solo me falta comparar precio y tiempos.»
+RFP — Solicitud de Propuesta
+«Tengo un problema o proyecto amplio, busco que el proveedor proponga una solución.»
+Atrás
+Confirmar clasificación
+
+
+========== M-04-detalles ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Borrador activo
+Guardar borrador
+Cancelar y descartar
+Detalles para cotizar
+
+Completá la información técnica requerida para tu solicitud.
+
+INFORMACIÓN DE TU SOLICITUD
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+Necesitamos 200 pelotas de fútbol tamaño 5official con los colores de la marca, para torneo juvenil al aire libre en Tegucigalpa.
+¿Lleva marca o branding?
+Material POP, uniformes, empaques, etc.
+Subir arte o logo oficial
+Formatos aceptados: PNG, JPG, PDF, SVG, AI, EPS. Obligatorio para que el proveedor use la versión correcta.
+EL ASISTENTE NECESITA ESTOS DETALLES (4)
+
+¿De qué material deben ser las pelotas de fútbol para el torneo juvenil al aire libre?
+
+PENDIENTE
+SUGERIDO:
+Cuero sintético PU
+TPU (Poliuretano Termoplástico)
+PVC (Policloruro de Vinilo)
+o escribí tu propia respuesta:
+No lo sé
+
+¿Qué nivel de calidad se espera para las pelotas de fútbol (ej. entrenamiento, partido, profesional)?
+
+PENDIENTE
+SUGERIDO:
+Entrenamiento
+Partido
+Profesional
+o escribí tu propia respuesta:
+No lo sé
+
+¿Se requiere que las pelotas de fútbol incluyan la marca BIA y los colores corporativos?
+
+PENDIENTE
+SUGERIDO:
+Sí, con logo y colores
+Solo colores corporativos
+No, estándar
+o escribí tu propia respuesta:
+No lo sé
+
+¿Cuál es el plazo de entrega esperado para las 200 pelotas de fútbol?
+
+PENDIENTE
+SUGERIDO:
+15 días hábiles
+30 días hábiles
+A convenir
+o escribí tu propia respuesta:
+No lo sé
+Atrás
+Generar documento
+
+
+========== M-05-documento ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Lista para envío
+Guardar borrador
+Cancelar y descartar
+Tu solicitud está lista
+
+Revisá el resumen antes de enviar a Compras.
+
+BIA
+REFERENCIA ÚNICA
+RFQ-2026-XXXX
+La referencia definitiva se asigna al enviar
+RFQ
+TÍTULO DE LA SOLICITUD
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+DESCRIPCIÓN
+Necesitamos 200 pelotas de fútbol tamaño 5official con los colores de la marca, para torneo juvenil al aire libre en Tegucigalpa.
+SOLICITANTE
+Solicitante E2E
+ÁREA
+Trade Marketing
+TIPO DE NECESIDAD
+Materia prima y empaque
+FECHA REQUERIDA
+22 oct 2026
+CLASIFICACIÓN ASIGNADA
+RFQ — Solicitud de Cotización
+DETALLES DE LA SOLICITUD
+¿De qué material deben ser las pelotas de fútbol para el torneo juvenil al aire libre?
+—
+¿Qué nivel de calidad se espera para las pelotas de fútbol (ej. entrenamiento, partido, profesional)?
+—
+¿Se requiere que las pelotas de fútbol incluyan la marca BIA y los colores corporativos?
+—
+¿Cuál es el plazo de entrega esperado para las 200 pelotas de fútbol?
+—
+¿A QUÉ COMPRADOR VA DIRIGIDA LA SOLICITUD?
+Bryan Bonilla
+Servicios logísticos · Compras administrativas
+Carlos Melara
+Mercadeo y publicidad · Tecnología
+Lester Ramirez
+Compras administrativas · Mercadeo y publicidad
+Maria Jose Torres
+CAPEX e indirectos de manufactura · Tecnología
+
+Irá asignada a
+Bryan Bonilla
+
+Atrás
+Enviar solicitud
+
+
+========== M-06-confirmacion ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Enviada
+Tu solicitud fue enviada
+Referencia: RFQ-2026-0012
+
+Todo listo. Te avisaremos a mj.e2e@biabrands.co en cuanto haya una comparativa lista para que decidas.
+
+DOCUMENTO GENERADO
+RFQ
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+Solicitud de Cotización
+•
+mj.e2e@biabrands.co
+Ver PDF
+Descargar
+COORDINADOR ASIGNADO
+Equipo Compras BIA
+Ver mis solicitudes
+
+
+========== S-02-captura ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Borrador activo
+Guardar borrador
+Cancelar y descartar
+¿Qué necesitás?
+
+Describí brevemente tu solicitud.
+
+Título de la solicitud
+Tipo de necesidad
+Seleccioná una opción
+Materia prima y empaque
+Servicios logísticos
+Compras administrativas
+Mercadeo y publicidad
+CAPEX e indirectos de manufactura
+Tecnología
+Otra
+¿Producto o servicio?
+Producto
+Bien físico: materiales, empaques, artículos.
+Servicio
+Trabajo o actividad: logística, diseño, consultoría.
+¿Para cuándo lo necesitás?
+Descripción breve
+Área: Trade Marketing
+Continuar
+
+
+========== S-04-detalles ==========
+BIA
+Compras
+PROGRESO DE LA SOLICITUD
+Captura Inicial
+Clasificación
+Detalles técnicos
+Documento
+ESTADO ACTUAL
+Borrador activo
+Guardar borrador
+Cancelar y descartar
+Detalles para cotizar
+
+Completá la información técnica requerida para tu solicitud.
+
+INFORMACIÓN DE TU SOLICITUD
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+Necesitamos 200 pelotas de fútbol tamaño 5official con los colores de la marca, para torneo juvenil al aire libre en Tegucigalpa.
+¿Lleva marca o branding?
+Material POP, uniformes, empaques, etc.
+Subir arte o logo oficial
+Formatos aceptados: PNG, JPG, PDF, SVG, AI, EPS. Obligatorio para que el proveedor use la versión correcta.
+EL ASISTENTE NECESITA ESTOS DETALLES (5)
+
+¿De qué material debe ser la cubierta exterior de las pelotas de fútbol para el torneo juvenil al aire libre?
+
+PENDIENTE
+SUGERIDO:
+TPU (Poliuretano Termoplástico)
+PVC (Cloruro de Polivinilo)
+Cuero sintético
+o escribí tu propia respuesta:
+No lo sé
+
+¿Qué nivel de calidad o durabilidad se espera para las pelotas de fútbol, considerando que son para un torneo juvenil al aire libre?
+
+PENDIENTE
+SUGERIDO:
+Entrenamiento/Recreativo
+Partido/Competición
+Profesional
+o escribí tu propia respuesta:
+No lo sé
+
+¿Se requiere que las pelotas de fútbol lleven la marca BIA impresa o algún otro tipo de branding?
+
+PENDIENTE
+SUGERIDO:
+Sí, logo impreso
+Sí, logo grabado
+No, solo colores
+o escribí tu propia respuesta:
+No lo sé
+
+¿Cuáles son los colores específicos de la marca BIA que deben llevar las pelotas de fútbol?
+
+PENDIENTE
+SUGERIDO:
+Colores corporativos (especificar)
+Combinación de 2 colores
+Diseño multicolor
+o escribí tu propia respuesta:
+No lo sé
+
+¿Cuál es el plazo de entrega esperado para las 200 pelotas de fútbol?
+
+PENDIENTE
+SUGERIDO:
+15 días hábiles
+30 días hábiles
+Urgente (especificar fecha)
+o escribí tu propia respuesta:
+No lo sé
+Atrás
+Generar documento
+
+
+========== MD-01-sin-email ==========
+Mis solicitudes
+
+Revisá el estado de tus pedidos y comparativas.
+
+NUEVA SOLICITUD
+Tu correo institucional
+Ver mis solicitudes
+
+
+========== MD-02-lista ==========
+Mis solicitudes
+
+Revisá el estado de tus pedidos y comparativas.
+
+NUEVA SOLICITUD
+Tu correo institucional
+Ver mis solicitudes
+RFQ-2026-0012
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+26 DÍAS DE MARGEN
+Enviada a Compras
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 26 sept 2026
+
+Ver detalle
+Atención: 0 h
+RFQ-2026-0011
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+26 DÍAS DE MARGEN
+Enviada a Compras
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 26 sept 2026
+
+Ver detalle
+Atención: 0 h
+RFQ-2026-0009
+Gorra tejida con logo — prueba fixes
+36 DÍAS DE MARGEN
+Enviada a Compras
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 22 sept 2026
+
+Ver detalle
+Atención: 4 días
+RFQ-2026-0008
+Verificación fixes QA
+29 DÍAS DE MARGEN
+Comparativa lista
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 22 sept 2026
+
+Ver detalle
+Atención: 4 días
+RFQ-2026-0007
+Lapiceros branding Vía — activación canal tradicional
+Cerrada
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 22 sept 2026
+
+Ver detalle
+Atención: 0 h
+RFQ-2026-0006
+Lapiceros con branding Vía para activación
+Cerrada
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 19 sept 2026
+
+Ver detalle
+Atención: 2 h
+
+
+========== MD-03-detalle ==========
+Volver
+RFQ-2026-0009
+36 DÍAS DE MARGEN
+Enviada a Compras
+Gorra tejida con logo — prueba fixes
+
+Creada: 22 sept 2026 · Atención: 4 días
+
+SOLICITANTE
+Solicitante E2E
+ÁREA
+Trade Marketing
+TIPO
+RFQ
+SUBTIPO
+producto
+CATEGORÍA
+Mercadeo y publicidad
+FECHA REQUERIDA
+1 nov 2026
+DESCRIPCIÓN
+
+100 gorras tejidas con logo de marca.
+
+Logo / arte del producto
+Descargar cotizacion-sombrillas.pdf
+PROGRESO
+📝
+Creada
+🧾
+En cotización
+⚖️
+Comparativa
+🗳️
+Tu decisión
+✅
+Cerrada
+COTIZACIONES (0)
+
+Aún no hay cotizaciones cargadas.
+
+
+========== MD-04-detalle-comparativa ==========
+Volver
+RFQ-2026-0008
+29 DÍAS DE MARGEN
+Comparativa lista
+Verificación fixes QA
+
+Creada: 22 sept 2026 · Atención: 4 días
+
+SOLICITANTE
+Solicitante E2E
+ÁREA
+Trade Marketing
+TIPO
+RFQ
+SUBTIPO
+producto
+CATEGORÍA
+Mercadeo y publicidad
+FECHA REQUERIDA
+25 oct 2026
+DESCRIPCIÓN
+
+Solicitud para verificar fixes H12
+
+PROGRESO
+✓
+Creada
+✓
+En cotización
+⚖️
+Comparativa
+🗳️
+Tu decisión
+✅
+Cerrada
+COTIZACIONES (2)
+Prov Cara SA
+HNL 100000
+Prov Barata SA
+HNL 80000
+
+
+========== MD-05-email-inexistente ==========
+Mis solicitudes
+
+Revisá el estado de tus pedidos y comparativas.
+
+NUEVA SOLICITUD
+Tu correo institucional
+Ver mis solicitudes
+No encontramos solicitudes con este correo
+Crear una solicitud
+
+
+========== MM-01-sin-email ==========
+
+
+
+========== MM-02-lista ==========
+Mis solicitudes
+
+Revisá el estado de tus pedidos y comparativas.
+
+NUEVA SOLICITUD
+Tu correo institucional
+Ver mis solicitudes
+RFQ-2026-0012
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+26 DÍAS DE MARGEN
+Enviada a Compras
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 26 sept 2026
+
+Ver detalle
+Atención: 0 h
+RFQ-2026-0011
+Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil
+26 DÍAS DE MARGEN
+Enviada a Compras
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 26 sept 2026
+
+Ver detalle
+Atención: 0 h
+RFQ-2026-0009
+Gorra tejida con logo — prueba fixes
+36 DÍAS DE MARGEN
+Enviada a Compras
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 22 sept 2026
+
+Ver detalle
+Atención: 4 días
+RFQ-2026-0008
+Verificación fixes QA
+29 DÍAS DE MARGEN
+Comparativa lista
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 22 sept 2026
+
+Ver detalle
+Atención: 4 días
+RFQ-2026-0007
+Lapiceros branding Vía — activación canal tradicional
+Cerrada
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 22 sept 2026
+
+Ver detalle
+Atención: 0 h
+RFQ-2026-0006
+Lapiceros con branding Vía para activación
+Cerrada
+Creada
+En cotización
+Comparativa
+Tu decisión
+Cerrada
+
+Creada: 19 sept 2026
+
+Ver detalle
+Atención: 2 h
+
+
+========== MM-03-detalle ==========
+Volver
+RFQ-2026-0009
+36 DÍAS DE MARGEN
+Enviada a Compras
+Gorra tejida con logo — prueba fixes
+
+Creada: 22 sept 2026 · Atención: 4 días
+
+SOLICITANTE
+Solicitante E2E
+ÁREA
+Trade Marketing
+TIPO
+RFQ
+SUBTIPO
+producto
+CATEGORÍA
+Mercadeo y publicidad
+FECHA REQUERIDA
+1 nov 2026
+DESCRIPCIÓN
+
+100 gorras tejidas con logo de marca.
+
+Logo / arte del producto
+Descargar cotizacion-sombrillas.pdf
+PROGRESO
+📝
+Creada
+🧾
+En cotización
+⚖️
+Comparativa
+🗳️
+Tu decisión
+✅
+Cerrada
+COTIZACIONES (0)
+
+Aún no hay cotizaciones cargadas.
+
+
+========== MM-04-detalle-comparativa ==========
+Volver
+RFQ-2026-0008
+29 DÍAS DE MARGEN
+Comparativa lista
+Verificación fixes QA
+
+Creada: 22 sept 2026 · Atención: 4 días
+
+SOLICITANTE
+Solicitante E2E
+ÁREA
+Trade Marketing
+TIPO
+RFQ
+SUBTIPO
+producto
+CATEGORÍA
+Mercadeo y publicidad
+FECHA REQUERIDA
+25 oct 2026
+DESCRIPCIÓN
+
+Solicitud para verificar fixes H12
+
+PROGRESO
+✓
+Creada
+✓
+En cotización
+⚖️
+Comparativa
+🗳️
+Tu decisión
+✅
+Cerrada
+COTIZACIONES (2)
+Prov Cara SA
+HNL 100000
+Prov Barata SA
+HNL 80000
+
+
+========== MM-05-email-inexistente ==========
+Mis solicitudes
+
+Revisá el estado de tus pedidos y comparativas.
+
+NUEVA SOLICITUD
+Tu correo institucional
+Ver mis solicitudes
+No encontramos solicitudes con este correo
+Crear una solicitud
+
+
+========== PD-01-comparativa ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo PlayaPromo
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+CostaPrint
+TOTAL
+HNL 98.9
+PROS
+Valor total en Lempiras (HNL), lo que podría simplificar la gestión financiera si la moneda base de la operación es Lempiras.
+CONTRAS
+Plazo de entrega de 12 días, ligeramente superior al de PlayaPromo. · Valor total significativamente mayor en comparación con PlayaPromo.
+PLAZO DE ENTREGA
+12 días
+Elegir esta opción
+PROVEEDOR
+PlayaPromo
+TOTAL
+USD 31.5
+PROS
+Plazo de entrega más corto (10 días). · Valor total considerablemente menor en comparación con CostaPrint.
+CONTRAS
+Valor total en Dólares (USD), lo que implica riesgo cambiario y necesidad de conversión para comparación directa.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras
+
+
+========== PD-02-modal-confirmar ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo PlayaPromo
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+CostaPrint
+TOTAL
+HNL 98.9
+PROS
+Valor total en Lempiras (HNL), lo que podría simplificar la gestión financiera si la moneda base de la operación es Lempiras.
+CONTRAS
+Plazo de entrega de 12 días, ligeramente superior al de PlayaPromo. · Valor total significativamente mayor en comparación con PlayaPromo.
+PLAZO DE ENTREGA
+12 días
+Elegir esta opción
+PROVEEDOR
+PlayaPromo
+TOTAL
+USD 31.5
+PROS
+Plazo de entrega más corto (10 días). · Valor total considerablemente menor en comparación con CostaPrint.
+CONTRAS
+Valor total en Dólares (USD), lo que implica riesgo cambiario y necesidad de conversión para comparación directa.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras
+Confirmar selección
+
+Estás por elegir CostaPrint. Esta acción registrará tu decisión y notificará a Compras para avanzar.
+
+Cancelar
+Confirmar
+
+
+========== PD-05-comparativa-decidida ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo la oferta de Imprenta CostaPrint: menor total (HNL 42,000) y mejor plazo (10 días). Confirmar con Proveedora Norte si puede igualar el precio antes de descartarla.
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+Proveedora Norte S.A.
+TOTAL
+HNL 57,500
+PROS
+Plazo de entrega de 15 días, razonable.
+CONTRAS
+Valor total más alto entre los proveedores que especifican ISV. · No especifica vigencia de oferta, forma de pago ni garantía.
+PLAZO DE ENTREGA
+15 días
+Elegir esta opción
+PROVEEDOR
+Imprenta CostaPrint S. de R.L.
+TOTAL
+HNL 42,000
+PROS
+Plazo de entrega más corto (10 días). · Valor total más bajo entre los proveedores que especifican ISV.
+CONTRAS
+No especifica vigencia de oferta, forma de pago ni garantía.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+PROVEEDOR
+Papelera del Valle S.A.
+TOTAL
+HNL 399,000
+PROS
+Vigencia de oferta de 30 días, lo que da más tiempo para la toma de decisión.
+CONTRAS
+Valor total significativamente más alto. · Plazo de entrega más largo (30 días). · No especifica si el precio incluye ISV, requiriendo aclaración. · No especifica forma de pago ni garantía.
+PLAZO DE ENTREGA
+30 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras
+
+
+========== PM-01-comparativa ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo PlayaPromo
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+CostaPrint
+TOTAL
+HNL 98.9
+PROS
+Valor total en Lempiras (HNL), lo que podría simplificar la gestión financiera si la moneda base de la operación es Lempiras.
+CONTRAS
+Plazo de entrega de 12 días, ligeramente superior al de PlayaPromo. · Valor total significativamente mayor en comparación con PlayaPromo.
+PLAZO DE ENTREGA
+12 días
+Elegir esta opción
+PROVEEDOR
+PlayaPromo
+TOTAL
+USD 31.5
+PROS
+Plazo de entrega más corto (10 días). · Valor total considerablemente menor en comparación con CostaPrint.
+CONTRAS
+Valor total en Dólares (USD), lo que implica riesgo cambiario y necesidad de conversión para comparación directa.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras
+
+
+========== PM-02-modal-confirmar ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo PlayaPromo
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+CostaPrint
+TOTAL
+HNL 98.9
+PROS
+Valor total en Lempiras (HNL), lo que podría simplificar la gestión financiera si la moneda base de la operación es Lempiras.
+CONTRAS
+Plazo de entrega de 12 días, ligeramente superior al de PlayaPromo. · Valor total significativamente mayor en comparación con PlayaPromo.
+PLAZO DE ENTREGA
+12 días
+Elegir esta opción
+PROVEEDOR
+PlayaPromo
+TOTAL
+USD 31.5
+PROS
+Plazo de entrega más corto (10 días). · Valor total considerablemente menor en comparación con CostaPrint.
+CONTRAS
+Valor total en Dólares (USD), lo que implica riesgo cambiario y necesidad de conversión para comparación directa.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras
+Confirmar selección
+
+Estás por elegir CostaPrint. Esta acción registrará tu decisión y notificará a Compras para avanzar.
+
+Cancelar
+Confirmar
+
+
+========== PM-05-comparativa-decidida ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo la oferta de Imprenta CostaPrint: menor total (HNL 42,000) y mejor plazo (10 días). Confirmar con Proveedora Norte si puede igualar el precio antes de descartarla.
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+Proveedora Norte S.A.
+TOTAL
+HNL 57,500
+PROS
+Plazo de entrega de 15 días, razonable.
+CONTRAS
+Valor total más alto entre los proveedores que especifican ISV. · No especifica vigencia de oferta, forma de pago ni garantía.
+PLAZO DE ENTREGA
+15 días
+Elegir esta opción
+PROVEEDOR
+Imprenta CostaPrint S. de R.L.
+TOTAL
+HNL 42,000
+PROS
+Plazo de entrega más corto (10 días). · Valor total más bajo entre los proveedores que especifican ISV.
+CONTRAS
+No especifica vigencia de oferta, forma de pago ni garantía.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+PROVEEDOR
+Papelera del Valle S.A.
+TOTAL
+HNL 399,000
+PROS
+Vigencia de oferta de 30 días, lo que da más tiempo para la toma de decisión.
+CONTRAS
+Valor total significativamente más alto. · Plazo de entrega más largo (30 días). · No especifica si el precio incluye ISV, requiriendo aclaración. · No especifica forma de pago ni garantía.
+PLAZO DE ENTREGA
+30 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras
+
+
+========== PS-01-comparativa ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo PlayaPromo
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+CostaPrint
+TOTAL
+HNL 98.9
+PROS
+Valor total en Lempiras (HNL), lo que podría simplificar la gestión financiera si la moneda base de la operación es Lempiras.
+CONTRAS
+Plazo de entrega de 12 días, ligeramente superior al de PlayaPromo. · Valor total significativamente mayor en comparación con PlayaPromo.
+PLAZO DE ENTREGA
+12 días
+Elegir esta opción
+PROVEEDOR
+PlayaPromo
+TOTAL
+USD 31.5
+PROS
+Plazo de entrega más corto (10 días). · Valor total considerablemente menor en comparación con CostaPrint.
+CONTRAS
+Valor total en Dólares (USD), lo que implica riesgo cambiario y necesidad de conversión para comparación directa.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras
+
+
+========== PS-02-modal-confirmar ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo PlayaPromo
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+CostaPrint
+TOTAL
+HNL 98.9
+PROS
+Valor total en Lempiras (HNL), lo que podría simplificar la gestión financiera si la moneda base de la operación es Lempiras.
+CONTRAS
+Plazo de entrega de 12 días, ligeramente superior al de PlayaPromo. · Valor total significativamente mayor en comparación con PlayaPromo.
+PLAZO DE ENTREGA
+12 días
+Elegir esta opción
+PROVEEDOR
+PlayaPromo
+TOTAL
+USD 31.5
+PROS
+Plazo de entrega más corto (10 días). · Valor total considerablemente menor en comparación con CostaPrint.
+CONTRAS
+Valor total en Dólares (USD), lo que implica riesgo cambiario y necesidad de conversión para comparación directa.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras
+Confirmar selección
+
+Estás por elegir CostaPrint. Esta acción registrará tu decisión y notificará a Compras para avanzar.
+
+Cancelar
+Confirmar
+
+
+========== PS-05-comparativa-decidida ==========
+ENLACE PÚBLICO · SIN INICIAR SESIÓN
+Comparativa lista
+
+Los importes se muestran en su moneda original (sin conversión).
+
+RECOMENDACIÓN DE COMPRAS
+HUMANA
+Recomiendo la oferta de Imprenta CostaPrint: menor total (HNL 42,000) y mejor plazo (10 días). Confirmar con Proveedora Norte si puede igualar el precio antes de descartarla.
+Opciones cotizadas
+
+Los importes se muestran en su moneda original (sin conversión).
+
+PENDIENTE DE DECISIÓN
+PROVEEDOR
+Proveedora Norte S.A.
+TOTAL
+HNL 57,500
+PROS
+Plazo de entrega de 15 días, razonable.
+CONTRAS
+Valor total más alto entre los proveedores que especifican ISV. · No especifica vigencia de oferta, forma de pago ni garantía.
+PLAZO DE ENTREGA
+15 días
+Elegir esta opción
+PROVEEDOR
+Imprenta CostaPrint S. de R.L.
+TOTAL
+HNL 42,000
+PROS
+Plazo de entrega más corto (10 días). · Valor total más bajo entre los proveedores que especifican ISV.
+CONTRAS
+No especifica vigencia de oferta, forma de pago ni garantía.
+PLAZO DE ENTREGA
+10 días
+Elegir esta opción
+PROVEEDOR
+Papelera del Valle S.A.
+TOTAL
+HNL 399,000
+PROS
+Vigencia de oferta de 30 días, lo que da más tiempo para la toma de decisión.
+CONTRAS
+Valor total significativamente más alto. · Plazo de entrega más largo (30 días). · No especifica si el precio incluye ISV, requiriendo aclaración. · No especifica forma de pago ni garantía.
+PLAZO DE ENTREGA
+30 días
+Elegir esta opción
+Ninguna me sirve, necesito hablar con Compras

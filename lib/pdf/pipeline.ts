@@ -20,8 +20,16 @@ export async function pipelineEnvioACompras(opts: {
   solicitud: Solicitud;
   respuestas?: Record<string, string>;
   coordinadorIdSolicitado?: string;
+  /**
+   * `false` devuelve en cuanto el documento está persistido y deja los correos 1 y 2 en
+   * segundo plano. Es lo que usa el endpoint de envío: la transición ya ocurrió y la
+   * notificación no puede decidir si la solicitud se envió (RF-25). Los correos registran
+   * su propio estado en `correo_enviado` (incluido `fallido`), así que ningún resultado se
+   * pierde por no esperar.
+   */
+  notificar?: boolean;
 }): Promise<ResultadoPipeline> {
-  const { repo, solicitud, respuestas = {}, coordinadorIdSolicitado } = opts;
+  const { repo, solicitud, respuestas = {}, coordinadorIdSolicitado, notificar = true } = opts;
   const tipo = solicitud.tipo ?? "RFQ";
 
   // 0. Asignar coordinador. Si el solicitante eligió uno explícito (1.1), respetar esa elección;
@@ -51,7 +59,8 @@ export async function pipelineEnvioACompras(opts: {
   }
   const coordenadorNombre = coordinadores.find((c) => c.id === coordinadorId)?.nombre;
 
-  // 1. Generar PDF (si falla, la solicitud NO cambia de estado — RF-24)
+  // 1. Generar PDF. Si falla, el pipeline lo reporta: la transición ya ocurrió (el envío es
+  // un hecho de negocio) y quien llama decide qué hacer con el fallo.
   let pdf;
   try {
     pdf = await generarDocumento({ tipo, solicitud, respuestas, coordenadorNombre });
@@ -67,6 +76,7 @@ export async function pipelineEnvioACompras(opts: {
     plantillaVersion: 1,
   });
 
+  // 3. Correos 1 (al coordinador, con el PDF) y 2 (acuse al solicitante).
   const baseDatos = {
     numeroReferencia: solicitud.numeroReferencia,
     titulo: solicitud.titulo,
@@ -77,26 +87,49 @@ export async function pipelineEnvioACompras(opts: {
     fechaRequerida: solicitud.fechaRequerida,
     resumen: solicitud.descripcion,
   };
-
-  // 3. Correo 1 al coordinador (con PDF adjunto). Si falla: avanza marcada notificacion_fallida (RF-25)
   const correoCoordinadorDest = process.env.MAIL_COORDINADOR_DEFAULT ?? solicitud.solicitanteEmail;
-  const c1 = await enviarCorreo({
-    repo,
-    tipoCorreo: "1",
-    solicitudId: solicitud.id,
-    destinatario: correoCoordinadorDest,
-    datos: { ...baseDatos, coordinadorNombre: coordenadorNombre, urlPanel: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/panel` },
-    adjuntoPdf: { filename: `${solicitud.numeroReferencia ?? "solicitud"}.pdf`, content: pdf.buffer },
-  });
 
-  // 4. Correo 2 al solicitante (acuse)
-  const c2 = await enviarCorreo({
-    repo,
-    tipoCorreo: "2",
-    solicitudId: solicitud.id,
-    destinatario: solicitud.solicitanteEmail,
-    datos: { ...baseDatos, coordinadorNombre: coordenadorNombre },
-  });
+  const enviarLosDos = async () => {
+    // Correo 1 al coordinador (con el PDF adjunto).
+    const c1 = await enviarCorreo({
+      repo,
+      tipoCorreo: "1",
+      solicitudId: solicitud.id,
+      destinatario: correoCoordinadorDest,
+      datos: { ...baseDatos, coordinadorNombre: coordenadorNombre, urlPanel: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/panel` },
+      adjuntoPdf: { filename: `${solicitud.numeroReferencia ?? "solicitud"}.pdf`, content: pdf.buffer },
+    });
+    // Correo 2 al solicitante (acuse de recibo).
+    const c2 = await enviarCorreo({
+      repo,
+      tipoCorreo: "2",
+      solicitudId: solicitud.id,
+      destinatario: solicitud.solicitanteEmail,
+      datos: { ...baseDatos, coordinadorNombre: coordenadorNombre },
+    });
+    return { c1, c2 };
+  };
+
+  if (!notificar) {
+    void enviarLosDos().catch((e) => {
+      // `enviarCorreo` ya registra su propio fallo (incluido `fallido`) en `correo_enviado`,
+      // pero eso NO cubre una excepción inesperada (p. ej. que `registrarCorreo` reviente).
+      // Sin este log, ese fallo se perdería en silencio.
+      console.error(
+        `[pipeline] correos 1 y 2 no completados para ${solicitud.id} (${solicitud.numeroReferencia ?? "sin ref"}):`,
+        e
+      );
+    });
+    return {
+      ok: true,
+      documentoId: doc.id,
+      coordinadorId: coordinadorId || undefined,
+      correoCoordinador: "pendiente",
+      correoSolicitante: "pendiente",
+    };
+  }
+
+  const { c1, c2 } = await enviarLosDos();
 
   return {
     ok: true,

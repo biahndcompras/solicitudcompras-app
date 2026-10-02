@@ -780,6 +780,27 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
     return [...dePreguntas, ...dePlantilla].filter((p) => (vistos.has(p.campoKey) ? false : (vistos.add(p.campoKey), true)));
   }, [estado]);
 
+  /**
+   * Si el assessment no llegó a prepararse, la solicitud se envía igual y al coordinador le
+   * RFQ con título y descripción pero sin una sola característica técnica: los proveedores
+   * cotizan cosas distintas y la comparativa no sirve. La UI lo dice en el paso 4, pero ese
+   * texto no sobrevive a que la persona avance y no lo lea.
+   *
+   * Se distinguen tres salidas, porque "0 preguntas" no siempre es lo mismo:
+   * - `listo` con 0 preguntas: el asistente concluyó que con eso alcanza. NO es un fallo.
+   * - `error`: falló la preparación y no hay ni preguntas ni plantilla.
+   * - `inactivo`/`cargando` sin nada: nunca llegó a preguntar (borrador retomado, salto de
+   *   paso). Tampoco es un fallo, pero el RFQ saldría igual de vacío.
+   */
+  const assessmentIncompleto = useMemo<"error" | "sin_preparar" | null>(() => {
+    const s = estado;
+    const sinNada = s.assessmentPreguntas.length === 0 && (s.camposPlantilla?.length ?? 0) === 0;
+    if (!sinNada) return null;
+    if (s.assessmentEstado === "error") return "error";
+    if (s.assessmentEstado === "listo") return null;
+    return "sin_preparar";
+  }, [estado]);
+
   return {
     estado,
     siguiente,
@@ -789,6 +810,7 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
     pasoValido,
     faltantes,
     obligatoriosPendientes,
+    assessmentIncompleto,
     envio,
     enviarSolicitud,
     clasificandoIA,

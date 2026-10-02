@@ -62,7 +62,9 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  /* clip en vez de hidden: recorta el desborde horizontal SIN convertir el body en
+     contenedor de scroll (hidden rompería los pies de página sticky del wizard). */
+  overflow-x: clip;
 }
 
 /* JetBrains Mono para IDs y referencias */
@@ -128,4 +130,78 @@ select {
 /* Textura de fondo en patrón de puntos (del ref) */
 .bg-grid {
   background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H17.5V20.5H20ZM20 20.5V23H22.5V20.5H20Z' fill='%23E5E7EB' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+/* P3-b — Bloque de movimiento reducido (WCAG 2.3.3 / prefers-reduced-motion).
+   Los blobs de fondo (12s + 24s infinite) y las transiciones de paso se congelan:
+   un usuario con mareo o epilepsia sensible al movimiento no debe verlos. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fluid-blob,
+  .step-enter,
+  .animate-spin,
+  .animate-pulse {
+    animation: none !important;
+  }
+  .step-enter {
+    opacity: 1;
+    transform: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Base "mobile-native" — el admin se usa en teléfono dentro de la planta.
+   Verificado en la auditoría del admin: faltaban las cinco declaraciones.
+   ─────────────────────────────────────────────────────────────────────────── */
+html {
+  /* Sin esto, iOS/Android pintan un highlight gris-azulado sobre cada elemento
+     pulsado: la señal más ruidosa de "esto es una web". */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* iOS hace zoom al enfocar un input de <16px y NO vuelve atrás al perder el
+   foco: el usuario queda con un layout recortado y desalineado. Se aplica
+   SOLO en puntero grueso: en escritorio el tamaño de input es una decisión de
+   diseño y esta regla no debe pisarla. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Elimina la espera de 300ms del doble-tap-zoom en elementos pulsables. */
+button,
+a,
+[role="button"],
+summary,
+label {
+  touch-action: manipulation;
+}
+
+/* El texto que ES control no debe seleccionarse con pulsación larga; el texto
+   que ES contenido (cifras, referencias) sí. Nunca en body. */
+button,
+[role="button"],
+summary {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Reservas del notch / barra de inicio. Requieren `viewport-fit=cover` en el
+   <meta viewport> (hoy falta: app/layout.tsx no exporta `viewport`). Sin esa
+   meta, env() vale 0px y estas reglas no hacen nada. */
+.safe-b {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

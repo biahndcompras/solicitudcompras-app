@@ -1,0 +1,1340 @@
+
+
+==============================================================================
+### P1 · /login/coordinador (inicial)
+==============================================================================
+BIA
+Compras
+ENTERPRISE
+Iniciar sesión
+
+Rol: Coordinador · Equipo de Compras. Portales separados por rol.
+
+Correo
+Contraseña
+Entrar al panel
+
+==============================================================================
+### P2 · /panel (Todos)
+==============================================================================
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+7 resultados
+REFERENCIA	SOLICITANTE	NECESIDAD	CATEGORÍA	ESTADO	ACCIÓN
+
+RFQ-2026-0010
+	
+Edgar Calderon
+Intelia
+	
+Pelota de fútbol
+Entrega requerida: 15 nov 2026
+	Mercadeo y publicidad	
+Activa
+52 días de margen
+3 días de gestión
+	Abrir
+
+
+RFQ-2026-0009
+	
+Solicitante E2E
+Trade Marketing
+	
+Gorra tejida con logo — prueba fixes
+Entrega requerida: 1 nov 2026
+	Mercadeo y publicidad	
+Activa
+38 días de margen
+3 días de gestión
+	Abrir
+
+
+RFQ-2026-0008
+	
+Solicitante E2E
+Trade Marketing
+	
+Verificación fixes QA
+Entrega requerida: 25 oct 2026
+	Mercadeo y publicidad	
+Esperando cotizaciones
+31 días de margen
+3 días de gestión
+	Abrir
+
+
+RFQ-2026-0007
+	
+Solicitante E2E
+Trade Marketing
+	
+Lapiceros branding Vía — activación canal tradicional
+Entrega requerida: 5 oct 2026
+	Mercadeo y publicidad	
+Cerrada
+0 h de gestión
+	Abrir
+
+
+SOL-F40B42A0
+	
+Pipe Test
+Área por definir
+	
+Pipeline PDF
+Entrega por definir
+	Compras administrativas	
+BORRADOR
+Sin fecha límite
+42 días de gestión
+	Abrir
+
+
+SOL-DAAF118A
+	
+Pipe Test
+Área por definir
+	
+Pipeline PDF
+Entrega por definir
+	Compras administrativas	
+BORRADOR
+Sin fecha límite
+42 días de gestión
+	Abrir
+
+
+SOL-EC35649B
+	
+Pipe Test
+Área por definir
+	
+Pipeline PDF
+Entrega por definir
+	Compras administrativas	
+BORRADOR
+Sin fecha límite
+42 días de gestión
+	Abrir
+
+==============================================================================
+### P2b · /panel filtro «Activas»
+==============================================================================
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+2 resultados
+REFERENCIA	SOLICITANTE	NECESIDAD	CATEGORÍA	ESTADO	ACCIÓN
+
+RFQ-2026-0010
+	
+Edgar Calderon
+Intelia
+	
+Pelota de fútbol
+Entrega requerida: 15 nov 2026
+	Mercadeo y publicidad	
+Activa
+52 días de margen
+3 días de gestión
+	Abrir
+
+
+RFQ-2026-0009
+	
+Solicitante E2E
+Trade Marketing
+	
+Gorra tejida con logo — prueba fixes
+Entrega requerida: 1 nov 2026
+	Mercadeo y publicidad	
+Activa
+38 días de margen
+3 días de gestión
+	Abrir
+
+==============================================================================
+### P2b · /panel filtro «Esperando cotizaciones»
+==============================================================================
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+1 resultado
+REFERENCIA	SOLICITANTE	NECESIDAD	CATEGORÍA	ESTADO	ACCIÓN
+
+RFQ-2026-0008
+	
+Solicitante E2E
+Trade Marketing
+	
+Verificación fixes QA
+Entrega requerida: 25 oct 2026
+	Mercadeo y publicidad	
+Esperando cotizaciones
+31 días de margen
+3 días de gestión
+	Abrir
+
+==============================================================================
+### P2b · /panel filtro «Esperando decisión»
+==============================================================================
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+0 resultados
+No tenés solicitudes asignadas
+Cuando te asignen una categoría, aparecerán acá.
+
+==============================================================================
+### P2b · /panel filtro «Cerradas»
+==============================================================================
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+1 resultado
+REFERENCIA	SOLICITANTE	NECESIDAD	CATEGORÍA	ESTADO	ACCIÓN
+
+RFQ-2026-0007
+	
+Solicitante E2E
+Trade Marketing
+	
+Lapiceros branding Vía — activación canal tradicional
+Entrega requerida: 5 oct 2026
+	Mercadeo y publicidad	
+Cerrada
+0 h de gestión
+	Abrir
+
+==============================================================================
+### P2c · /panel búsqueda «pelota» (1 resultado)
+==============================================================================
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+1 resultado
+REFERENCIA	SOLICITANTE	NECESIDAD	CATEGORÍA	ESTADO	ACCIÓN
+
+RFQ-2026-0010
+	
+Edgar Calderon
+Intelia
+	
+Pelota de fútbol
+Entrega requerida: 15 nov 2026
+	Mercadeo y publicidad	
+Activa
+52 días de margen
+3 días de gestión
+	Abrir
+
+==============================================================================
+### P2d · /panel búsqueda sin resultados (estado vacío de búsqueda)
+==============================================================================
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+0 resultados
+No tenés solicitudes asignadas
+Cuando te asignen una categoría, aparecerán acá.
+
+==============================================================================
+### P3 · RFQ-2026-0010 'Pelota de fútbol' — tab 07 Cotizaciones (0 cotizaciones)
+==============================================================================
+RFQ-2026-0010
+Activa
+Pelota de fútbol
+Edgar Calderon
+•
+Intelia
+•
+Entrega requerida: 15 nov 2026
+Volver al panel
+Editar datos
+Cancelar solicitud
+07 · Cotizaciones
+08 · Comparativa
+09 · Recomendación
+Cotizaciones de proveedores
+
+Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea.
+
+MÍNIMO 2 PARA COMPARATIVA
+Agregar cotización manual
+Todavía no hay cotizaciones
+Agregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.
+Generar comparativa
+Se necesitan al menos 2 cotizaciones para generar una comparativa.
+Generar comparativa
+Edgar Calderon
+Intelia
+pelota de futbol para una actividad de marketing
+edgar.calderon@intelia.com
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+15 nov 2026
+Logo/archivo del producto
+cotizacion-sombrillas.pdf
+
+==============================================================================
+### P3b · RFQ-2026-0010 — intento de tab 09 (¿deshabilitado?)
+==============================================================================
+RFQ-2026-0010
+Activa
+Pelota de fútbol
+Edgar Calderon
+•
+Intelia
+•
+Entrega requerida: 15 nov 2026
+Volver al panel
+Editar datos
+Cancelar solicitud
+07 · Cotizaciones
+08 · Comparativa
+09 · Recomendación
+09 · Recomendación
+
+Punto de control humano (RN-01). Podés contradecir la sugerencia de la IA sin fricción.
+
+Recomendación del coordinador *
+Escribí tu recomendación antes de enviar. El solicitante decide, pero tu criterio es lo que más le sirve para decidir.
+Enviar comparativa al solicitante
+Bloqueo duro B3: se valida también en el servidor.
+Edgar Calderon
+Intelia
+pelota de futbol para una actividad de marketing
+edgar.calderon@intelia.com
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+15 nov 2026
+Logo/archivo del producto
+cotizacion-sombrillas.pdf
+
+==============================================================================
+### P3b2 · RFQ-2026-0010 — ERROR visible tras intentar enviar con 0 cotizaciones
+==============================================================================
+RFQ-2026-0010
+Activa
+Pelota de fútbol
+Edgar Calderon
+•
+Intelia
+•
+Entrega requerida: 15 nov 2026
+Volver al panel
+Editar datos
+Cancelar solicitud
+07 · Cotizaciones
+08 · Comparativa
+09 · Recomendación
+09 · Recomendación
+
+Punto de control humano (RN-01). Podés contradecir la sugerencia de la IA sin fricción.
+
+Recomendación del coordinador *
+Enviar comparativa al solicitante
+No se pudo enviar. Revisá la conexión e intentá de nuevo.
+Edgar Calderon
+Intelia
+pelota de futbol para una actividad de marketing
+edgar.calderon@intelia.com
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+15 nov 2026
+Logo/archivo del producto
+cotizacion-sombrillas.pdf
+
+==============================================================================
+### P3c · RFQ-2026-0010 — formulario 'Nueva cotización' abierto
+==============================================================================
+RFQ-2026-0010
+Activa
+Pelota de fútbol
+Edgar Calderon
+•
+Intelia
+•
+Entrega requerida: 15 nov 2026
+Volver al panel
+Editar datos
+Cancelar solicitud
+07 · Cotizaciones
+08 · Comparativa
+09 · Recomendación
+Cotizaciones de proveedores
+
+Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea.
+
+MÍNIMO 2 PARA COMPARATIVA
+Cancelar
+Nueva cotización
+Proveedor
+Moneda
+HNL
+USD
+Valor neto
+ISV
+Total
+Plazo de entrega
+Cancelar
+Guardar cotización
+Todavía no hay cotizaciones
+Agregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.
+Generar comparativa
+Se necesitan al menos 2 cotizaciones para generar una comparativa.
+Generar comparativa
+Edgar Calderon
+Intelia
+pelota de futbol para una actividad de marketing
+edgar.calderon@intelia.com
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+15 nov 2026
+Logo/archivo del producto
+cotizacion-sombrillas.pdf
+
+==============================================================================
+### P3d · RFQ-2026-0010 — panel 'Editar datos para re-cotizar'
+==============================================================================
+RFQ-2026-0010
+Activa
+Pelota de fútbol
+Edgar Calderon
+•
+Intelia
+•
+Entrega requerida: 15 nov 2026
+Volver al panel
+Cerrar edición
+Cancelar solicitud
+07 · Cotizaciones
+08 · Comparativa
+09 · Recomendación
+Editar datos para re-cotizar (2.3)
+Fecha requerida
+Descripción
+Guardar cambios
+Cotizaciones de proveedores
+
+Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea.
+
+MÍNIMO 2 PARA COMPARATIVA
+Agregar cotización manual
+Todavía no hay cotizaciones
+Agregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.
+Generar comparativa
+Se necesitan al menos 2 cotizaciones para generar una comparativa.
+Generar comparativa
+Edgar Calderon
+Intelia
+pelota de futbol para una actividad de marketing
+edgar.calderon@intelia.com
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+15 nov 2026
+Logo/archivo del producto
+cotizacion-sombrillas.pdf
+
+!!! ERROR: page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "http://localhost:3001/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c", waiting until "networkidle"
+
+page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "http://localhost:3001/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c", waiting until "networkidle"
+
+    at /Users/ecalderonl/Intelia/compras-1/qa/evidencia-piloto/critique/auditA-capture.mjs:346:14
+
+
+==============================================================================
+### MÉTRICAS AUTOMÁTICAS (JSON)
+==============================================================================
+{
+ "login": {
+  "targetsChicos": [],
+  "sinNombreAccesible": [],
+  "focusables": 3,
+  "rolesImplicitos": [],
+  "spanRoleLink": 0,
+  "ariaPressed": 0,
+  "ariaLabelCount": 0,
+  "liveRegions": 0,
+  "titulos": []
+ },
+ "loginContraste": [
+  {
+   "texto": "ENTERPRISE",
+   "fontSize": 10,
+   "fontWeight": 600,
+   "color": "lab(44.4871 -41.0396 11.0361)",
+   "fondo": "lab(94.9004 -17.0769 5.63836)",
+   "ratio": 1.1,
+   "minimo": 4.5
+  }
+ ],
+ "loginFoco": [
+  {
+   "tag": "INPUT",
+   "type": "email",
+   "outline": "rgb(15, 23, 42) none 3px",
+   "outlineWidth": "3px",
+   "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+   "borderColor": "oklab(0.928755 -0.0031155 -0.0121984)"
+  },
+  {
+   "tag": "INPUT",
+   "type": "password",
+   "outline": "rgb(15, 23, 42) none 3px",
+   "outlineWidth": "3px",
+   "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+   "borderColor": "oklab(0.928755 -0.0031155 -0.0121984)"
+  },
+  {
+   "tag": "BUTTON",
+   "type": "submit",
+   "outline": "rgb(0, 95, 204) auto 1px",
+   "outlineWidth": "1px",
+   "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0",
+   "borderColor": "rgb(255, 255, 255)"
+  }
+ ],
+ "panel": {
+  "targetsChicos": [],
+  "sinNombreAccesible": [],
+  "focusables": 18,
+  "rolesImplicitos": [
+   "span.text-slate-700.text-[11px].px-4.py-2",
+   "span.text-slate-700.text-[11px].px-4.py-2",
+   "span.text-slate-700.text-[11px].px-4.py-2",
+   "span.text-slate-700.text-[11px].px-4.py-2",
+   "span.text-slate-700.text-[11px].px-4.py-2",
+   "span.text-slate-700.text-[11px].px-4.py-2",
+   "span.text-slate-700.text-[11px].px-4.py-2"
+  ],
+  "spanRoleLink": 7,
+  "ariaPressed": 0,
+  "ariaLabelCount": 0,
+  "liveRegions": 0,
+  "titulos": [
+   "REFERENCIA",
+   "SOLICITANTE",
+   "NECESIDAD",
+   "CATEGORÍA",
+   "ESTADO",
+   "ACCIÓN"
+  ]
+ },
+ "panelContraste": [
+  {
+   "texto": "Panel de Compras",
+   "fontSize": 20,
+   "fontWeight": 600,
+   "color": "rgb(15, 23, 42)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 1.17,
+   "minimo": 4.5
+  },
+  {
+   "texto": "COORDINADOR",
+   "fontSize": 10,
+   "fontWeight": 600,
+   "color": "rgb(71, 85, 105)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.77,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Flujo del coordinador: de bandeja a enví",
+   "fontSize": 12,
+   "fontWeight": 400,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Carlos Melara",
+   "fontSize": 11,
+   "fontWeight": 600,
+   "color": "lab(16.132 -0.318035 -14.6672)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)",
+   "ratio": 1.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Equipo de Compras",
+   "fontSize": 10,
+   "fontWeight": 400,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "SALIR",
+   "fontSize": 11,
+   "fontWeight": 600,
+   "color": "rgb(71, 85, 105)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.77,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Activas",
+   "fontSize": 12,
+   "fontWeight": 600,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Esperando cotizaciones",
+   "fontSize": 12,
+   "fontWeight": 600,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Esperando decisión",
+   "fontSize": 12,
+   "fontWeight": 600,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Cerradas",
+   "fontSize": 12,
+   "fontWeight": 600,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "REFERENCIA",
+   "fontSize": 10,
+   "fontWeight": 600,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.981633 -0.000599355 -0.00156158 / 0.7)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "SOLICITANTE",
+   "fontSize": 10,
+   "fontWeight": 600,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.981633 -0.000599355 -0.00156158 / 0.7)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "NECESIDAD",
+   "fontSize": 10,
+   "fontWeight": 600,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.981633 -0.000599355 -0.00156158 / 0.7)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "CATEGORÍA",
+   "fontSize": 10,
+   "fontWeight": 600,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.981633 -0.000599355 -0.00156158 / 0.7)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "ESTADO",
+   "fontSize": 10,
+   "fontWeight": 600,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.981633 -0.000599355 -0.00156158 / 0.7)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "ACCIÓN",
+   "fontSize": 10,
+   "fontWeight": 600,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.981633 -0.000599355 -0.00156158 / 0.7)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Mercadeo y publicidad",
+   "fontSize": 11,
+   "fontWeight": 600,
+   "color": "lab(32.4486 49.2217 -84.6695)",
+   "fondo": "lab(91.6577 1.04591 -12.7199)",
+   "ratio": 1.12,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Activa",
+   "fontSize": 11,
+   "fontWeight": 600,
+   "color": "lab(41.6013 -9.10804 -42.5647)",
+   "fondo": "lab(94.3709 -4.56053 -8.23453)",
+   "ratio": 1.28,
+   "minimo": 4.5
+  },
+  {
+   "texto": "52 días de margen",
+   "fontSize": 9,
+   "fontWeight": 700,
+   "color": "lab(44.4871 -41.0396 11.0361)",
+   "fondo": "lab(97.8462 -6.94966 1.85487)",
+   "ratio": 1.08,
+   "minimo": 4.5
+  },
+  {
+   "texto": "38 días de margen",
+   "fontSize": 9,
+   "fontWeight": 700,
+   "color": "lab(44.4871 -41.0396 11.0361)",
+   "fondo": "lab(97.8462 -6.94966 1.85487)",
+   "ratio": 1.08,
+   "minimo": 4.5
+  },
+  {
+   "texto": "RFQ-2026-0008",
+   "fontSize": 12,
+   "fontWeight": 600,
+   "color": "rgb(15, 23, 42)",
+   "fondo": "oklab(0.976997 -0.00716156 -0.0108322 / 0.4)",
+   "ratio": 1.17,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Solicitante E2E",
+   "fontSize": 12,
+   "fontWeight": 500,
+   "color": "rgb(15, 23, 42)",
+   "fondo": "oklab(0.976997 -0.00716156 -0.0108322 / 0.4)",
+   "ratio": 1.17,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Trade Marketing",
+   "fontSize": 11,
+   "fontWeight": 400,
+   "color": "rgb(100, 116, 139)",
+   "fondo": "oklab(0.976997 -0.00716156 -0.0108322 / 0.4)",
+   "ratio": 4.41,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Verificación fixes QA",
+   "fontSize": 12,
+   "fontWeight": 500,
+   "color": "rgb(15, 23, 42)",
+   "fondo": "oklab(0.976997 -0.00716156 -0.0108322 / 0.4)",
+   "ratio": 1.17,
+   "minimo": 4.5
+  },
+  {
+   "texto": "25 oct 2026",
+   "fontSize": 11,
+   "fontWeight": 500,
+   "color": "rgb(71, 85, 105)",
+   "fondo": "oklab(0.976997 -0.00716156 -0.0108322 / 0.4)",
+   "ratio": 2.77,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Esperando cotizaciones",
+   "fontSize": 11,
+   "fontWeight": 600,
+   "color": "lab(47.2709 42.9082 69.2966)",
+   "fondo": "lab(95.916 -1.21653 23.111)",
+   "ratio": 1.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "31 días de margen",
+   "fontSize": 9,
+   "fontWeight": 700,
+   "color": "lab(44.4871 -41.0396 11.0361)",
+   "fondo": "lab(97.8462 -6.94966 1.85487)",
+   "ratio": 1.08,
+   "minimo": 4.5
+  },
+  {
+   "texto": "3 días de gestión",
+   "fontSize": 10,
+   "fontWeight": 400,
+   "color": "lab(65.5349 -2.25151 -14.5072)",
+   "fondo": "oklab(0.976997 -0.00716156 -0.0108322 / 0.4)",
+   "ratio": 1.24,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Cerrada",
+   "fontSize": 11,
+   "fontWeight": 600,
+   "color": "lab(44.4871 -41.0396 11.0361)",
+   "fondo": "lab(94.9004 -17.0769 5.63836)",
+   "ratio": 1.1,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Sin fecha límite",
+   "fontSize": 9,
+   "fontWeight": 700,
+   "color": "lab(44.4871 -41.0396 11.0361)",
+   "fondo": "lab(97.8462 -6.94966 1.85487)",
+   "ratio": 1.08,
+   "minimo": 4.5
+  }
+ ],
+ "contadorTarjetaActiva": "no encontrado",
+ "buscadorSinLabel": false,
+ "buscadorFoco": {
+  "outline": "rgb(0, 95, 204) none 1px",
+  "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+  "border": "lab(63.3038 -18.433 -51.0407)"
+ },
+ "panelFoco": [
+  {
+   "tag": "BODY",
+   "txt": "BIA\nPanel de Compras\nCOORDIN",
+   "outline": "3px rgb(15, 23, 42)",
+   "shadow": "none"
+  },
+  {
+   "tag": "NEXTJS-PORTAL",
+   "txt": "",
+   "outline": "3px rgb(117, 117, 117)",
+   "shadow": "none"
+  },
+  {
+   "tag": "BUTTON",
+   "txt": "SALIR",
+   "outline": "1px rgb(71, 85, 105)",
+   "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0,"
+  },
+  {
+   "tag": "BUTTON",
+   "txt": "ACTIVAS\n2\nen curso",
+   "outline": "1px rgb(0, 95, 204)",
+   "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0,"
+  },
+  {
+   "tag": "BUTTON",
+   "txt": "ESPERANDO COTIZACIONES\n1\npen",
+   "outline": "1px rgb(0, 95, 204)",
+   "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0,"
+  },
+  {
+   "tag": "BUTTON",
+   "txt": "ESPERANDO DECISIÓN\n0\nsolic.",
+   "outline": "1px rgb(0, 95, 204)",
+   "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0,"
+  }
+ ],
+ "s0010": {
+  "targetsChicos": [],
+  "sinNombreAccesible": [],
+  "focusables": 9,
+  "rolesImplicitos": [],
+  "spanRoleLink": 0,
+  "ariaPressed": 3,
+  "ariaLabelCount": 0,
+  "liveRegions": 0,
+  "titulos": []
+ },
+ "s0010Contraste": [
+  {
+   "texto": "RFQ-2026-0010",
+   "fontSize": 14,
+   "fontWeight": 600,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Activa",
+   "fontSize": 11,
+   "fontWeight": 600,
+   "color": "lab(41.6013 -9.10804 -42.5647)",
+   "fondo": "lab(94.3709 -4.56053 -8.23453)",
+   "ratio": 1.28,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Pelota de fútbol",
+   "fontSize": 32,
+   "fontWeight": 600,
+   "color": "rgb(15, 23, 42)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 1.17,
+   "minimo": 3
+  },
+  {
+   "texto": "Edgar Calderon",
+   "fontSize": 14,
+   "fontWeight": 400,
+   "color": "rgb(71, 85, 105)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.77,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Intelia",
+   "fontSize": 14,
+   "fontWeight": 400,
+   "color": "rgb(71, 85, 105)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.77,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Entrega requerida: 15 nov 2026",
+   "fontSize": 14,
+   "fontWeight": 400,
+   "color": "rgb(71, 85, 105)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.77,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Editar datos",
+   "fontSize": 14,
+   "fontWeight": 600,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Cancelar solicitud",
+   "fontSize": 14,
+   "fontWeight": 600,
+   "color": "lab(49.1882 81.577 36.0311)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.35,
+   "minimo": 4.5
+  },
+  {
+   "texto": "08 · Comparativa",
+   "fontSize": 14,
+   "fontWeight": 600,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "09 · Recomendación",
+   "fontSize": 14,
+   "fontWeight": 600,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "Todavía no hay cotizaciones",
+   "fontSize": 16,
+   "fontWeight": 600,
+   "color": "rgb(15, 23, 42)",
+   "fondo": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)",
+   "ratio": 1.17,
+   "minimo": 4.5
+  },
+  {
+   "texto": "pelota de futbol para una actividad de m",
+   "fontSize": 14,
+   "fontWeight": 400,
+   "color": "rgb(71, 85, 105)",
+   "fondo": "oklab(0.981633 -0.000599355 -0.00156158 / 0.5)",
+   "ratio": 2.77,
+   "minimo": 4.5
+  },
+  {
+   "texto": "edgar.calderon@intelia.com",
+   "fontSize": 14,
+   "fontWeight": 500,
+   "color": "rgb(51, 65, 85)",
+   "fondo": "oklab(0.981633 -0.000599355 -0.00156158 / 0.5)",
+   "ratio": 2.03,
+   "minimo": 4.5
+  },
+  {
+   "texto": "15 nov 2026",
+   "fontSize": 14,
+   "fontWeight": 600,
+   "color": "lab(47.2709 42.9082 69.2966)",
+   "fondo": "lab(98.6252 -0.635922 8.42309)",
+   "ratio": 1.01,
+   "minimo": 4.5
+  }
+ ],
+ "barraAcciones0010": [
+  {
+   "txt": "Volver al panel",
+   "disabled": false,
+   "title": null
+  },
+  {
+   "txt": "Editar datos",
+   "disabled": false,
+   "title": "Edita la fecha requerida o la descripción para re-cotizar"
+  },
+  {
+   "txt": "Cancelar solicitud",
+   "disabled": false,
+   "title": "Cancela la solicitud (queda registrada como CANCELADA)"
+  },
+  {
+   "txt": "07 · Cotizaciones",
+   "disabled": false,
+   "title": null
+  },
+  {
+   "txt": "08 · Comparativa",
+   "disabled": true,
+   "title": null
+  },
+  {
+   "txt": "09 · Recomendación",
+   "disabled": false,
+   "title": null
+  }
+ ],
+ "tabsDeshabilitados0010": [
+  "08 · Comparativa",
+  "Enviar comparativa al solicitante"
+ ],
+ "tabsConDisabledTitle": [
+  {
+   "txt": "07 · Cotizaciones",
+   "disabled": false,
+   "title": null,
+   "aria": null
+  },
+  {
+   "txt": "08 · Comparativa",
+   "disabled": true,
+   "title": null,
+   "aria": null
+  },
+  {
+   "txt": "09 · Recomendación",
+   "disabled": false,
+   "title": null,
+   "aria": null
+  }
+ ],
+ "ctaSinCotizaciones": {
+  "habilitado": true
+ },
+ "errorVisibleSinCotizaciones": {
+  "muestraError": true,
+  "texto": "No se pudo enviar. Revisá la conexión e intentá de nuevo.",
+  "alerta": [],
+  "estadoSigue": "RFQ-2026-0010\nActiva\nPelota de fútbol\nEdgar Calderon\n"
+ },
+ "formManual": {
+  "targetsChicos": [],
+  "sinNombreAccesible": [],
+  "focusables": 17,
+  "rolesImplicitos": [],
+  "spanRoleLink": 0,
+  "ariaPressed": 3,
+  "ariaLabelCount": 0,
+  "liveRegions": 0,
+  "titulos": []
+ },
+ "guardarVacio": {
+  "disabled": true,
+  "opacity": "0.4",
+  "cursor": "not-allowed"
+ },
+ "formLabels": [
+  {
+   "campo": "text",
+   "tieneLabelFor": false,
+   "labelImplicito": true,
+   "ariaLabel": null,
+   "req": false,
+   "min": null,
+   "placeholder": "Ej. Imprenta CostaPrint S. de R.L."
+  },
+  {
+   "campo": "SELECT",
+   "tieneLabelFor": false,
+   "labelImplicito": true,
+   "ariaLabel": null,
+   "req": false,
+   "min": null,
+   "placeholder": null
+  },
+  {
+   "campo": "number",
+   "tieneLabelFor": false,
+   "labelImplicito": true,
+   "ariaLabel": null,
+   "req": false,
+   "min": null,
+   "placeholder": "0.00"
+  },
+  {
+   "campo": "number",
+   "tieneLabelFor": false,
+   "labelImplicito": true,
+   "ariaLabel": null,
+   "req": false,
+   "min": null,
+   "placeholder": "0.00"
+  },
+  {
+   "campo": "number",
+   "tieneLabelFor": false,
+   "labelImplicito": true,
+   "ariaLabel": null,
+   "req": false,
+   "min": null,
+   "placeholder": "0.00"
+  },
+  {
+   "campo": "text",
+   "tieneLabelFor": false,
+   "labelImplicito": true,
+   "ariaLabel": null,
+   "req": false,
+   "min": null,
+   "placeholder": "Ej. 12 días"
+  }
+ ],
+ "estadoTrasRechazarCancelar": false,
+ "reabrirVisible0010": false,
+ "dialogos": [
+  {
+   "tipo": "confirm",
+   "mensaje": "¿Cancelar esta solicitud? El proceso se cerrará y quedará registrado como CANCELADA.",
+   "url": "http://localhost:3001/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+   "accion": "RECHAZADO (sin aceptar)"
+  }
+ ],
+ "erroresConsola": [],
+ "userDataDir": "/tmp/auditA-ccceb1ff"
+}
+
+==============================================================================
+### DIÁLOGOS NATIVOS CAPTURADOS
+==============================================================================
+[
+ {
+  "tipo": "confirm",
+  "mensaje": "¿Cancelar esta solicitud? El proceso se cerrará y quedará registrado como CANCELADA.",
+  "url": "http://localhost:3001/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+  "accion": "RECHAZADO (sin aceptar)"
+ }
+]
+
+==============================================================================
+### ERRORES DE CONSOLA
+==============================================================================
+[]

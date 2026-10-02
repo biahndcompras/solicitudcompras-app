@@ -1,0 +1,476 @@
+{
+  "panel-1440": {
+    "url": "/panel",
+    "filas": 12,
+    "enlacesDetalle": [
+      {
+        "href": "/panel/solicitud/b695acac-2267-4718-aa78-ab7374b9e9d1",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/ac49f97b-9f7d-4900-a649-55492275132a",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/105c5af4-6563-4ff4-81fa-eb2942c16b75",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/d685be06-966c-4a66-944f-43b7985c87fe",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/47980a7b-9e88-493e-9255-70d3c8d62206",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/abaaeeae-5069-47b6-845e-10797f2d78b7",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/85f8b7e5-119b-46fe-9879-ec9649d790c6",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/bded87a1-f0c2-46a4-b6f9-7c66112262e8",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/ec31204d-2006-40b1-aef3-e91e343c320e",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/57ad1bbb-928c-446c-8c01-eb1ac3dde27b",
+        "t": "Abrir",
+        "tabIndex": 0
+      }
+    ],
+    "filasConOnClick": 0,
+    "roleLinkFalso": 0,
+    "pasos": [],
+    "posicion": null,
+    "textosMenores12px": [
+      {
+        "t": "Referencia",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Solicitante",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Necesidad",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Categoría",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Estado",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Acción",
+        "fs": "10px",
+        "tag": "TH"
+      }
+    ],
+    "targetsPequenos": [],
+    "recorte": []
+  },
+  "panel": {
+    "filas": 12,
+    "referenciaInventada": 0
+  },
+  "teclado": {
+    "paradasHastaDetalle": 8,
+    "enlace": {
+      "tag": "A",
+      "t": "Abrir",
+      "href": "/panel/solicitud/b695acac-2267-4718-aa78-ab7374b9e9d1",
+      "visible": true
+    },
+    "urlTrasEnter": "http://localhost:3002/panel/solicitud/b695acac-2267-4718-aa78-ab7374b9e9d1"
+  },
+  "detalle-0008-1440": {
+    "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+    "filas": 0,
+    "enlacesDetalle": [],
+    "filasConOnClick": 0,
+    "roleLinkFalso": 0,
+    "pasos": [
+      {
+        "t": "07Cotizaciones",
+        "pressed": "true",
+        "disabled": false
+      },
+      {
+        "t": "08Comparativa",
+        "pressed": "false",
+        "disabled": false
+      },
+      {
+        "t": "09Recomendación",
+        "pressed": "false",
+        "disabled": false
+      }
+    ],
+    "posicion": [
+      "Paso 1 de 3"
+    ],
+    "textosMenores12px": [],
+    "targetsPequenos": [
+      {
+        "t": "",
+        "h": 31
+      },
+      {
+        "t": "",
+        "h": 31
+      }
+    ],
+    "recorte": []
+  },
+  "modal-reabrir": "¿Reabrir para re-cotizar?\n«Verificación fixes QA» (RFQ-2026-0008) vuelve a «Esperando cotizaciones».\n•\nLa comparativa generada se descarta: hay que volver a generarla.\n•\nLas 2 cotizaciones cargadas se conservan; solo cambia el estado del proceso.\nVolver\nSí, reabrir",
+  "modal-cancelar": "¿Cancelar esta solicitud?\n«Verificación fixes QA» (RFQ-2026-0008) se cierra y queda registrada como CANCELADA.\n•\nEl solicitante deja de tener una comparativa que decidir.\n•\nLas 2 cotizaciones registradas quedan en el historial, pero ya no se pueden comparar ni re-cotizar.\n•\nNo se puede deshacer: CANCELADA es un estado terminal.\nVolver\nSí, cancelar la solicitud",
+  "rfq0007": {
+    "imperativos": []
+  },
+  "detalle-0007-1440": {
+    "url": "/panel/solicitud/57ad1bbb-928c-446c-8c01-eb1ac3dde27b",
+    "filas": 0,
+    "enlacesDetalle": [],
+    "filasConOnClick": 0,
+    "roleLinkFalso": 0,
+    "pasos": [
+      {
+        "t": "07Cotizaciones",
+        "pressed": "true",
+        "disabled": false
+      },
+      {
+        "t": "08Comparativa",
+        "pressed": "false",
+        "disabled": false
+      },
+      {
+        "t": "09Recomendación",
+        "pressed": "false",
+        "disabled": false
+      }
+    ],
+    "posicion": [
+      "Paso 1 de 3"
+    ],
+    "textosMenores12px": [],
+    "targetsPequenos": [],
+    "recorte": []
+  },
+  "rfq0010": {
+    "paso08Deshabilitado": true
+  },
+  "detalle-0010-1440": {
+    "url": "/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+    "filas": 0,
+    "enlacesDetalle": [],
+    "filasConOnClick": 0,
+    "roleLinkFalso": 0,
+    "pasos": [
+      {
+        "t": "07Cotizaciones",
+        "pressed": "true",
+        "disabled": false
+      },
+      {
+        "t": "08Comparativa",
+        "pressed": "false",
+        "disabled": true
+      },
+      {
+        "t": "09Recomendación",
+        "pressed": "false",
+        "disabled": false
+      }
+    ],
+    "posicion": [
+      "Paso 1 de 3"
+    ],
+    "textosMenores12px": [],
+    "targetsPequenos": [],
+    "recorte": []
+  },
+  "busqueda-vacia": [
+    "Esperando cotizaciones",
+    "Esperando decisión",
+    "Cerradas",
+    "Solicitudes",
+    "0 resultados",
+    "Sin resultados para «zzzz»",
+    "Revisá la referencia, el título o el nombre del solicitante.",
+    "Limpiar búsqueda"
+  ],
+  "bandeja-sin-busqueda": {
+    "filas": 12,
+    "contador": "12 resultados",
+    "borradoresPipeTest": 0
+  },
+  "detalle-0008-390": {
+    "url": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+    "filas": 0,
+    "enlacesDetalle": [],
+    "filasConOnClick": 0,
+    "roleLinkFalso": 0,
+    "pasos": [
+      {
+        "t": "07Cotizaciones",
+        "pressed": "true",
+        "disabled": false
+      },
+      {
+        "t": "08Comparativa",
+        "pressed": "false",
+        "disabled": false
+      },
+      {
+        "t": "09Recomendación",
+        "pressed": "false",
+        "disabled": false
+      }
+    ],
+    "posicion": [
+      "Paso 1 de 3"
+    ],
+    "textosMenores12px": [],
+    "targetsPequenos": [],
+    "recorte": []
+  },
+  "movil": {
+    "pasosVisibles": [
+      {
+        "t": "07Cotizaciones",
+        "w": 97,
+        "h": 60,
+        "visible": true
+      },
+      {
+        "t": "08Comparativa",
+        "w": 97,
+        "h": 60,
+        "visible": true
+      },
+      {
+        "t": "09Recomendación",
+        "w": 97,
+        "h": 60,
+        "visible": true
+      }
+    ],
+    "kebab": true,
+    "accionesEnMenu": [
+      "Reabrir cotizaciones",
+      "Editar datos",
+      "Cancelar solicitud",
+      "Reabrir cotizaciones",
+      "Editar datos",
+      "Cancelar solicitud"
+    ],
+    "cancelarSolicitud": {
+      "x": 36,
+      "y": 360,
+      "w": 254,
+      "h": 45,
+      "dentroDelViewport": true
+    },
+    "modalCancelarAbierto": true
+  },
+  "panel-390": {
+    "url": "/panel",
+    "filas": 12,
+    "enlacesDetalle": [
+      {
+        "href": "/panel/solicitud/b695acac-2267-4718-aa78-ab7374b9e9d1",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/ac49f97b-9f7d-4900-a649-55492275132a",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/105c5af4-6563-4ff4-81fa-eb2942c16b75",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/d685be06-966c-4a66-944f-43b7985c87fe",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/47980a7b-9e88-493e-9255-70d3c8d62206",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/abaaeeae-5069-47b6-845e-10797f2d78b7",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/85f8b7e5-119b-46fe-9879-ec9649d790c6",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/bded87a1-f0c2-46a4-b6f9-7c66112262e8",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/a6e7aa8a-00f9-4e5c-a09f-ab2632a4a691",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/ec31204d-2006-40b1-aef3-e91e343c320e",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/d50dd0ba-3636-4458-99ff-866e6f43914c",
+        "t": "Abrir",
+        "tabIndex": 0
+      },
+      {
+        "href": "/panel/solicitud/57ad1bbb-928c-446c-8c01-eb1ac3dde27b",
+        "t": "Abrir",
+        "tabIndex": 0
+      }
+    ],
+    "filasConOnClick": 0,
+    "roleLinkFalso": 0,
+    "pasos": [],
+    "posicion": null,
+    "textosMenores12px": [
+      {
+        "t": "Referencia",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Solicitante",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Necesidad",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Categoría",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Estado",
+        "fs": "10px",
+        "tag": "TH"
+      },
+      {
+        "t": "Acción",
+        "fs": "10px",
+        "tag": "TH"
+      }
+    ],
+    "targetsPequenos": [],
+    "recorte": [
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      },
+      {
+        "t": "Abrir",
+        "right": 893,
+        "cortado": true
+      }
+    ]
+  }
+}

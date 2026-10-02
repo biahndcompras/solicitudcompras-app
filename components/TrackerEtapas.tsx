@@ -43,7 +43,7 @@ export function TrackerEtapas({ estado, compacto = false }: { estado: EstadoSoli
                 }
                 title={etiqueta}
               />
-              <span className={"text-[8px] leading-none " + (cancelada && i === ETAPAS.length - 1 ? "text-rose-600 font-bold" : esActual ? "text-sky-700 font-bold" : completada ? "text-slate-600" : "text-slate-400")}>
+              <span className={"text-[11px] leading-tight text-center break-words px-0.5 " + (cancelada && i === ETAPAS.length - 1 ? "text-rose-600 font-bold" : esActual ? "text-sky-700 font-bold" : completada ? "text-slate-600" : "text-slate-400")}>
                 {etiqueta}
               </span>
             </div>
@@ -68,7 +68,7 @@ export function TrackerEtapas({ estado, compacto = false }: { estado: EstadoSoli
               ) : null}
               <span
                 className={
-                  "relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] " +
+                  "relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs " +
                   (cancelada && i === ETAPAS.length - 1
                     ? "bg-rose-50 border-rose-400 text-rose-600"
                     : completada
@@ -80,7 +80,7 @@ export function TrackerEtapas({ estado, compacto = false }: { estado: EstadoSoli
               >
                 {cancelada && i === ETAPAS.length - 1 ? "✕" : completada ? "✓" : e.icono}
               </span>
-              <span className={"mt-1.5 text-[9px] text-center px-0.5 leading-tight " + (cancelada && i === ETAPAS.length - 1 ? "text-rose-600 font-bold" : esActual ? "text-sky-700 font-bold" : completada ? "text-slate-700" : "text-slate-400")}>
+              <span className={"mt-1.5 text-[11px] text-center px-0.5 leading-tight " + (cancelada && i === ETAPAS.length - 1 ? "text-rose-600 font-bold" : esActual ? "text-sky-700 font-bold" : completada ? "text-slate-700" : "text-slate-400")}>
                 {etiqueta}
               </span>
             </div>

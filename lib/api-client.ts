@@ -27,21 +27,32 @@ async function json<T>(res: Response): Promise<T> {
 }
 
 export const api = {
-  crearSolicitud(payload: {
-    titulo: string;
-    solicitanteEmail: string;
-    solicitanteNombre: string;
-    areaSolicitante?: string;
-    descripcion?: string;
-    categoria?: string;
-    tipo?: "RFI" | "RFQ" | "RFP";
-    subtipo?: "producto" | "servicio" | "mixto";
-    fechaRequerida?: string;
-  }): Promise<Solicitud> {
+  /**
+   * `idempotencyKey` hace que el reintento no cree una segunda solicitud: el servidor
+   * devuelve la fila que ya creó esa clave. Sin él, un timeout que el cliente no aborta
+   * deja la fila creada igual y el siguiente intento agrega otra.
+   * `signal` permite cancelar de verdad la petición en vez de solo dejar de esperarla.
+   */
+  crearSolicitud(
+    payload: {
+      titulo: string;
+      solicitanteEmail: string;
+      solicitanteNombre: string;
+      areaSolicitante?: string;
+      descripcion?: string;
+      categoria?: string;
+      tipo?: "RFI" | "RFQ" | "RFP";
+      subtipo?: "producto" | "servicio" | "mixto";
+      fechaRequerida?: string;
+      idempotencyKey?: string;
+    },
+    opts?: { signal?: AbortSignal }
+  ): Promise<Solicitud> {
     return fetch("/api/solicitudes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: opts?.signal,
     }).then((r) => json<Solicitud>(r));
   },
 
@@ -54,11 +65,12 @@ export const api = {
     respuestas?: Record<string, string>;
     coordinadorId?: string;
     coordenadorNombre?: string;
-  }): Promise<{ solicitud: Solicitud; eventoId: string; pipeline?: unknown; enlace?: { token: string; url: string } }> {
+  }, opts?: { signal?: AbortSignal }): Promise<{ solicitud: Solicitud; eventoId: string; pipeline?: unknown; enlace?: { token: string; url: string } }> {
     return fetch(`/api/solicitudes/${payload.solicitudId}/estado`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: opts?.signal,
     }).then((r) => json(r));
   },
 
@@ -75,12 +87,13 @@ export const api = {
   },
 
   // H2: logo/archivo real del producto.
-  subirArchivoLogo(solicitudId: string, archivo: File): Promise<{ ok: boolean; nombre: string }> {
+  subirArchivoLogo(solicitudId: string, archivo: File, opts?: { signal?: AbortSignal }): Promise<{ ok: boolean; nombre: string }> {
     const form = new FormData();
     form.append("archivo", archivo);
     return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}/logo`, {
       method: "POST",
       body: form,
+      signal: opts?.signal,
     }).then((r) => json(r));
   },
 
@@ -204,11 +217,12 @@ export const api = {
     }).then(async (r) => { if (!r.ok) throw new Error("No se pudo eliminar"); });
   },
 
-  clasificarIA(payload: { titulo: string; descripcion?: string; categoria?: string }) {
+  clasificarIA(payload: { titulo: string; descripcion?: string; categoria?: string }, opts?: { signal?: AbortSignal }) {
     return fetch("/api/ia/clasificar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: opts?.signal,
     }).then((r) => {
       if (r.status === 400) return null;
       return json<ClasificarOutput | null>(r);
@@ -225,11 +239,12 @@ export const api = {
     catalogo: CampoCatalogo[];
     llevaBranding?: boolean;
     archivoLogo?: string;
-  }) {
+  }, opts?: { signal?: AbortSignal }) {
     return fetch("/api/ia/assessment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: opts?.signal,
     }).then((r) => {
       if (r.status === 400) return null;
       return json<ResultadoAssessment | null>(r);

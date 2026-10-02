@@ -4,8 +4,10 @@ import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { Badge, type BadgeTone } from "@/components/Badge";
 import { SemParoBadge } from "@/components/Semaforo";
 import { TrackerEtapas } from "@/components/TrackerEtapas";
+import { CTADecision } from "@/components/solicitante/CTADecision";
 import { duracionAtencion, formatoFechaLegible } from "@/lib/domain/semaforo";
 import { nombreCategoria } from "@/lib/domain/categorias";
+import { formatoMoneda } from "@/lib/domain/moneda";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import type { EstadoSolicitud } from "@/lib/domain/types";
 
@@ -20,13 +22,16 @@ export default async function DetalleSolicitudSolicitantePage({
 }) {
   const { id } = await params;
   const { email } = await searchParams;
+  // El correo NO es opcional: sin él la comprobación se saltaba entera y
+  // `/mis-solicitudes/<uuid>` mostraba la solicitud de otra persona (nombre, área,
+  // descripción y estado) con solo conocer el id. Ahora sin correo no hay página.
+  if (!email) notFound();
   const solicitud = await repo.obtenerSolicitud(id);
   if (!solicitud) notFound();
-  // Si viene con email del listado, debe corresponder al solicitante de la solicitud.
-  if (email && email.toLowerCase() !== solicitud.solicitanteEmail.toLowerCase()) notFound();
+  if (email.trim().toLowerCase() !== solicitud.solicitanteEmail.trim().toLowerCase()) notFound();
 
   const cotizaciones = await repo.listarCotizaciones(id);
-  const volverA = `/mis-solicitudes?email=${encodeURIComponent(email ?? solicitud.solicitanteEmail)}`;
+  const volverA = `/mis-solicitudes?email=${encodeURIComponent(email)}`;
 
   return (
     <main className="min-h-screen flex items-start justify-center p-4 md:p-8 relative overflow-hidden">
@@ -93,14 +98,30 @@ export default async function DetalleSolicitudSolicitantePage({
           ) : (
             <div className="space-y-2">
               {cotizaciones.map((c) => (
-                <div key={c.id} className="flex items-center justify-between bg-slate-50 rounded-lg border border-slate-100 px-3 py-2">
-                  <span className="text-xs font-medium text-slate-900">{c.proveedorNombre}</span>
-                  <span className="text-xs font-mono text-slate-600">{c.valorTotal !== undefined ? `${c.moneda ?? "L"} ${c.valorTotal}` : "—"}</span>
+                <div key={c.id} className="flex items-center justify-between gap-3 bg-slate-50 rounded-lg border border-slate-100 px-3 py-2">
+                  <span className="text-xs font-medium text-slate-900 min-w-0 break-words">{c.proveedorNombre}</span>
+                  {/* Separador de miles: "L 100000" no es un monto que se pueda comparar. */}
+                  <span className="text-xs font-mono text-slate-600 shrink-0 text-right">
+                    {c.valorTotal !== undefined ? formatoMoneda(c.moneda ?? "HNL", c.valorTotal) : "—"}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* P2-c: el detalle también es un lugar desde donde se decide, no solo el listado. */}
+        <CTADecision solicitudId={solicitud.id} estado={solicitud.estado} />
+
+        <p className="mt-6 text-center">
+          <Link
+            href="/guias/manual-solicitante"
+            className="inline-flex items-center gap-1.5 min-h-[44px] px-3 text-xs font-medium text-slate-500 hover:text-sky-600 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 6.25A2.25 2.25 0 0 1 14.25 4h4A2.75 2.75 0 0 1 21 6.75v10.5A2.75 2.75 0 0 1 18.25 20h-4A2.25 2.25 0 0 1 12 17.75z"/><path d="M12 6.25A2.25 2.25 0 0 0 9.75 4h-4A2.75 2.75 0 0 0 3 6.75v10.5A2.75 2.75 0 0 0 5.75 20h4A2.25 2.25 0 0 0 12 17.75"/></svg>
+            Guía rápida de uso
+          </Link>
+        </p>
       </div>
     </main>
   );

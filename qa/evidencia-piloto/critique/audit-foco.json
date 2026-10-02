@@ -1,0 +1,98 @@
+[
+  {
+    "tag": "INPUT",
+    "type": "email",
+    "t": "usuario@compras.bia.local",
+    "outline": false,
+    "ring": true,
+    "visible": true
+  },
+  {
+    "tag": "INPUT",
+    "type": "password",
+    "t": "••••••••",
+    "outline": false,
+    "ring": true,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "t": "Entrar al panel",
+    "outline": true,
+    "ring": true,
+    "visible": true
+  },
+  {
+    "tag": "NEXTJS-PORTAL",
+    "type": "",
+    "t": "",
+    "outline": false,
+    "ring": false,
+    "visible": false
+  },
+  {
+    "tag": "BODY",
+    "type": "",
+    "t": "BIAComprasEnterpriseIniciar se",
+    "outline": false,
+    "ring": false,
+    "visible": true
+  },
+  {
+    "tag": "INPUT",
+    "type": "email",
+    "t": "usuario@compras.bia.local",
+    "outline": false,
+    "ring": true,
+    "visible": true
+  },
+  {
+    "tag": "INPUT",
+    "type": "password",
+    "t": "••••••••",
+    "outline": false,
+    "ring": true,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "t": "Entrar al panel",
+    "outline": true,
+    "ring": true,
+    "visible": true
+  },
+  {
+    "tag": "NEXTJS-PORTAL",
+    "type": "",
+    "t": "",
+    "outline": false,
+    "ring": false,
+    "visible": false
+  },
+  {
+    "tag": "BODY",
+    "type": "",
+    "t": "BIAComprasEnterpriseIniciar se",
+    "outline": false,
+    "ring": false,
+    "visible": true
+  },
+  {
+    "tag": "INPUT",
+    "type": "email",
+    "t": "usuario@compras.bia.local",
+    "outline": false,
+    "ring": true,
+    "visible": true
+  },
+  {
+    "tag": "INPUT",
+    "type": "password",
+    "t": "••••••••",
+    "outline": false,
+    "ring": true,
+    "visible": true
+  }
+]

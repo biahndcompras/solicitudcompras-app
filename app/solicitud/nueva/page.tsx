@@ -7,8 +7,8 @@ export const metadata = {
 
 export default function NuevaSolicitudPage() {
   return (
-    <div className="mx-auto max-w-[1160px] px-8">
-      <div className="pt-8">
+    <div className="mx-auto max-w-[1160px] md:px-8">
+      <div className="md:pt-8">
         <Suspense>
           <SolicitanteWizard />
         </Suspense>

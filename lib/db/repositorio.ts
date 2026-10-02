@@ -22,13 +22,24 @@ export type TransicionResultado = {
 };
 
 export interface Repositorio {
+  /**
+   * Crea la solicitud. Si `opciones.idempotencyKey` viene repeats, NO crea una segunda fila:
+   * devuelve la que ya existe con esa clave. Es la garantía de que un reintento, un doble clic
+   * o un refresh en pleno envío no duplican la solicitud (ver migration 016).
+   */
   crearSolicitud(
     datos: Pick<
       Solicitud,
       "titulo" | "solicitanteEmail" | "solicitanteNombre" | "estado"
     >,
-    opciones?: { areaSolicitante?: string; descripcion?: string; tipo?: string; subtipo?: string; categoria?: string; fechaRequerida?: string }
+    opciones?: { areaSolicitante?: string; descripcion?: string; tipo?: string; subtipo?: string; categoria?: string; fechaRequerida?: string; idempotencyKey?: string }
   ): Promise<Solicitud>;
+
+  /**
+   * Marca que la notificación/documento de una solicitud ya enviada no se pudo generar.
+   * La transición ya ocurrió: esto registra el fallo del aviso, no lo revierte (RF-25).
+   */
+  marcarNotificacionFallida(solicitudId: string): Promise<void>;
 
   guardarRespuestas(solicitudId: string, respuestas: RespuestaCampo[]): Promise<void>;
 

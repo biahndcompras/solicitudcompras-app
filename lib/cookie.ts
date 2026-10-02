@@ -1,5 +1,6 @@
 // Cookie de continuidad del solicitante (30 días) — sin autenticación.
 // Fuente: user-flows.md §2.3. No es autenticación: solo asocia borrador/email.
+import { envolverBorrador, desenvolverBorrador, CLAVE_BORRADOR, type SobreBorrador } from "@/lib/domain/borrador";
 
 export const COOKIE_NOMBRE = "bia_session";
 
@@ -44,29 +45,50 @@ export function leerBorradorEmail(): string | null {
   }
 }
 
-const BORRADOR_KEY = "bia_borrador";
+export { CLAVE_BORRADOR };
 
-// Guarda el estado completo del borrador en localStorage para retomarlo.
-export function guardarBorrador<T>(estado: T): void {
-  if (typeof window === "undefined") return;
+// Guarda el estado completo del borrador en localStorage para retomarlo, con versión y
+// marca de tiempo (sin eso, "Borrador activo" era una mentira que se pierde al recargar).
+// Devuelve si la escritura REALMENTE ocurrió: si localStorage no existe o la cuota está
+// llena (modo privado, cuota agotada), la UI debe decirlo en vez de prometer que guarda.
+export function escribirBorrador<T>(estado: T, guardadoEn: number = Date.now()): boolean {
+  if (typeof window === "undefined") return false;
   try {
-    localStorage.setItem(BORRADOR_KEY, JSON.stringify(estado));
+    const sobre: SobreBorrador = envolverBorrador(estado, guardadoEn);
+    localStorage.setItem(CLAVE_BORRADOR, JSON.stringify(sobre));
+    return true;
   } catch {
-    /* sin almacenamiento */
+    return false;
   }
 }
 
-export function leerBorrador<T>(): T | null {
+/** @deprecated usar escribirBorrador (mismo comportamiento, nombre explícito). */
+export const guardarBorrador = escribirBorrador;
+
+/**
+ * Lee el borrador tolerando sobre nuevo, objeto plano legado, JSON inválido, array o
+ * cualquier basura escrita a mano. Devuelve null si no hay nada aprovechable.
+ */
+export function leerBorradorSeguro(): {
+  estado: Record<string, unknown>;
+  guardadoEn: number | null;
+  version: number | null;
+} | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(BORRADOR_KEY);
-    return raw ? (JSON.parse(raw) as T) : null;
+    return desenvolverBorrador(localStorage.getItem(CLAVE_BORRADOR));
   } catch {
     return null;
   }
 }
 
+/** @deprecated usar leerBorradorSeguro. */
+export function leerBorrador<T>(): T | null {
+  const sobre = leerBorradorSeguro();
+  return sobre ? (sobre.estado as T) : null;
+}
+
 export function limpiarBorrador(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(BORRADOR_KEY);
+  localStorage.removeItem(CLAVE_BORRADOR);
 }

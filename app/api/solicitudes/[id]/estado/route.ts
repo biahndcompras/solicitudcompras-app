@@ -55,6 +55,31 @@ export async function PATCH(
     if (!solicitud) {
       return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
     }
+
+    // El solicitante solo puede mover SU solicitud. El comentario de arriba ya decía "desde
+    // una solicitud propia" pero el código no lo comprobaba: sin sesión, cualquiera que
+    // supiera un id podía empujar cualquier solicitud a ENVIADA_A_COMPRAS. El correo es la
+    // identidad de este flujo (ver `mis-solicitudes?email=`), así que es lo que se compara.
+    if (
+      enviaSolicitante &&
+      (solicitud.estado !== "BORRADOR" ||
+        solicitud.solicitanteEmail.toLowerCase() !== (body.actorIdentificador ?? "").trim().toLowerCase())
+    ) {
+      // Idempotencia del envío: si YA está en ENVIADA_A_COMPRAS y es del mismo correo, el
+      // reintento del cliente (timeout que perdió la respuesta) NO es un error — el hecho de
+      // negocio ya ocurrió. Devolver 409 aquí volvía a mostrarle al solicitante un fallo sobre
+      // un envío que sí se había hecho, que es exactamente lo que se reportó.
+      if (solicitud.estado === "ENVIADA_A_COMPRAS") {
+        return NextResponse.json({
+          solicitud,
+          eventoId: "",
+          yaEnviada: true,
+          pipeline: { ok: true, documentoId: undefined, correoCoordinador: "no-op", correoSolicitante: "no-op" },
+        });
+      }
+      return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
+    }
+
     if (!esTransicionValida(solicitud.estado, body.hacia)) {
       return NextResponse.json(
         {
@@ -63,25 +88,6 @@ export async function PATCH(
         },
         { status: 409 }
       );
-    }
-
-    // Pipeline: al transicionar a ENVIADA_A_COMPRAS, generar PDF + correos 1 y 2.
-    // Si el PDF falla, la solicitud NO cambia de estado (RF-24).
-    let pipeline: Awaited<ReturnType<typeof pipelineEnvioACompras>> | undefined;
-    if (body.hacia === "ENVIADA_A_COMPRAS") {
-      pipeline = await pipelineEnvioACompras({
-        repo,
-        solicitud,
-        respuestas: body.respuestas,
-        // El solicitante eligió explícitamente a qué comprador va la solicitud (1.1).
-        coordinadorIdSolicitado: body.coordinadorId,
-      });
-      if (!pipeline.ok) {
-        return NextResponse.json(
-          { error: pipeline.error ?? "No se pudo generar el documento" },
-          { status: 500 }
-        );
-      }
     }
 
     // Al enviar la comparativa al solicitante: validar que exista comparativa, persistir
@@ -110,9 +116,55 @@ export async function PATCH(
         new Date(Date.now() + dias * 86400000).toISOString()
       );
       enlace = { token: link.token, url: `/comparativa/${link.token}` };
+    }
 
-      // 2.2: enviar correo 3 al solicitante con las cotizaciones ORIGINALES adjuntas.
-      // El solicitante siempre quiere ver las ofertas que consiguió Compras, no solo el comparativo.
+    // La transición es el HECHO DE NEGOCIO: el solicitante completó y Compras ya tiene la
+    // solicitud. Por eso ocurre ANTES del PDF y de los correos. Antes este endpoint hacía
+    // lo contrario (`await pipelineEnvioACompras` y `return 500` si fallaba): un pdfme que
+    // no renderaba, o un Resend que tardaba, dejaba al solicitante viendo "no se pudo
+    // enviar" sobre una solicitud que en realidad ya estaba enviada — y su reintento
+    // creaba otra. Mismo espíritu que RF-25 en el correo 3, aplicado al pipeline entero.
+    const res = await repo.transicionarEstado({
+      solicitudId: id,
+      hacia: body.hacia,
+      actorTipo: body.actorTipo,
+      actorIdentificador: body.actorIdentificador,
+      nota: body.nota,
+    });
+
+    // Ya con `numeroReferencia` definitiva (se asigna en la transición), que es lo que
+    // aparece en el PDF y en el asunto de los correos.
+    let pipeline: { ok: boolean; error?: string; documentoId?: string } | undefined;
+    if (body.hacia === "ENVIADA_A_COMPRAS") {
+      const enviado = res.solicitud;
+      pipeline = await pipelineEnvioACompras({
+        repo,
+        solicitud: enviado,
+        respuestas: body.respuestas,
+        // El solicitante eligió explícitamente a qué comprador va la solicitud (1.1).
+        coordinadorIdSolicitado: body.coordinadorId,
+        notificar: false,
+      });
+      if (!pipeline.ok) {
+        // La solicitud QUEDÓ enviada. El fallo es del documento, se registra y se reporta
+        // aparte; no se devuelve 500 porque eso mentiría sobre el envío.
+        try {
+          await repo.marcarNotificacionFallida(id);
+        } catch (e) {
+          // Si ni siquiera el registro del fallo se puede escribir, hay que decirlo: sin esto
+          // la solicitud queda enviada y sin rastro de que el documento nunca se generó.
+          console.error(`[pipeline] no se pudo marcar notificacion_fallida en ${id}:`, e);
+        }
+        console.error(
+          `[pipeline] solicitud ${id} (${enviado.numeroReferencia}) enviada pero sin documento:`,
+          pipeline.error
+        );
+      }
+    }
+
+    // 2.2: enviar correo 3 al solicitante con las cotizaciones ORIGINALES adjuntas.
+    // El solicitante siempre quiere ver las ofertas que consiguió Compras, no solo el comparativo.
+    if (body.hacia === "ENVIADA_A_SOLICITANTE") {
       void (async () => {
         try {
           const adjuntos = (await repo.listarCotizacionesConArchivo(id)).map((c) => ({
@@ -124,11 +176,11 @@ export async function PATCH(
             repo,
             tipoCorreo: "3",
             solicitudId: id,
-            destinatario: solicitud.solicitanteEmail,
+            destinatario: res.solicitud.solicitanteEmail,
             datos: {
-              numeroReferencia: solicitud.numeroReferencia,
-              titulo: solicitud.titulo,
-              solicitanteNombre: solicitud.solicitanteNombre,
+              numeroReferencia: res.solicitud.numeroReferencia,
+              titulo: res.solicitud.titulo,
+              solicitanteNombre: res.solicitud.solicitanteNombre,
               coordinadorNombre: coordNombre ?? "Compras",
               cantidadCotizaciones: adjuntos.length || (await repo.listarCotizaciones(id)).length,
               recomendacion: body.nota,
@@ -141,14 +193,6 @@ export async function PATCH(
         }
       })();
     }
-
-    const res = await repo.transicionarEstado({
-      solicitudId: id,
-      hacia: body.hacia,
-      actorTipo: body.actorTipo,
-      actorIdentificador: body.actorIdentificador,
-      nota: body.nota,
-    });
 
     return NextResponse.json({ ...res, pipeline, enlace });
   } catch (e) {

@@ -22,21 +22,36 @@ function soloEnviadasACompras(solicitudes: Solicitud[]): Solicitud[] {
   return solicitudes.filter((s) => !ESTADOS_PRE_ENVIO.includes(s.estado));
 }
 
+// Topes en el límite público: el cliente los aplica, pero esta API es abierta y sin
+// sesión (ver POST), así que el techo se vuelve a validar en el servidor para que nadie
+// pueda meter un título de 1 MB o un cuerpo enorme.
+const MAX_TITULO = 200;
+const MAX_NOMBRE = 200;
+const MAX_AREA = 200;
+const MAX_DESCRIPCION = 5000;
+/** La clave de idempotencia es un UUID del cliente; 64 chars es holgado y no abre la puerta a un payload libre. */
+const MAX_CLAVE_IDEMPOTENCIA = 64;
+const CLAVE_IDEMPOTENCIA_RE = /^[A-Za-z0-9_-]{8,64}$/;
+
 const crearSchema = z.object({
-  titulo: z.string().min(1),
-  solicitanteEmail: z.string().email(),
-  solicitanteNombre: z.string().min(1),
-  areaSolicitante: z.string().optional(),
-  descripcion: z.string().optional(),
-  categoria: z.string().optional(),
+  titulo: z.string().min(1).max(MAX_TITULO),
+  solicitanteEmail: z.string().email().max(320),
+  solicitanteNombre: z.string().min(1).max(MAX_NOMBRE),
+  areaSolicitante: z.string().max(MAX_AREA).optional(),
+  descripcion: z.string().max(MAX_DESCRIPCION).optional(),
+  categoria: z.string().max(80).optional(),
   tipo: z.enum(["RFI", "RFQ", "RFP"]).optional(),
   subtipo: z.enum(["producto", "servicio", "mixto"]).optional(),
-  fechaRequerida: z.string().optional(),
+  fechaRequerida: z.string().max(10).optional(),
+  // Opcional y sin efecto si no viene: la API pública no exige idempotencia, la aprovecha
+  // cuando el cliente la manda. Un valor con forma rara se ignora en vez de rechazar el envío.
+  idempotencyKey: z.string().max(MAX_CLAVE_IDEMPOTENCIA).optional(),
 });
 
 export async function POST(request: Request) {
   try {
     const body = crearSchema.parse(await request.json());
+    const clave = body.idempotencyKey ?? "";
     const solicitud = await repo.crearSolicitud(
       {
         titulo: body.titulo,
@@ -44,14 +59,15 @@ export async function POST(request: Request) {
         solicitanteNombre: body.solicitanteNombre,
         estado: "BORRADOR",
       },
-{
-      areaSolicitante: body.areaSolicitante,
-      descripcion: body.descripcion,
-      categoria: body.categoria,
-      tipo: body.tipo,
-      subtipo: body.subtipo,
-      fechaRequerida: body.fechaRequerida,
-    }
+      {
+        areaSolicitante: body.areaSolicitante,
+        descripcion: body.descripcion,
+        categoria: body.categoria,
+        tipo: body.tipo,
+        subtipo: body.subtipo,
+        fechaRequerida: body.fechaRequerida,
+        idempotencyKey: CLAVE_IDEMPOTENCIA_RE.test(clave) ? clave : undefined,
+      }
     );
     return NextResponse.json(solicitud, { status: 201 });
   } catch (e) {

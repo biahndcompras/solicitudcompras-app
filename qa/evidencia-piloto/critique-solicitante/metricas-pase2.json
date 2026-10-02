@@ -1,0 +1,271 @@
+{
+  "H1-sin-area": {
+    "textoVisibleArea": "Área: —",
+    "hayCampoAreaEnFormulario": false,
+    "botonContinuarDisabled": true,
+    "pasoValido_hooks": "requiere area.trim() (hooks/useSolicitudWizard.ts:299)",
+    "camposQueElUsuarioPuedeLlenar": [
+      "titulo",
+      "select-one",
+      "date",
+      "textarea"
+    ]
+  },
+  "H2-draft-loss": {
+    "antes": {
+      "h2": [
+        "¿Qué necesitás?"
+      ],
+      "tituloInput": "TÍTULO ÚNICO XYZ-12345",
+      "pasoEnLS": 2,
+      "tituloEnLS": "TÍTULO ÚNICO XYZ-12345",
+      "areaEnLS": "Trade Marketing"
+    },
+    "despues": {
+      "url": "?nuevo=1&email=mj.e2e%40biabrands.co&nombre=Solicitante%20E2E&area=Trade%20Marketing",
+      "h2": [
+        "¿Qué necesitás?"
+      ],
+      "tituloInput": "",
+      "tituloEnPantalla": false,
+      "descEnPantalla": false,
+      "cookie": "",
+      "areaEnPantalla": "Área: Trade Marketing"
+    },
+    "veredicto": "BORRADOR PERDIDO: los datos NO volvieron tras recargar"
+  },
+  "H2b-draft-sin-nuevo": {
+    "h2": [
+      "¿Qué necesitás?"
+    ],
+    "tituloEnPantalla": false
+  },
+  "H3-foco-radio-card": {
+    "llegoAlRadio": true,
+    "estado": {
+      "inputRect": {
+        "w": 1,
+        "h": 1
+      },
+      "cardBorderAntes": "lab(63.3038 -18.433 -51.0407) / ring:rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.684991 -0.0912492 -0.142231 / 0.3) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "cardClasses": "py-3.5 px-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-center transition-all group-has-[:checked]:border-sky-500 group-has-[:checked]:bg-sky-50/50 group-has-[:checked]:ring-1 group-has-[:checked]:ring-sky-500/",
+      "tieneFocusVisibleEnClases": false
+    }
+  },
+  "H3b-foco-audit": {
+    "tarjetaBounds": {
+      "w": 136,
+      "h": 115
+    },
+    "outlineEnTarjeta": "rgb(15, 23, 42) none 3px",
+    "note": "el input es sr-only (1x1px); cualquier indicador debe venir de la tarjeta label"
+  },
+  "H4a-file-input": {
+    "hay": true,
+    "accept": ".png,.jpg,.jpeg,.pdf,.svg,.ai,.eps",
+    "labelVisible": "Subir arte o logo oficial | Formatos aceptados: PNG, JPG, PDF, SVG, AI, EPS. Obligatorio para que el proveedor use la versión correcta.",
+    "rect": {
+      "w": 1,
+      "h": 1
+    },
+    "labelRect": {
+      "w": 252,
+      "h": 224
+    },
+    "enPantalla": false
+  },
+  "H4b-archivo-12MB": {
+    "nombreMostrado": "SI",
+    "zonaVerde": true,
+    "textoVisible": "Formatos aceptados: PNG, JPG, PDF, SVG, AI, EPS. Obligatorio para que el proveedor use la versión correcta.\nAtrás\nGenerar documento",
+    "hayMensajeDeError": false
+  },
+  "H4c-pdf-roto": {
+    "nombreMostrado": true,
+    "hayErrorVisible": false
+  },
+  "H4d-heic": {
+    "aceptado": true,
+    "texto": "Formatos aceptados: PNG, JPG, PDF, SVG, AI, EPS. Obligatorio para que el proveedor use la versión correcta.\nAtrás\nGenerar documento"
+  },
+  "H4e-advance": {
+    "botonExiste": true,
+    "disabled": false
+  },
+  "H5a-comparativa-estructura": {
+    "monedasPresentes": [
+      "HNL",
+      "USD"
+    ],
+    "importes": [
+      "HNL 98.9",
+      "USD 31.5"
+    ],
+    "hayAvisoSinConversion": true,
+    "hayEquivalente": false,
+    "recomendacion": "Recomiendo PlayaPromo",
+    "textoRecomendacion": "RECOMENDACIÓN DE COMPRAS\nHUMANA\nRecomiendo PlayaPromo\nOpciones cotizadas\n\nLos importes se muestran en su moneda original (sin conversión).\n\nPENDIENTE DE DECISIÓN\nPROVEEDOR\nCostaPrint\nTOTAL\nHNL 98.9\nPROS\nValor total en Lempiras (HNL), lo que pod"
+  },
+  "H5b-modal-foco": {
+    "focoAlAbrir": {
+      "activo": "BUTTON:Elegir esta opción"
+    },
+    "recorrido": [
+      {
+        "tag": "BUTTON",
+        "t": "Elegir esta opción",
+        "enModal": false,
+        "enFondo": true
+      },
+      {
+        "tag": "BUTTON",
+        "t": "Ninguna me sirve, nece",
+        "enModal": false,
+        "enFondo": true
+      },
+      {
+        "tag": "BUTTON",
+        "t": "Cancelar",
+        "enModal": true,
+        "enFondo": false
+      },
+      {
+        "tag": "BUTTON",
+        "t": "Confirmar",
+        "enModal": true,
+        "enFondo": false
+      },
+      {
+        "tag": "BODY",
+        "t": "ENLACE PÚBLICO · SIN I",
+        "enModal": false,
+        "enFondo": false
+      },
+      {
+        "tag": "NEXTJS-PORTAL",
+        "t": "",
+        "enModal": false,
+        "enFondo": true
+      },
+      {
+        "tag": "BUTTON",
+        "t": "Elegir esta opción",
+        "enModal": false,
+        "enFondo": true
+      },
+      {
+        "tag": "BUTTON",
+        "t": "Elegir esta opción",
+        "enModal": false,
+        "enFondo": true
+      }
+    ],
+    "hayTrampaDeFoco": false,
+    "hayRoleDialog": false,
+    "hayAriaModal": false,
+    "escapeCierra": false,
+    "fondoConOnClick": true
+  },
+  "H5c-ninguna-me-sirve": {
+    "existe": true,
+    "disabled": false,
+    "texto": "Ninguna me sirve, necesito hablar con Compras"
+  },
+  "H5d-token-usa": {
+    "status": 200,
+    "sinCamposDeLogin": false
+  },
+  "H6-lista-movil-aplastamiento": {
+    "tarjetaW": 292,
+    "colTituloW": 57,
+    "tituloTexto": "Pelotas de fútbol tamaño 5 marca BIA para torneo juvenil",
+    "tituloW": 57,
+    "tituloH": 240,
+    "lineasTitulo": 10,
+    "refTexto": "RFQ-2026-0012",
+    "refW": 57,
+    "refH": 45,
+    "badges": [
+      {
+        "txt": "26 DÍAS DE MARGEN",
+        "w": 146,
+        "desbordadoDerecha": -68,
+        "seSaleDelCard": false
+      },
+      {
+        "txt": "26 DÍAS DE MARGEN",
+        "w": 110,
+        "desbordadoDerecha": -79,
+        "seSaleDelCard": false
+      },
+      {
+        "txt": "Enviada a Compras",
+        "w": 118,
+        "desbordadoDerecha": 58,
+        "seSaleDelCard": true
+      },
+      {
+        "txt": "Comparativa",
+        "w": 48,
+        "desbordadoDerecha": -122,
+        "seSaleDelCard": false
+      },
+      {
+        "txt": "Tu decisión",
+        "w": 43,
+        "desbordadoDerecha": -74,
+        "seSaleDelCard": false
+      },
+      {
+        "txt": "Cerrada",
+        "w": 31,
+        "desbordadoDerecha": -32,
+        "seSaleDelCard": false
+      }
+    ],
+    "trackerLabels": [
+      {
+        "t": "26 días de margen",
+        "fs": "10px",
+        "w": 146
+      },
+      {
+        "t": "Creada",
+        "fs": "16px",
+        "w": 44
+      },
+      {
+        "t": "En cotización",
+        "fs": "16px",
+        "w": 44
+      },
+      {
+        "t": "Comparativa",
+        "fs": "16px",
+        "w": 48
+      },
+      {
+        "t": "Tu decisión",
+        "fs": "16px",
+        "w": 44
+      },
+      {
+        "t": "Cerrada",
+        "fs": "16px",
+        "w": 44
+      }
+    ]
+  },
+  "H6b-detalle-movil": {
+    "tracker": [
+      {
+        "t": "29 días de margen",
+        "fs": "10px",
+        "w": 146
+      }
+    ],
+    "overflowX": false,
+    "hayDecisionCTA": false,
+    "texto": "Volver | RFQ-2026-0008 | 29 DÍAS DE MARGEN | Comparativa lista | Verificación fixes QA | Creada: 22 sept 2026 · Atención: 4 días | SOLICITANTE | Solicitante E2E | ÁREA | Trade Marketing | TIPO | RFQ | SUBTIPO | producto | CATEGORÍA | Mercadeo y publicidad | FECHA REQUERIDA | 25 oct 2026 | DESCRIPCIÓN | Solicitud para verificar fixes H12 | PROGRESO | ✓ | Creada | ✓ | En cotización | ⚖️ | Comparativa | 🗳️ | Tu decisión | ✅ | Cerrada | COTIZACIONES (2) | Prov Cara SA | HNL 100000 | Prov Barata SA | HNL 80000"
+  }
+}

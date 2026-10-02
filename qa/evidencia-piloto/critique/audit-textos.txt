@@ -1,0 +1,471 @@
+
+
+===== login =====
+BIA
+Compras
+ENTERPRISE
+Iniciar sesión
+
+Rol: Coordinador · Equipo de Compras. Portales separados por rol.
+
+Correo
+Contraseña
+Entrar al panel
+
+===== panel =====
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+4 resultados
+REFERENCIA	SOLICITANTE	NECESIDAD	CATEGORÍA	ESTADO	ACCIÓN
+
+RFQ-2026-0010
+	
+Edgar Calderon
+Intelia
+	
+Pelota de fútbol
+Entrega requerida: 15 nov 2026
+	Mercadeo y publicidad	
+Activa
+50 días de margen
+4 días de gestión
+	Abrir
+
+
+RFQ-2026-0009
+	
+Solicitante E2E
+Trade Marketing
+	
+Gorra tejida con logo — prueba fixes
+Entrega requerida: 1 nov 2026
+	Mercadeo y publicidad	
+Activa
+36 días de margen
+4 días de gestión
+	Abrir
+
+
+RFQ-2026-0008
+	
+Solicitante E2E
+Trade Marketing
+	
+Verificación fixes QA
+Entrega requerida: 25 oct 2026
+	Mercadeo y publicidad	
+Esperando cotizaciones
+29 días de margen
+4 días de gestión
+	Abrir
+
+
+RFQ-2026-0007
+	
+Solicitante E2E
+Trade Marketing
+	
+Lapiceros branding Vía — activación canal tradicional
+Entrega requerida: 5 oct 2026
+	Mercadeo y publicidad	
+Cerrada
+0 h de gestión
+	Abrir
+
+===== panel-busqueda-vacia =====
+BIA
+Panel de Compras
+COORDINADOR
+
+Flujo del coordinador: de bandeja a envío de comparativa.
+
+Carlos Melara
+Equipo de Compras
+SALIR
+ACTIVAS
+2
+en curso
+ESPERANDO COTIZACIONES
+1
+pend.
+ESPERANDO DECISIÓN
+0
+solic.
+CERRADAS
+1
+cerradas
+Todos
+Activas
+Esperando cotizaciones
+Esperando decisión
+Cerradas
+Solicitudes
+0 resultados
+Sin resultados para «zzzz»
+Revisá la referencia, el título o el nombre del solicitante.
+Limpiar búsqueda
+
+===== detalle-0010-paso7 =====
+RFQ-2026-0010
+Activa
+Pelota de fútbol
+Edgar Calderon
+•
+Intelia
+•
+Entrega requerida: 15 nov 2026
+Volver al panel
+Editar datos
+Cancelar solicitud
+Paso 1 de 3 · Cotizaciones
+Comparativa se habilita con 2 cotizaciones cargadas
+07
+Cotizaciones
+08
+Comparativa
+09
+Recomendación
+Cotizaciones de proveedores
+
+Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea.
+
+MÍNIMO 2 PARA COMPARATIVA
+Agregar cotización manual
+Todavía no hay cotizaciones
+Agregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.
+Generar comparativa
+Se necesitan al menos 2 cotizaciones para generar una comparativa.
+Generar comparativa
+Edgar Calderon
+Intelia
+pelota de futbol para una actividad de marketing
+edgar.calderon@intelia.com
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+15 nov 2026
+Logo/archivo del producto
+cotizacion-sombrillas.pdf
+
+===== detalle-0010-form-manual =====
+RFQ-2026-0010
+Activa
+Pelota de fútbol
+Edgar Calderon
+•
+Intelia
+•
+Entrega requerida: 15 nov 2026
+Volver al panel
+Editar datos
+Cancelar solicitud
+Paso 1 de 3 · Cotizaciones
+Comparativa se habilita con 2 cotizaciones cargadas
+07
+Cotizaciones
+08
+Comparativa
+09
+Recomendación
+Cotizaciones de proveedores
+
+Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea.
+
+MÍNIMO 2 PARA COMPARATIVA
+Cancelar
+Nueva cotización
+Proveedor
+Moneda
+HNL
+USD
+Valor neto
+ISV
+Total
+Plazo de entrega
+Cancelar
+Guardar cotización
+Todavía no hay cotizaciones
+Agregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.
+Generar comparativa
+Se necesitan al menos 2 cotizaciones para generar una comparativa.
+Generar comparativa
+Edgar Calderon
+Intelia
+pelota de futbol para una actividad de marketing
+edgar.calderon@intelia.com
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+15 nov 2026
+Logo/archivo del producto
+cotizacion-sombrillas.pdf
+
+===== detalle-0008-paso7 =====
+RFQ-2026-0008
+Comparativa lista
+Verificación fixes QA
+Solicitante E2E
+•
+Trade Marketing
+•
+Entrega requerida: 25 oct 2026
+Volver al panel
+Reabrir cotizaciones
+Editar datos
+Cancelar solicitud
+Paso 1 de 3 · Cotizaciones
+07
+Cotizaciones
+08
+Comparativa
+09
+Recomendación
+Cotizaciones de proveedores
+
+Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea.
+
+MÍNIMO 2 PARA COMPARATIVA
+Agregar cotización manual
+MANUAL
+Prov Cara SA
+· entrega 20 días
+Neto: HNL 100,000
+ISV: 0
+Total: HNL 100,000
+(22/9/2026)
+Adjuntar archivo
+Editar
+MANUAL
+Prov Barata SA
+· entrega 10 días
+Neto: HNL 80,000
+ISV: 0
+Total: HNL 80,000
+(22/9/2026)
+Adjuntar archivo
+Editar
+Generar comparativa
+La IA analizará las 2 cotizaciones y generará la comparativa.
+Generar comparativa
+Solicitante E2E
+Trade Marketing
+Solicitud para verificar fixes H12
+mj.e2e@biabrands.co
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+25 oct 2026
+
+===== detalle-0008-paso8-comparativa =====
+RFQ-2026-0008
+Comparativa lista
+Verificación fixes QA
+Solicitante E2E
+•
+Trade Marketing
+•
+Entrega requerida: 25 oct 2026
+Volver al panel
+Reabrir cotizaciones
+Editar datos
+Cancelar solicitud
+Paso 2 de 3 · Comparativa
+07
+Cotizaciones
+08
+Comparativa
+09
+Recomendación
+08 · Comparativa generada
+
+Moneda original por proveedor. Si no desglosa impuestos: «⚠ no especifica» (RN-06).
+
+Descargar Excel
+Ver recomendación →
+CONCEPTO	PROV CARA SA	PROV BARATA SA
+Valor neto	HNL 100,000	HNL 80,000
+Impuestos (ISV)	⚠ no especifica	⚠ no especifica
+Total	HNL 100,000	HNL 80,000
+Entrega	20 días	10 días
+Forma de pago	no especificado	no especificado
+Garantía	no especificado	no especificado
+Vigencia	no especificado	no especificado
+Solicitante E2E
+Trade Marketing
+Solicitud para verificar fixes H12
+mj.e2e@biabrands.co
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+25 oct 2026
+
+===== detalle-0008-paso9-recomendacion =====
+RFQ-2026-0008
+Comparativa lista
+Verificación fixes QA
+Solicitante E2E
+•
+Trade Marketing
+•
+Entrega requerida: 25 oct 2026
+Volver al panel
+Reabrir cotizaciones
+Editar datos
+Cancelar solicitud
+Paso 3 de 3 · Recomendación
+07
+Cotizaciones
+08
+Comparativa
+09
+Recomendación
+09 · Recomendación
+
+Punto de control humano (RN-01). Podés contradecir la sugerencia de la IA sin fricción.
+
+Prov Cara SA
+Total: HNL 100,000
+✓ Pros
+Ahorro potencial de 20,000 HNL frente a la opción más cara
+✗ Contras
+El valor neto es de 100,000 HNL, superior al de Prov Barata SA.
+El plazo de entrega es de 20 días, más largo que el de Prov Barata SA.
+Prov Barata SA
+Total: HNL 80,000
+✓ Pros
+El valor neto es de 80,000 HNL, inferior al de Prov Cara SA.
+El plazo de entrega es de 10 días, más corto que el de Prov Cara SA.
+✗ Contras
+SUGERENCIA DEL ASISTENTE (IA)
+SOLO UN INSUMO
+Proveedor sugerido: Prov Barata SA
+Generado por el sistema: Se sugiere considerar la oferta de Prov Barata SA debido a su menor valor neto y un plazo de entrega más corto. Sin embargo, dado que no se especificaron requisitos de forma de pago, vigencia de oferta o garantía, se recomienda solicitar esta información a ambos proveedores para una evaluación más completa. — Generada por el sistema.
+Recomendación del coordinador *
+Escribí tu recomendación antes de enviar. El solicitante decide, pero tu criterio es lo que más le sirve para decidir.
+Enviar comparativa al solicitante
+Bloqueo duro B3: se valida también en el servidor.
+Solicitante E2E
+Trade Marketing
+Solicitud para verificar fixes H12
+mj.e2e@biabrands.co
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+25 oct 2026
+
+===== detalle-0007-cerrada =====
+RFQ-2026-0007
+Cerrada
+Lapiceros branding Vía — activación canal tradicional
+Solicitante E2E
+•
+Trade Marketing
+•
+Entrega requerida: 5 oct 2026
+•
+Cerrada: 22/9/2026
+Solicitud cerrada con decisión
+El solicitante eligió Imprenta CostaPrint S. de R.L. · 22/9/2026.
+Volver al panel
+Paso 1 de 3 · Cotizaciones
+07
+Cotizaciones
+08
+Comparativa
+09
+Recomendación
+Cotizaciones registradas
+
+Estas son las 3 ofertas cargadas con las que se comparó esta solicitud. El ciclo está cerrado.
+
+3 REGISTRADAS
+MANUAL
+Proveedora Norte S.A.
+· entrega 15 días
+Neto: HNL 50,000
+ISV: 7,500
+Total: HNL 57,500
+(22/9/2026)
+MANUAL
+Imprenta CostaPrint S. de R.L.
+· entrega 10 días
+Neto: HNL 42,000
+ISV: 0
+Total: HNL 42,000
+(22/9/2026)
+PDF
+Papelera del Valle S.A.
+· entrega 30 días
+Neto: HNL 399,000
+Total: HNL 399,000
+(22/9/2026)
+Campos que la IA marcó con baja confianza de extracción: garantia, ISV, formaPago, proveedorContacto, montoOtrosImpuestos, Impuestos, observacionesFiscales, proveedorIdentificacionFiscal. El ciclo está cerrado, así que no queda acción pendiente sobre ellos.
+CONFIANZA IA:
+Moneda 100%
+garantia 0%
+ilegible 100%
+ISV 0%
+formaPago 0%
+Valor neto 100%
+Total 100%
+Plazo 100%
+vigenciaOferta 100%
+Proveedor 100%
+proveedorContacto 0%
+montoOtrosImpuestos 0%
+Impuestos 0%
+observacionesFiscales 0%
+especificacionesOfertadas 100%
+proveedorIdentificacionFiscal 0%
+El análisis de esta oferta quedó con una observación fiscal. El detalle está en el historial de la solicitud; como el ciclo está cerrado, no queda ninguna acción pendiente.
+Solicitante E2E
+Trade Marketing
+500 lapiceros metálicos con logo Vía para entrega en canal tradicional. Colores corporativos azul y blanco.
+mj.e2e@biabrands.co
+Detalles de la solicitud
+Categoría
+Mercadeo y publicidad
+Subtipo
+Producto
+Fecha requerida
+5 oct 2026

@@ -50,3 +50,17 @@ next-env.d.ts
 # Documentación interna original del de origen (no presenta al repo de desarrollo;
 # incluye material comercial confidencial como el re-baseline/doc 12 — guía 23 §2)
 /documentacion inicial/
+
+# Evidencia visual de QA: los .md sí se versionan (son el registro de los hallazgos),
+# las capturas binarias no (~24 MB y se regeneran con `npm run e2e`).
+qa/**/*.png
+qa/**/*.pdf
+.playwright-mcp/
+/p2-*.png
+/h42-*.png
+/panel-coordinador-redise*.png
+
+# Documentos binarios aportados por el cliente (RFQ/RFP/fichas de merchandising).
+# 33 MB de material comercial confidencial: la misma categoría que `documentacion inicial/`.
+# Se consultan desde el disco; no se versionan.
+/docs/doc-references/

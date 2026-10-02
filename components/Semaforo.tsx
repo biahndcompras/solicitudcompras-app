@@ -22,7 +22,7 @@ export function SemParoBadge({ solicitud, compact = false }: { solicitud: SemSol
       className={
         "inline-flex items-center gap-1.5 rounded-full border " +
         SEMAFORO_CLASES[s.nivel] +
-        (compact ? " px-2 py-0.5 text-[9px] font-bold" : " px-2.5 py-1 text-[10px] font-bold")
+        (compact ? " px-2 py-0.5 text-xs font-bold" : " px-2.5 py-1 text-xs font-bold")
       }
       title={s.texto}
     >

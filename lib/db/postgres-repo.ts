@@ -98,15 +98,18 @@ export class PostgresRepositorio implements Repositorio {
     datos: Parameters<Repositorio["crearSolicitud"]>[0],
     opciones: Parameters<Repositorio["crearSolicitud"]>[1]
   ): Promise<Solicitud> {
+    const idempotencyKey = opciones?.idempotencyKey?.trim() || null;
+    const email = datos.solicitanteEmail.toLowerCase();
     const res = await this.pg.query(
       `INSERT INTO solicitud (titulo, solicitante_email, solicitante_nombre, estado,
-         area_solicitante, descripcion, categoria, tipo, subtipo, fecha_requerida)
+         area_solicitante, descripcion, categoria, tipo, subtipo, fecha_requerida, idempotency_key)
        VALUES ($1,$2,$3,$4,$5,$6,$7,
-         $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date)
+         $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11)
+       ON CONFLICT (solicitante_email, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
        RETURNING *`,
       [
         datos.titulo,
-        datos.solicitanteEmail.toLowerCase(),
+        email,
         datos.solicitanteNombre,
         datos.estado,
         opciones?.areaSolicitante ?? null,
@@ -117,9 +120,26 @@ export class PostgresRepositorio implements Repositorio {
         opciones?.tipo && ["RFI", "RFQ", "RFP"].includes(opciones.tipo) ? opciones.tipo : null,
         opciones?.subtipo && ["producto", "servicio", "mixto"].includes(opciones.subtipo) ? opciones.subtipo : null,
         opciones?.fechaRequerida ?? null,
+        idempotencyKey,
       ]
     );
-    return filaSolicitud(res.rows[0]);
+    if (res.rows[0]) return filaSolicitud(res.rows[0]);
+    // Conflicto de idempotencia: esta clave YA creó una solicitud para este correo. Se
+    // devuelve ESA, sin tocarla, para que el cliente se reenganche en vez de duplicar.
+    // El índice cubre (correo, clave), pero la comprobación se repite aquí a propósito: si
+    // alguien cambiara el índice, esta línea seguiría impidiendo devolver la fila de otro.
+    const existente = await this.pg.query(
+      "SELECT * FROM solicitud WHERE idempotency_key = $1 AND solicitante_email = $2 LIMIT 1",
+      [idempotencyKey, email]
+    );
+    if (!existente.rows[0]) throw new Error("No se pudo resolver la clave de idempotencia");
+    return filaSolicitud(existente.rows[0]);
+  }
+
+  async marcarNotificacionFallida(solicitudId: string): Promise<void> {
+    await this.pg.query("UPDATE solicitud SET notificacion_fallida = true WHERE id = $1", [
+      solicitudId,
+    ]);
   }
 
   async guardarRespuestas(solicitudId: string, respuestas: RespuestaCampo[]): Promise<void> {

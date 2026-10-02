@@ -1,0 +1,70 @@
+{
+  "P3-360x740-cta-sin-scroll": {
+    "viewport": {
+      "w": 360,
+      "h": 740
+    },
+    "ctaBoundingBox": {
+      "x": 164.71875,
+      "y": 786.25,
+      "width": 126.28125,
+      "height": 40
+    },
+    "ctaVisibleEnPantalla": false,
+    "pxDebajoDelFold": 46,
+    "hitTestDelCentro": null,
+    "conclusion": "REQUIERE SCROLL para llegar al CTA"
+  },
+  "P3-360x740-reparto": {
+    "altoContenedor": 666,
+    "altoSidebar": 486,
+    "altoFormulario": 179,
+    "pctSidebar": 73,
+    "pctFormulario": 27,
+    "viewportH": 740,
+    "contenedorCabeEnPantalla": true,
+    "mainClasses": [
+      "h-[90vh] md:h-[80vh] min-h-[650px] max-h-[850px] overflow-hidden relative z-10"
+    ]
+  },
+  "P3-360x740-tap-resultado": {
+    "avanzo": "no se intentó: el CTA está fuera del viewport"
+  },
+  "P3-360x740-cta-paso3-recortado": {
+    "error": "TimeoutError: page.waitForSelector: Timeout 40000ms exceeded.\nCall log:\n  - waiting for locator('text=/Clasificación de tu solicitud/') to b"
+  },
+  "P3-390x844-cta-sin-scroll": {
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "ctaBoundingBox": {
+      "x": 194.71875,
+      "y": 876.328125,
+      "width": 126.28125,
+      "height": 40
+    },
+    "ctaVisibleEnPantalla": false,
+    "pxDebajoDelFold": 32,
+    "hitTestDelCentro": null,
+    "conclusion": "REQUIERE SCROLL para llegar al CTA"
+  },
+  "P3-390x844-reparto": {
+    "altoContenedor": 760,
+    "altoSidebar": 486,
+    "altoFormulario": 272,
+    "pctSidebar": 64,
+    "pctFormulario": 36,
+    "viewportH": 844,
+    "contenedorCabeEnPantalla": true,
+    "mainClasses": [
+      "h-[90vh] md:h-[80vh] min-h-[650px] max-h-[850px] overflow-hidden relative z-10"
+    ]
+  },
+  "P3-390x844-tap-resultado": {
+    "avanzo": "no se intentó: el CTA está fuera del viewport"
+  },
+  "P3-390x844-cta-paso3-recortado": {
+    "error": "TimeoutError: page.waitForSelector: Timeout 40000ms exceeded.\nCall log:\n  - waiting for locator('text=/Clasificación de tu solicitud/') to b"
+  }
+}

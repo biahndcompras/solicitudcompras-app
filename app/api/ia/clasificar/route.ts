@@ -18,7 +18,12 @@ export async function POST(request: Request) {
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: "Entrada inválida", detalles: e.issues }, { status: 400 });
     }
-    // La IA nunca bloquea: si falla, devolvemos null (sin preselección).
-    return NextResponse.json(null);
+    // La IA nunca bloquea: si falla, se avisa con 503 y el cliente sigue sin preselección
+    // (antes: 200 + `null`, que escondía el fallo y lo hacía indistinguible de una
+    // clasificación sin confianza). El detalle técnico nunca sale de aquí.
+    return NextResponse.json(
+      { error: "El asistente no está disponible en este momento." },
+      { status: 503 }
+    );
   }
 }

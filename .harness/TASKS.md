@@ -342,7 +342,20 @@ Un agente que arrancaba mañana leía que no había feature activa y que todo es
 **Hecho en esta sesión:**
 1. `AGENTS.md` ahora manda a leer **este archivo primero**, y declara que es la lista oficial.
 2. `STATE.md` reducido a un puntero: estado de una línea + orden de lectura.
-3. `HANDOFF.md` marcado como histórico, con la explicación de por qué se obsoletizó.
+3. `HANDOFF.md` **reescrito con la sesión de hoy**.
+
+⚠️ **Corrección posterior:** primero marqué `HANDOFF.md` como "histórico, no usar". Fue un
+error de diseño: confundí "documento que se quedó viejo" con "documento redundante". No es lo
+mismo. `session-start` lo lee como input obligatorio (`.agents/skills/session-start/SKILL.md:18`),
+así que dejarlo descartado le rompe el mecanismo de continuidad.
+
+Los tres archivos sirven cosas distintas y por eso conviven sin contradecirse:
+- **`TASKS.md`** — qué hay que hacer. Durable, lista oficial.
+- **`STATE.md`** — qué es el proyecto y cómo arrancar. Puntero, una pantalla.
+- **`HANDOFF.md`** — dónde quedó *esta* sesión y cuál es el primer movimiento. Efímero, se
+  reescribe al cerrar cada sesión.
+
+La solución a la obsolescencia es refrescarlo, no retirarlo.
 
 Verificá que no queden contradicciones: `grep -rn "HANDOFF" AGENTS.md .harness/*.md`.
 

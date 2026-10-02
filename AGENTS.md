@@ -5,8 +5,9 @@
 
 On every new session:
 
-1. Read `.harness/manifest.yml` and `.harness/STATE.md`.
-2. Read `.harness/HANDOFF.md` when it contains an active handoff.
+1. Read `.harness/TASKS.md` — **fuente única de estado y lista oficial de tareas**. Toda tarea
+   nueva, sin excepción, se registra ahí; ningún otro archivo las sostiene.
+2. Read `.harness/manifest.yml` and `.harness/STATE.md` (puntero a TASKS.md).
 3. Read only the lessons relevant to the current mode.
 4. Route from lifecycle state:
    - `intake` → invoke `project-intake`.
@@ -20,8 +21,8 @@ Inspect before asking the user for information. Never implement before Gate G4 a
 
 - Agent rules: `AGENTS.md`
 - Harness versions and ownership: `.harness/manifest.yml`
-- Current global state: `.harness/STATE.md`
-- Immediate continuity: `.harness/HANDOFF.md`
+- Current global state + **official task list**: `.harness/TASKS.md`
+- Harness pointers: `.harness/STATE.md` (summary) · `.harness/HANDOFF.md` (historical, not a source)
 - Product requirements: approved documents under `docs/product/`
 - Feature scope and execution: `specs/NNN-feature/`
 

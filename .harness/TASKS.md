@@ -4,18 +4,22 @@ tipo: mapa-vivo
 proposito: "Única fuente de verdad de qué está listo, qué está a medias y qué falta."
 autoridad: "Este documento reemplaza a STATE.md y HANDOFF.md como fuente de estado operativo."
 ultima_verificacion: 2026-10-02
-commit_verificado: 6dc64d5
+commit_verificado: b28c5cd
 ---
 
 # Mapa vivo del Portal de Compras BIA
 
+> **Este archivo es la lista oficial de tareas.** Toda tarea o subtarea nueva se registra acá,
+> sin excepción. Ningún otro archivo las sostiene: ni `specs/`, ni los `assessment.md`, ni
+> los checklists de QA.
+>
 > **Cómo usar este documento.** Es lo único que hay que leer para saber dónde está el proyecto.
 > Si algo no está acá, no existe como tarea. Si algo está acá y ya se hizo, se borra (no se
 > tacha: queda en git).
 >
 > **Regla de actualización:** al cerrar un bloque de trabajo, se mueve la fila de
 > "Por hacer" a "Listo" con la evidencia concreta (commit, test, captura). Sin evidencia, no
-> se marca.
+> se marca. Los `specs/*/tasks.md` y `specs/009/assessment.md` son **históricos**, no fuentes.
 >
 > **Regla de honestidad:** distingo siempre entre *verificado hoy* (lo corrí), *reportado por
 > documentación* (puede estar viejo) y *inferido*. No marco nada como listo sin haberlo visto.
@@ -25,14 +29,12 @@ commit_verificado: 6dc64d5
 ## 0. Estado real en una línea
 
 El producto **funciona de punta a punta** y está verificado. Lo que pesa hoy no es código: es
-**deuda de proceso** (features cerradas sin gates, 132 tareas sin marcar), **trabajo sin
-commitear** (30 modificados + 38 sin trackear), y **tres bloqueantes de producción** (uno de
-seguridad).
+**trabajo sin registrar** (funcionalidad en producción que no estaba en ningún spec),
+**deuda de proceso** (features cerradas sin gates, 132 tareas sin marcar) y **tres
+bloqueantes de producción** (uno de seguridad).
 
-`.harness/STATE.md` está **18 commits desactualizado**: declara `activeFeature: null` y
-`nextAction: feature-select`, cuando hay una feature en curso y un working tree sucio.
-`.harness/HANDOFF.md` describe un estado que ya no existe (su punto 1 —"commitear la ronda
-post-cierre"— se resolvió en `e8ff42b`). **Ambos mienten.** Ver §8.
+`.harness/STATE.md` y `.harness/HANDOFF.md` ya no son fuente de estado: el primero es un
+puntero a este archivo y el segundo quedó marcado como histórico.
 
 ---
 
@@ -69,7 +71,7 @@ Verificado hoy por mí salvo donde se indica otra cosa.
 | `tsc --noEmit` | limpio |
 | `eslint` | **0 errores** |
 | Migraciones | **17 en disco, 17 aplicadas** — sin divergencia |
-| e2e (Playwright) | 5 specs existen. **NO los re-corrí hoy**; la última cifra registrada es 22/22 (`e8ff42b`) |
+| e2e (Playwright) | 5 specs existen. **NO los re-corrí**; la última cifra registrada es 22/22 (`e8ff42b`) |
 
 ### Features cerradas con gates y evidencia
 | Feature | Estado | Evidencia |
@@ -87,52 +89,38 @@ Verificado hoy por mí salvo donde se indica otra cosa.
 **Conclusión honesta:** 000–005 están terminadas *en código* pero su documentación dice lo
 contrario (5 `verification.md` afirman literalmente *"Implementation is prohibited until G1, G2, G3 and G4 have explicit human approval"*). No es trabajo faltante: es deuda documental. Ver §8.
 
-### Lo que hicimos en esta sesión (sin commitear)
-| Bloque | Qué resuelve |
-|---|---|
-| `6dc64d5` | Campos obligatorios forzados en el assessment, aviso al enviar, `contexto_investigado` visible, dedupe de preguntas duplicadas. **Commiteado.** |
-| Migración `017` | `forma_pago` → obligatorio. **Commiteada y aplicada.** |
-| *(working tree)* | **Gate de envío** cuando el assessment falla o nunca se preparó. Verificado en navegador con caída simulada. **SIN COMMIT.** |
+### Lo que hicimos en esta sesión
+| Bloque | Qué resuelve | Commit |
+|---|---|---|
+| Assessment: obligatorios forzados, aviso al enviar, `contexto_investigado` visible, dedupe de preguntas duplicadas | El RFQ llegaba al coordinador sin fecha ni condiciones de pago; la IA se saltaba campos obligatorios; `contexto_investigado` estaba declarado en el schema pero nunca se pidió ni se renderizó | `6dc64d5` |
+| Migración `017` | `forma_pago` → obligatorio | `6dc64d5` |
+| Gate de envío + remediación de auditoría UX + idempotencia | Si el assessment falla, el RFQ salía vacío sin aviso. El envío creaba duplicados ante reintento. | `b28c5cd` |
+
+**Working tree limpio** al cierre de la sesión.
 
 ---
 
-## 3. Trabajo a medias — el working tree
+## 3. Trabajo que estaba sin registrar — YA COMMITEA
 
-**30 archivos modificados + 38 sin trackear.** Esto es lo primero que hay que resolver: es
-trabajo real y funciona, pero no está en git y no tiene respaldo.
+**Resuelto en `b28c5cd`.** El working tree quedó limpio. Antes de ese commit había 9 piezas de
+funcionalidad en producción que no estaban en ningún spec: tenían consumidores reales, estaban
+probadas, y no aparecían en ningún `tasks.md` ni `assessment.md`.
 
-### 3.1 Funcionalidad implementada que NO está en ningún spec
+El verdadero registro de ese trabajo era
+`qa/evidencia-piloto/critique-solicitante/AUDIT-SOLICITANTES.md`, un archivo fuera del ciclo
+de Spec Kit. Sus etiquetas (`P1-b`, `P2-c`, `P3-d`) no existen en `specs/`. **Ahora está
+versionado** y referenciado desde acá.
 
-Todo esto está **en uso** en producción local, tiene consumidores reales, y **no aparece en ningún
-`tasks.md` ni `assessment.md`**. El verdadero registro de este trabajo es
-`qa/evidencia-piloto/critique-solicitante/AUDIT-SOLICITANTES.md` — un archivo **sin trackear,
-fuera de `specs/`**, de ~800 líneas. Los comentarios del código nuevo citan sus etiquetas
-(`P1-b`, `P2-c`, `P3-d`) y **`specs/` no las conoce**.
+| Pieza | Qué resuelve | Estado |
+|---|---|---|
+| `migrations/016` idempotencia | El envío son 3 llamadas encadenadas; un reintento o refresh creaba solicitudes duplicadas | ✅ `b28c5cd` |
+| `lib/domain/moneda.ts` | La comparativa pedía comparar importes no comparables (USD vs HNL) | ✅ `b28c5cd` — **sin test propio, ver 6.13** |
+| `lib/domain/archivos.ts` | Anti-subida: magic bytes, sin `.svg`, 4 MB, PDF truncado | ✅ `b28c5cd` + test |
+| `lib/enlaces-decision.ts` + `CTADecision.tsx` | CTA honesto: no promete un enlace no abierto; el token no viaja por API | ✅ `b28c5cd` |
+| `app/guias/manual-solicitante/page.tsx` | Ruta servida desde el `.md`, 5 puntos de entrada | ✅ `b28c5cd` |
+| 4 archivos de tests nuevos | Estado, idempotencia, adjuntos, autoguardado | ✅ `b28c5cd` |
 
-| Archivo | Qué hace | En uso | Documentado | Commit |
-|---|---|---|---|---|
-| `lib/domain/moneda.ts` | Formato es-HN + equivalente HNL con tasa declarada y fechada (24.7, 2026-09-01) | sí (2 vistas) | ❌ no | ❌ no |
-| `lib/domain/archivos.ts` | Anti-subida: magic bytes, whitelist sin `.svg`, 4 MB, PDF truncado | sí (wizard) | ❌ no | ❌ no |
-| `lib/enlaces-decision.ts` | Mapa local de tokens de decisión ya vistos + `useSyncExternalStore` | sí (3 sitios) | ❌ no | ❌ no |
-| `components/solicitante/CTADecision.tsx` | CTA "Decidir ahora" honesto: no promete enlace si no lo viste | sí | ❌ no | ❌ no |
-| `migrations/016_solicitud_idempotencia.sql` | **El envío son 3 llamadas**: sin idempotencia, un reintento creaba solicitudes duplicadas | sí, extremo a extremo | ❌ no | ❌ no |
-| `app/guias/manual-solicitante/page.tsx` | Ruta `/guias/manual-solicitante` servida desde el `.md` | sí (5 enlaces) | ❌ no | ❌ no |
-| `app/api/solicitudes/[id]/estado/route.test.ts` | Tests del invariante "la transición es el hecho de negocio" | sí | ❌ no | ❌ no |
-| `lib/domain/archivos.test.ts` | Tests de la whitelist de adjuntos | sí | ❌ no | ❌ no |
-| `components/solicitante/envio-idempotencia.test.tsx` | Tests de las 3 garantías del envío | sí | ❌ no | ❌ no |
-| `components/solicitante/borrador-hook.test.tsx` | Tests del autoguardado/restauración | sí | ❌ no | ❌ no |
-
-**Tarea concreta:** crear un spec retroactivo que registre esto, o al menos un
-`specs/010-remediacion-auditoria/` que enlace el `AUDIT-SOLICITANTES.md`. No se puede cerrar
-G5 sobre trabajo que no está escrito.
-
-### 3.2 Otras cosas sin commitear
-- Rediseño del panel del coordinador, vista pública, trackers, guías, estilos.
-- `components/ui-ext/Stepper.tsx` **borrado** sin commitear (código muerto, correcto).
-- 24 MB de evidencia visual en `qa/` + `.playwright-mcp/` (no debería entrar al repo).
-- Una solicitud de prueba en la DB: `RFP-2026-0001`, `qa.obligatorios@biabrands.co`.
-
----
+**Pendiente de esta sección:** nada, salvo la tarea 6.13.
 
 ## 4. Pendientes de producto — requisito aprobado, NO cumplido
 
@@ -221,13 +209,17 @@ Nada de esto rompe el producto. Todo esto hace que sea imposible saber si algo e
 | 6.2 | **5 `verification.md` dicen "implementación prohibida hasta G4"** | medio | Reescribir con el estado real. Hoy contradicen al código. |
 | 6.3 | **`003` sin `plan.md` ni `verification.md`**; se cerró G5/G6 con commits que solo tocaron `STATE.md` | medio | Crear los artefactos o marcar la carpeta como histórica. |
 | 6.4 | **`009` sin Spec Kit**: solo tiene `assessment.md` | **alto** | 8+ commits de feature sin pasar por G2/G3/G4/G5. Es la feature más avanzada y la única sin gates. |
-| 6.5 | **`STATE.md` 18 commits viejo**; `HANDOFF.md` describe un estado inexistente | alto | Este documento los reemplaza (§8). |
+| 6.5 | ~~`STATE.md` 18 commits viejo; `HANDOFF.md` con estado inexistente~~ | — | ✅ **Resuelto** en esta sesión, ver §8 |
 | 6.6 | `assessment.md:18` dice "2.2 Pendiente" pero se implementó en `9c75891` | bajo | Actualizar la tabla. |
 | 6.7 | `008/verification.md:75` dice "8/8 checkboxes"; `tasks.md` tiene 15 | bajo | Corregir el número. |
 | 6.8 | **`docs/guias/` y la UI usan "comprador"**, prohibido por ADR 0002 y el glossary | medio | Corrección de copy en 3 manuales + ~5 strings de UI. |
 | 6.9 | `references/index.md:19` dice "8 claves de config pendientes"; el doc 15 marca 6 + 1 propuesta | bajo | Corregir el conteo. |
 | 6.10 | Etiqueta `P3-d` citada en código sin existir en el audit (los headings terminan en `P3-c`) | bajo | Verificar a qué hallazgo se refiere. |
 | 6.11 | Nombre del cliente inconsistente: "Lady Matute" / "Ladi Isabel Matute" / "Ladisabel" / "Ladi" | bajo | Fijar una forma y propagar. |
+| 6.12 | **Credenciales de panel hardcodeadas en 4 scripts de QA** (`qa/checklist-piloto-3-roles.md`, `qa/evidencia-piloto/{d-fase-admin,e-vercel-smoke,probe-admin}.mjs`). Los dejé **sin trackear** a propósito; `secret-scan.sh` solo busca patrones de API key y no los detecta | medio | Leerlas de `.env.local`. Agregar el patrón al escaner. |
+| 6.13 | `lib/domain/moneda.ts` es el único módulo nuevo sin test propio (la tasa 24.7 está fija y fechada en el código) | bajo | Test de formato y del equivalente; si la tasa cambia, que avise que está vieja |
+| 6.14 | **`docs/doc-references/` sin trackear** (33 MB de RFQ/RFP/fichas del cliente). Añadido a `.gitignore` en `b28c5cd` | bajo | Confirmar que se consultan solo desde disco. Si deben versionarse, tiene que ser decisión explícita del cliente |
+| 6.15 | 5 specs (000–005) sin gates · `003` sin plan/verification · `009` sin Spec Kit | **alto** | Decidir: documentar en retrospectiva, o marcar esas carpetas como históricas. Este archivo ya es la lista oficial; los `tasks.md` quedan como archivo histórico |
 
 ---
 
@@ -252,17 +244,17 @@ como el resto.
 
 ---
 
-## 8. Decisión pendiente sobre `.harness/`
+## 8. `.harness/` ya unificado — RESUELTO
 
-`AGENTS.md` dice que el arranque de sesión lee `STATE.md` y `HANDOFF.md`. **Los dos están
-mal.** Un agente que arranque mañana leerá que no hay feature activa y que todo está cerrado.
+Estaba así: `AGENTS.md` mandaba a leer `STATE.md` y `HANDOFF.md`, y los dos mentían.
+Un agente que arrancaba mañana leía que no había feature activa y que todo estaba cerrado.
 
-Propuesta, a tu confirmación:
-1. **`STATE.md`**: reducir a un puntero a este documento + el estado de una línea.
-2. **`HANDOFF.md`**: vaciarlo o marcarlo `superseded`.
-3. **`AGENTS.md`**: agregar este archivo al orden de lectura.
+**Hecho en esta sesión:**
+1. `AGENTS.md` ahora manda a leer **este archivo primero**, y declara que es la lista oficial.
+2. `STATE.md` reducido a un puntero: estado de una línea + orden de lectura.
+3. `HANDOFF.md` marcado como histórico, con la explicación de por qué se obsoletizó.
 
-No lo toqué porque cambia el router del framework y eso es tu decisión.
+Verificá que no queden contradicciones: `grep -rn "HANDOFF" AGENTS.md .harness/*.md`.
 
 ---
 
@@ -286,18 +278,23 @@ Para que nadie lo re-propononga como si fuera un olvido. Todas tienen justificac
 
 ---
 
-## 10. Lo que yo haría en este orden (si me das luz verde)
+## 10. Próxima sesión — orden sugerido
 
-1. **Commitear el working tree** con un spec retroactivo que registre §3.1. Es lo único que
-   está en riesgo de perderse.
-2. **Re-correr `qa/checklist-piloto-3-roles.md`** y actualizar §7 con lo que sigue abierto.
-3. **Arreglar 4.2.1 (ahorro potencial)** — es un bug de una línea en `comparativa.ts:226`, con
-   impacto visible en la comparativa que ve el coordinador.
+Resueltos en esta sesión: §3 (commit), §8 (unificación de `.harness/`).
+
+1. **Prueba manual del bloque de assessment** (`§2`, commit `6dc64d5`) con el guion de 5 bloques.
+   Es lo único de este trabajo que **nunca se probó a mano** — la evidencia es de navegador
+   automatizado. Requirió apagar Postgres para el caso de caída.
+2. **Re-correr el checklist 3-roles** y actualizar §7. Sin eso, esa tabla envejece.
+   `qa/checklist-piloto-3-roles.md` quedó **sin trackear** por las credenciales (6.12):
+   leerlo de disco, no de git.
+3. **Arreglar 4.2.1 (ahorro potencial)** — bug de una línea en `comparativa.ts:226`, con impacto
+   visible en la comparativa que ve el coordinador.
 4. **Arreglar 4.3.1 (UI de re-cotización)** — el backend ya está, falta el botón.
 5. **Arreglar 4.1.1 (referencia real)** — deuda que la 008 cerró dejando abierta.
-6. **Higiene documental de §8** para que el próximo arranque no se pierda.
+6. **Higiene documental**: 6.12 (credenciales), 6.13 (test de moneda), 6.15 (specs históricos).
 
-Los bloqueantes B1–B4 no dependen de mí: van por correo al cliente.
+Los bloqueantes B1–B4 no dependen del equipo interno: van por correo al cliente.
 
 ---
 
@@ -305,4 +302,5 @@ Los bloqueantes B1–B4 no dependen de mí: van por correo al cliente.
 
 | Fecha | Qué cambió |
 |---|---|
-| 2026-10-02 | Creación. Auditoría de `specs/`, `docs/`, `qa/`, `.harness/`, migraciones y working tree. HEAD `6dc64d5`. Tests verificados hoy: 230/7. e2e no re-corridos. |
+| 2026-10-02 | Creación. Auditoría de `specs/`, `docs/`, `qa/`, `.harness/`, migraciones y working tree. Tests verificados: 230/7. e2e no re-corridos. |
+| 2026-10-02 | Post-commit `b28c5cd`: §3 reescrito como resuelto (con la tabla de las 9 piezas), §8 marcada resuelta tras unificar `.harness/`, §10 reordenada, tareas 6.12–6.15 agregadas (credenciales en QA, test de moneda, `doc-references`, specs históricos). Nombrada lista oficial de tareas en `AGENTS.md`. |

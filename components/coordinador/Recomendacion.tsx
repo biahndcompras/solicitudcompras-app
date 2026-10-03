@@ -140,7 +140,7 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
         {errorEnvio ? (
           <div className="mt-2 rounded-xl px-3 py-2 text-xs text-rose-700 bg-rose-50 border border-rose-200">{errorEnvio}</div>
         ) : (
-          <div className="mt-2 text-xs text-slate-500">Bloqueo duro B3: se valida también en el servidor.</div>
+          <div className="mt-2 text-xs text-slate-500">Bloqueo duro B3: es obligatorio acá y en el servidor. Si se vacía el campo, el envío se rechaza.</div>
         )}
       </div>
     </div>

@@ -194,9 +194,10 @@ no estaban en ninguna lista.
 
 | # | Tarea | Estado real | Evidencia |
 |---|---|---|---|
-| **4.7.1** | **B3 (recomendación humana obligatoria) validada en el SERVIDOR** | **FALTA** — la UI afirma lo contrario | `app/api/solicitudes/[id]/estado/route.ts:108` → `if (body.nota?.trim()) { await guardarRecomendacionComprador(...) }`. Si la nota viene vacía **no hay 400 ni 409**: simplemente no guarda y sigue, crea el enlace público y manda el correo 3. Un `PATCH` directo **envía la comparativa al solicitante sin recomendación humana**. Mientras tanto `components/coordinador/Recomendacion.tsx:143` dice literalmente *"Bloqueo duro B3: se valida también en el servidor"*. La UI **miente** sobre su propia garantía |
+| ~~**4.7.1**~~ | ~~B3 validado en el servidor~~ | ✅ **RESUELTO 2026-10-03** | `estado/route.ts:118-126`: sin recomendación (`trim()` vacío) devuelve **409** y **no transiciona, no guarda, no genera enlace**. 5 tests nuevos en `estado/route.test.ts`, 2 de ellos verificados **fallando** contra el código anterior. Reproducido en navegador con sesión real de coordinador: PATCH directo sin `nota` → 409; solo espacios → 409; con recomendación → 200 + enlace. Confirmado que la recomendación **llega al solicitante** por `/comparativa/[token]` |
 | **4.7.2** | **Correo 4: decisión registrada → coordinador + admin** | **FALTA** | No existe. `grep 'tipoCorreo: "4"'` → 0 resultados. Solo se envían 1, 2, 3 y 5. `decision/route.ts:49-59` cierra la solicitud **sin notificar a nadie**: el coordinador se entera solo si mira la bandeja |
 | **4.7.3** | **"Ninguna me sirve" reabre en `EN_COTIZACION`** | **FALTA** — cierra en su lugar | `decision/route.ts:50-59` → `estadoFinal: "CERRADA_SIN_DECISION"`. La UI le dice al solicitante *"la solicitud vuelve a revisión"* (`VistaPublica.tsx:58,224`). La máquina de estados **sí permite** `ENVIADA_A_SOLICITANTE → EN_COTIZACION` (`state-machine.ts:10`) pero **nadie la invoca**. El sistema hace lo contrario de lo que promete en pantalla |
+| 4.7.5 | Limpiar la recomendación previa al regenerar la comparativa | bajo | `guardarComparativa` (`postgres-repo.ts:603-616`) hace upsert de precios/pros pero **no borra `recomendacion_comprador`**. **Riesgo contenido**: B3 fuerza una recomendación nueva en cada envío y el textarea arranca vacío, así que no puede llegar una vieja al solicitante. Es higiene, no bug vivo |
 | 4.7.4 | `clasificacion_corregida` se persiste (métrica de precisión del doc 16) | FALTA | El flag existe en estado y borrador pero **no viaja al servidor** y ningún INSERT/UPDATE lo escribe. La métrica de "precisión del clasificador" **no se puede calcular** |
 
 ### 4.8 Seguridad — fronteras entre roles ⚠️ CRÍTICO
@@ -320,7 +321,7 @@ Salieron de la verificación de §11 contra código:
 
 | # | Hallazgo | Gravedad |
 |---|---|---|
-| 4.7.1 | B3 no validado en servidor + la UI afirma que sí | **crítica** |
+| ~~4.7.1~~ | ~~B3 no validado en servidor~~ | ✅ **resuelto 2026-10-03** |
 | 4.7.2 | Correo 4 (decisión registrada) nunca se envía | **crítica** |
 | 4.7.3 | "Ninguna me sirve" cierra la solicitud en vez de reabrirla | **crítica** |
 | 4.8.1 | `GET /api/solicitudes/[id]` sin auth: fuga precios + PII | **crítica** |

@@ -13,6 +13,8 @@ const obtenerComparativaPorSolicitudId = vi.fn();
 const listarCotizacionesConArchivo = vi.fn();
 const listarCotizaciones = vi.fn();
 const pipeline = vi.fn();
+const guardarRecomendacionComprador = vi.fn();
+const crearLinkPublico = vi.fn();
 
 vi.mock("@/lib/db/postgres-repo", () => ({
   PostgresRepositorio: class {
@@ -22,8 +24,8 @@ vi.mock("@/lib/db/postgres-repo", () => ({
     obtenerComparativaPorSolicitudId = (...a: unknown[]) => obtenerComparativaPorSolicitudId(...a);
     listarCotizacionesConArchivo = (...a: unknown[]) => listarCotizacionesConArchivo(...a);
     listarCotizaciones = (...a: unknown[]) => listarCotizaciones(...a);
-    crearLinkPublico = vi.fn();
-    guardarRecomendacionComprador = vi.fn();
+    crearLinkPublico = (...a: unknown[]) => crearLinkPublico(...a);
+    guardarRecomendacionComprador = (...a: unknown[]) => guardarRecomendacionComprador(...a);
     leerConfig = vi.fn().mockResolvedValue("90");
   },
 }));
@@ -64,6 +66,8 @@ beforeEach(() => {
   transicionarEstado.mockReset().mockResolvedValue({ solicitud: CON_REF, eventoId: "ev-1" });
   marcarNotificacionFallida.mockReset().mockResolvedValue(undefined);
   pipeline.mockReset().mockResolvedValue({ ok: true, documentoId: "d-1" });
+  guardarRecomendacionComprador.mockReset().mockResolvedValue(undefined);
+  crearLinkPublico.mockReset().mockResolvedValue({ token: "AAAA-BBBB-CCCC", url: "/comparativa/AAAA-BBBB-CCCC" });
 });
 
 describe("PATCH /api/solicitudes/[id]/estado · la transición es el hecho de negocio", () => {
@@ -129,5 +133,70 @@ describe("PATCH /api/solicitudes/[id]/estado · la transición es el hecho de ne
     await pedir("ENVIADA_A_COMPRAS");
     expect(pipeline).not.toHaveBeenCalled();
     expect(transicionarEstado).not.toHaveBeenCalled();
+  });
+});
+
+describe("B3 en el servidor · la recomendación humana es obligatoria (RN-01)", () => {
+  beforeEach(() => {
+    obtenerSolicitud.mockResolvedValue({ ...SOLICITUD, estado: "COMPARATIVA_LISTA" });
+    obtenerComparativaPorSolicitudId.mockResolvedValue({ id: "cmp-1" });
+  });
+
+  it("RECHAZA enviar al solicitante sin recomendación: 409 y no transiciona", async () => {
+    const res = await pedir("ENVIADA_A_SOLICITANTE", { actorTipo: "coordinador" });
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error).toMatch(/recomendación/i);
+    // Lo importante: NO se escribió nada. Ni transición, ni recomendación, ni enlace.
+    expect(transicionarEstado).not.toHaveBeenCalled();
+    expect(guardarRecomendacionComprador).not.toHaveBeenCalled();
+    expect(crearLinkPublico).not.toHaveBeenCalled();
+  });
+
+  it("también rechaza una recomendación de solo espacios", async () => {
+    const res = await pedir("ENVIADA_A_SOLICITANTE", { actorTipo: "coordinador", nota: "   \n  " });
+
+    expect(res.status).toBe(409);
+    expect(transicionarEstado).not.toHaveBeenCalled();
+    expect(guardarRecomendacionComprador).not.toHaveBeenCalled();
+  });
+
+  it("persiste la recomendación ANTES de transicionar (queda aunque la transición falle)", async () => {
+    transicionarEstado.mockRejectedValue(new Error("caída de DB"));
+    const res = await pedir("ENVIADA_A_SOLICITANTE", {
+      actorTipo: "coordinador",
+      nota: "  Recomiendo la opción B por plazo y garantía.  ",
+    });
+
+    expect(res.status).toBe(500);
+    // Se guardó con trim, no con el texto crudo: el padding no viaja al evento.
+    expect(guardarRecomendacionComprador).toHaveBeenCalledWith(
+      SOLICITUD.id,
+      "Recomiendo la opción B por plazo y garantía."
+    );
+  });
+
+  it("con recomendación válida: transiciona, guarda y genera el enlace", async () => {
+    const res = await pedir("ENVIADA_A_SOLICITANTE", {
+      actorTipo: "coordinador",
+      nota: "Recomiendo la opción B.",
+    });
+
+    expect(res.status).toBe(200);
+    expect(guardarRecomendacionComprador).toHaveBeenCalledWith(SOLICITUD.id, "Recomiendo la opción B.");
+    expect(crearLinkPublico).toHaveBeenCalled();
+    expect(transicionarEstado).toHaveBeenCalledWith(
+      expect.objectContaining({ hacia: "ENVIADA_A_SOLICITANTE" })
+    );
+  });
+
+  it("el 409 de B3 no aplica a otras transiciones: una nota vacía es legal en las demás", async () => {
+    // La `nota` es un dato general del evento en el resto del ciclo: exigirla en todos los
+    // pasos sería inventar un requisito que la doc no pide.
+    const res = await pedir("EN_COTIZACION", { actorTipo: "coordinador" });
+
+    expect(res.status).toBe(200);
+    expect(guardarRecomendacionComprador).not.toHaveBeenCalled();
   });
 });

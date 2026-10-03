@@ -105,9 +105,22 @@ export async function PATCH(
           { status: 409 }
         );
       }
-      if (body.nota?.trim()) {
-        await repo.guardarRecomendacionComprador(id, body.nota.trim());
+      // B3 (RN-01) validado AQUÍ, no solo en la UI. Antes la recomendación se guardaba
+      // "si venía con texto" y el envío continuaba igual: un PATCH directo mandaba la
+      // comparativa al solicitante sin que Compras hubiera dicho nada. Sin una decisión
+      // humana escrita, lo que el solicitante recibe es solo el criterio de la IA.
+      // `trim()` cubre el caso de que venga con solo espacios.
+      const recomendacion = body.nota?.trim() ?? "";
+      if (!recomendacion) {
+        return NextResponse.json(
+          {
+            error:
+              "Escribí la recomendación de Compras antes de enviar la comparativa. Sin ella el solicitante no tiene un criterio humano para decidir.",
+          },
+          { status: 409 }
+        );
       }
+      await repo.guardarRecomendacionComprador(id, recomendacion);
       const diasRaw = Number(await repo.leerConfig("expiracion_link_dias"));
       const dias = Number.isFinite(diasRaw) && diasRaw > 0 ? diasRaw : 90;
       const link = await repo.crearLinkPublico(

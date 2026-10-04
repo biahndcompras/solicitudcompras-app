@@ -375,6 +375,23 @@ export class PostgresRepositorio implements Repositorio {
     }));
   }
 
+  async usuarioLocalPorEmail(email: string): Promise<Usuario | null> {
+    const res = await this.pg.query(
+      "SELECT id, nombre, email, rol, categorias_asignadas, activo FROM usuario WHERE lower(email) = lower($1) LIMIT 1",
+      [email.trim()]
+    );
+    const f = res.rows[0];
+    if (!f) return null;
+    return {
+      id: String(f.id),
+      nombre: String(f.nombre),
+      email: String(f.email),
+      rol: f.rol,
+      categoriasAsignadas: f.categorias_asignadas ?? [],
+      activo: Boolean(f.activo),
+    };
+  }
+
   async listarTodas(): Promise<Solicitud[]> {
     const res = await this.pg.query("SELECT * FROM solicitud ORDER BY fecha_creacion DESC");
     return res.rows.map(filaSolicitud);

@@ -62,6 +62,12 @@ export interface Repositorio {
   reasignarCoordinador(solicitudId: string, nuevoCoordinadorId: string, actorIdentificador?: string): Promise<void>;
 
   listarPorEmail(email: string): Promise<Solicitud[]>;
+  /**
+   * Usuario local por correo de la sesión de Supabase. La sesión trae el email pero las
+   * solicitudes se asignan por id local: sin esta traducción, cada lugar que necesite el id
+   * reimplementa la búsqueda y empiezan a aparecer bandejas ajenas.
+   */
+  usuarioLocalPorEmail(email: string): Promise<Usuario | null>;
 
   obtenerSolicitud(id: string): Promise<Solicitud | null>;
 

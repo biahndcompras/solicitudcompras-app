@@ -94,13 +94,22 @@ export async function GET(request: Request) {
       const todas = await repo.listarTodas();
       return NextResponse.json(todas);
     }
-    if (!coordinadorId) {
+    // Para un coordinador, `coordinadorId` NO viene del query string: sale de su propia
+    // sesión. Antes el servidor se lo creía y `?coordinadorId=<otro>` bastaba para abrir
+    // la bandeja de un compañero. El admin conserva el parámetro: su vista de proceso
+    // completo es legítimamente transversal.
+    const propio = await repo.usuarioLocalPorEmail(auth.sesion.email);
+    if (!propio) {
+      // Su correo de Supabase no existe en la tabla `usuario`. Antes el layout del panel
+      // caía al primer coordinador activo y le mostraba la bandeja de otro en silencio.
+      // Ahora se dice: esta cuenta no está dada de alta.
       return NextResponse.json(
-        { error: "Falta coordinadorId" },
-        { status: 400 }
+        { error: "Tu cuenta no está dada de alta como coordinador." },
+        { status: 403 }
       );
     }
-    const solicitudes = soloEnviadasACompras(await repo.listarPorCoordinador(coordinadorId));
+    const solicitudDe = auth.sesion.rol === "admin" && coordinadorId ? coordinadorId : propio.id;
+    const solicitudes = soloEnviadasACompras(await repo.listarPorCoordinador(solicitudDe));
     return NextResponse.json(solicitudes);
   } catch {
     return NextResponse.json(

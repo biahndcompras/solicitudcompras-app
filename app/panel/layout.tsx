@@ -17,13 +17,10 @@ export default async function PanelLayout({
   let localId: string | undefined;
   try {
     const repo = new PostgresRepositorio();
-    const coordinadores = await repo.listarCoordinadores();
-    const match = coordinadores.find(
-      (c) => c.email.toLowerCase() === sesion.email.toLowerCase()
-    );
-    // Si el email del auth aún no existe en la DB local, usar el primer coordinador activo
-    // como fallback para que la bandeja no quede en spinner infinito.
-    localId = match?.id ?? coordinadores[0]?.id;
+    // Sin fallback a `coordenadores[0]`: si el correo de la sesión no está en la tabla
+    // `usuario`, antes se le mostraba LA BANDEJA DEL PRIMER COORDINADOR sin avisar. La
+    // bandeja queda vacía y la API responde 403 con un mensaje que dice qué hacer.
+    localId = (await repo.usuarioLocalPorEmail(sesion.email))?.id;
   } catch {
     localId = undefined;
   }

@@ -5,16 +5,19 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const listarPorCoordinador = vi.fn();
 const listarTodas = vi.fn();
+const usuarioLocalPorEmail = vi.fn();
+const guardApi = vi.fn();
 
 vi.mock("@/lib/db/postgres-repo", () => ({
   PostgresRepositorio: class {
     listarPorCoordinador = (...a: unknown[]) => listarPorCoordinador(...a);
     listarTodas = (...a: unknown[]) => listarTodas(...a);
+    usuarioLocalPorEmail = (...a: unknown[]) => usuarioLocalPorEmail(...a);
   },
 }));
 
 vi.mock("@/lib/api-guard", () => ({
-  guardApi: vi.fn(async () => ({ sesion: { rol: "coordinador" } })),
+  guardApi: (...a: unknown[]) => guardApi(...a),
 }));
 
 import { GET } from "./route";
@@ -40,6 +43,8 @@ function pedir(coordinadorId: string) {
 beforeEach(() => {
   listarPorCoordinador.mockReset();
   listarTodas.mockReset();
+  usuarioLocalPorEmail.mockReset().mockResolvedValue({ id: "local-mio", email: "mio@biafoods.co" });
+  guardApi.mockReset().mockResolvedValue({ sesion: { rol: "coordinador", email: "mio@biafoods.co" } });
 });
 
 describe("GET /api/solicitudes (bandeja del coordinador)", () => {
@@ -60,7 +65,9 @@ describe("GET /api/solicitudes (bandeja del coordinador)", () => {
     const body = (await res.json()) as Solicitud[];
 
     expect(res.status).toBe(200);
-    expect(listarPorCoordinador).toHaveBeenCalledWith("00000000-0000-4000-8000-000000000002");
+    // Un coordinador consulta SIEMPRE su propia bandeja: el id sale de su sesión, no del
+    // query string (ver "no abre la bandeja de otro coordinador" más abajo).
+    expect(listarPorCoordinador).toHaveBeenCalledWith("local-mio");
     expect(body.map((s) => s.estado)).toEqual([
       "ENVIADA_A_COMPRAS",
       "EN_COTIZACION",
@@ -84,5 +91,47 @@ describe("GET /api/solicitudes (bandeja del coordinador)", () => {
     const body = (await (await pedir("all")).json()) as Solicitud[];
     expect(listarTodas).toHaveBeenCalled();
     expect(body).toHaveLength(2);
+  });
+});
+
+describe("GET /api/solicitudes · la bandeja es la de la sesión, no la del query string", () => {
+  it("un coordinador NO puede abrir la bandeja de otro con ?coordinadorId=<otro>", async () => {
+    listarPorCoordinador.mockResolvedValue([sol("ENVIADA_A_COMPRAS")]);
+
+    await pedir("local-de-otro-coordinador");
+
+    // El spoofing falla aunque el parámetro sea el de un compañero real.
+    expect(listarPorCoordinador).toHaveBeenCalledWith("local-mio");
+    expect(listarPorCoordinador).not.toHaveBeenCalledWith("local-de-otro-coordinador");
+  });
+
+  it("el admin SÍ puede cruzar: su vista de proceso completo es legítimamente transversal", async () => {
+    guardApi.mockResolvedValue({ sesion: { rol: "admin", email: "admin@biafoods.co" } });
+    listarPorCoordinador.mockResolvedValue([sol("ENVIADA_A_COMPRAS")]);
+
+    await pedir("local-de-otro-coordinador");
+
+    expect(listarPorCoordinador).toHaveBeenCalledWith("local-de-otro-coordinador");
+  });
+
+  it("sin coordinadorId en la URL tampoco hay bandeja ajena: usa la de la sesión", async () => {
+    listarPorCoordinador.mockResolvedValue([]);
+
+    const res = await GET(new Request("http://localhost/api/solicitudes"));
+
+    expect(res.status).toBe(200);
+    expect(listarPorCoordinador).toHaveBeenCalledWith("local-mio");
+  });
+
+  it("si la cuenta no está dada de alta, lo dice — no muestra la bandeja de otro", async () => {
+    // Antes: el layout caía a coordinadores[0] y la bandeja del primero se leacea en
+    // silencio. Ahora la bandeja queda vacía y el motivo es explícito.
+    usuarioLocalPorEmail.mockResolvedValue(null);
+
+    const res = await pedir("local-que-sea");
+
+    expect(res.status).toBe(403);
+    expect(listarPorCoordinador).not.toHaveBeenCalled();
+    expect((await res.json()).error).toMatch(/alta/i);
   });
 });

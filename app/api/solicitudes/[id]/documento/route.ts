@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { generarDocumento } from "@/lib/pdf/generador";
+import { guardRecursoDeSolicitud } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -14,6 +15,11 @@ export async function GET(
     if (!solicitud) {
       return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
     }
+    // El solicitante ve el PDF de SU solicitud desde la pantalla de confirmación (sin
+    // sesión), así que no alcanza `guardApi`. Se acepta el rol de Compras o el correo
+    // dueño, que es la misma identidad de `/mis-solicitudes?email=`.
+    const auth = await guardRecursoDeSolicitud(request, solicitud);
+    if (!auth.autorizado) return auth.negada;
     const tipo = solicitud.tipo ?? "RFQ";
     const pdf = await generarDocumento({ tipo, solicitud, respuestas: {} });
     const nombre = `${solicitud.numeroReferencia ?? solicitud.id}.pdf`;

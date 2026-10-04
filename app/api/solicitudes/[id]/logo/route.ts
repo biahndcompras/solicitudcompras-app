@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
+import { guardRecursoDeSolicitud } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
 
@@ -30,14 +31,23 @@ export async function POST(
   }
 }
 
-// GET: descarga del logo/archivo del producto. El solicitante lo sube sin sesión
-// (flujo sin contraseñas) y el id uuid protege el acceso, igual que la creación.
+// GET: descarga del logo/archivo del producto. "El id uuid protege el acceso" no era
+// protección: los UUID no se adivinan, pero travels por la URL y se comparten en enlaces.
+// Es material de marca del solicitante, a veces con precios, así que se exige rol de Compras
+// o el correo dueño — la misma regla que el PDF.
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const solicitud = await repo.obtenerSolicitud(id);
+    if (!solicitud) {
+      return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
+    }
+    const auth = await guardRecursoDeSolicitud(request, solicitud);
+    if (!auth.autorizado) return auth.negada;
+
     const archivo = await repo.obtenerArchivoLogo(id);
     if (!archivo) {
       return NextResponse.json({ error: "La solicitud no tiene archivo de logo" }, { status: 404 });

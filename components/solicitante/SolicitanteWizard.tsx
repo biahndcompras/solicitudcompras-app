@@ -1363,7 +1363,11 @@ function ProgresoEnvio({ fase }: { fase: FaseEnvio }) {
 
 /* ---------- STEP 6: Confirmación ---------- */
 function PasoConfirmacion({ estado, referencia }: { estado: WizardState; referencia?: string }) {
-  const docUrl = estado.solicitudId ? `/api/solicitudes/${estado.solicitudId}/documento` : null;
+  // El PDF se abre con un <a href>, o sea sin sesión: el correo identifica al solicitante
+  // dueño, igual que en /mis-solicitudes?email=. Sin el, el endpoint responde 401.
+  const docUrl = estado.solicitudId
+    ? `/api/solicitudes/${estado.solicitudId}/documento?email=${encodeURIComponent(estado.email)}`
+    : null;
   return (
     <div className="flex flex-col items-center justify-center min-h-full w-full text-center py-6 step-enter">
       <div className="relative mb-6">

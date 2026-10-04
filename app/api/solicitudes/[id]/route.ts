@@ -16,6 +16,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Devuelve la solicitud MÁS las cotizaciones con precios, ISV y correos. Antes era
+    // público: cualquiera con el UUID se descargaba el RFQ completo. Este archivo ya
+    // importaba `guardApi` (lo usa el PATCH de abajo), pero el GET se lo saltaba.
+    // Lo legitimo es el rol de Compras: el solicitante tiene su propia vista, que además
+    // no debe mostrarle montos (RN-06). Nadie en la app llama este endpoint.
+    const auth = await guardApi(["coordinador", "admin"]);
+    if (auth.negada) return auth.negada;
+
     const { id } = await params;
     const solicitud = await repo.obtenerSolicitud(id);
     if (!solicitud) {

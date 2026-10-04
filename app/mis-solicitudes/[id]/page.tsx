@@ -75,7 +75,7 @@ export default async function DetalleSolicitudSolicitantePage({
           <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between gap-3">
             <span className="text-xs font-semibold text-slate-700">Logo / arte del producto</span>
             <a
-              href={`/api/solicitudes/${solicitud.id}/logo`}
+              href={`/api/solicitudes/${solicitud.id}/logo?email=${encodeURIComponent(email)}`}
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl text-sky-700 hover:bg-sky-50 border border-sky-200"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>

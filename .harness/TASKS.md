@@ -206,12 +206,13 @@ no estaban en ninguna lista.
 
 | # | Tarea | Estado real | Evidencia |
 |---|---|---|---|
-| **4.8.1** | **`GET /api/solicitudes/[id]` con autenticación** | **FALTA** — fuga abierta | `route.ts:14-29`: el archivo **importa `guardApi`** y el `PATCH` de la misma ruta lo usa, pero el `GET` **no**. Devuelve solicitud + **cotizaciones con precios, ISV y emails** a cualquiera con el UUID. Viola RN-06 |
-| **4.8.2** | **`GET /api/solicitudes/[id]/documento` y `/logo` verifican pertenencia** | **FALTA** | Con el UUID se descarga el PDF y el logo de **cualquier** solicitud. El solicitante no tiene sesión, así que no se puede verificar por cookie: hay que decidir por otro medio |
+| ~~**4.8.1**~~ | ~~`GET /api/solicitudes/[id]` con autenticación~~ | ✅ **RESUELTO 2026-10-03** | `guardApi(["coordinador","admin"])`. El endpoint **no tenía consumidores** (el panel usa el repo desde el servidor), así que cerrarlo fue riesgo cero. Verificado: sin sesión → 401 y **no** devuelve los precios; con correo ajeno → 401; 4 tests verificados fallando contra el código anterior |
+| ~~**4.8.2**~~ | ~~`/documento` y `/logo` verifican pertenencia~~ | ✅ **RESUELTO 2026-10-03** | Nuevo `guardRecursoDeSolicitud` en `lib/api-guard.ts`: acepta **rol de Compras o el correo dueño**, porque el solicitante ve su PDF y su logo **sin sesión** (el flujo no tiene login). El correo es la misma identidad de `/mis-solicitudes?email=`, no un mecanismo inventado. Los dos `<a href>` del solicitante ya lo envían |
 | **4.8.3** | **Aislamiento horizontal entre coordinadores** | **FALTA** | Todas estas rutas exigen rol `coordinador` pero **ninguna comprueba que la solicitud sea del coordinador autenticado**: `estado`, `comparativa`, `cotizaciones`, `[cotizacionId]`, `route.ts` PATCH. Cualquier coordinador transiciona, cotiza, edita o borra **cualquier** solicitud. El `PATCH` de cotizaciones además **ignora el `id`** de la ruta y usa el del body |
 | **4.8.4** | Bandeja del coordinador: el `coordinadorId` viene de la sesión, no del cliente | **FALTA** | `app/api/solicitudes/route.ts:89` acepta `?coordinadorId=<otro>`. Además `app/panel/layout.tsx:26`: si el email del auth no está en `usuario`, cae a `coordenadores[0].id` y **muestra la bandeja de otro coordinador en silencio** |
 | 4.8.5 | `guardApi` en todas las rutas `/api/admin` | **A MEDIAS** | `alertas/ejecutar`, `campos`, `campos/[id]`, `coordinadores`, `metricas`, `metricas/excel` dependen **solo del middleware**. Las que sí lo tienen: `reasignar`, `comparativa`, `estado`, `cotizaciones/*`. Inconsistente |
-| 4.8.6 | Validación de tipo/MIME del logo en servidor | **A MEDIAS** | `logo/route.ts:18-27` solo valida tamaño. El cliente sí valida magic bytes (`archivos.ts`), el servidor no |
+| 4.8.6 | Validación de tipo/MIME del logo en servidor | **A MEDIAS** | `logo/route.ts` POST solo valida tamaño. El cliente sí valida magic bytes (`archivos.ts`), el servidor no |
+| **4.8.11** | **`POST /api/solicitudes/[id]/logo` sin autorización** | media | Subir el archivo sigue abierto: cualquiera con el UUID sube el logo de cualquier solicitud. **No se resuelve con un guard más**: en una solicitud recién creada el solicitante no tiene sesión, y "el UUID es el token" es la misma debilidad que se acaba de cerrar en el GET. Necesita un token de un solo uso emitido al crear la solicitud |
 | **4.8.7** | **`/mis-solicitudes/[id]` no debe exponer montos** | **crítica** | El listado respeta RN-06, pero el **detalle lista proveedores con su monto total** (`[id]/page.tsx:92-111`). El propio repo afirma lo contrario en `postgres-repo.ts:425` ("sin montos") |
 
 ### 4.9 Correos — el ciclo tiene huecos
@@ -324,8 +325,8 @@ Salieron de la verificación de §11 contra código:
 | ~~4.7.1~~ | ~~B3 no validado en servidor~~ | ✅ **resuelto 2026-10-03** |
 | 4.7.2 | Correo 4 (decisión registrada) nunca se envía | **crítica** |
 | 4.7.3 | "Ninguna me sirve" cierra la solicitud en vez de reabrirla | **crítica** |
-| 4.8.1 | `GET /api/solicitudes/[id]` sin auth: fuga precios + PII | **crítica** |
-| 4.8.3 | Sin aislamiento horizontal entre coordinadores | **crítica** |
+| ~~4.8.1~~ | ~~`GET /api/solicitudes/[id]` sin auth~~ | ✅ **resuelto 2026-10-03** |
+| 4.8.3 | Sin aislamiento horizontal entre coordinadores | **crítica** — sigue abierto |
 | 4.9.1 | Correo 1 cae al solicitante si falta `MAIL_COORDINADOR_DEFAULT` | **crítica** |
 | 4.10.1 | Tasa ISV hardcodeada, no de configuración (contra doc 16) | alta |
 | 4.10.2 | La alerta de inactividad no puede dispararse nunca | alta |

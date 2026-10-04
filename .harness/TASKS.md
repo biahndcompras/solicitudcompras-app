@@ -219,8 +219,8 @@ no estaban en ninguna lista.
 
 | # | Tarea | Estado real | Evidencia |
 |---|---|---|---|
-| **4.9.1** | **Correo 1 no debe caer al solicitante** | **CRÍTICO** | `lib/pdf/pipeline.ts:90` → `process.env.MAIL_COORDINADOR_DEFAULT ?? solicitud.solicitanteEmail`. Sin esa env (**no está en `.env.example`**), el correo 1 —que lleva el PDF de la solicitud— **se le manda al propio solicitante** |
-| 4.9.2 | Correo 4 (decisión registrada) | FALTA | ver 4.7.2 |
+| ~~**4.9.1**~~ | ~~Correo 1 no debe caer al solicitante~~ | ✅ **RESUELTO 2026-10-03** | Destinatario = coordinador **asignado**, y si no tiene email, el alias `MAIL_COORDINADOR_DEFAULT` (que se agregó a `.env.example`, donde nunca había estado). Si no hay ninguno, **no se envía el correo 1** y queda registrado: es preferible que Compras no reciba nada a que el solicitante reciba su propio RFQ. El correo 2 (acuse al solicitante) sigue saliendo siempre. 5 tests, 4 verificados fallando contra el código anterior |
+| ~~**4.9.2**~~ | ~~Correo 4 (decisión registrada)~~ | ✅ **RESUELTO 2026-10-03** | `tipoCorreo: "4"` ya se invoca en `decision/route.ts`, **después** de cerrar la solicitud (si el correo saliera antes y la transacción fallara, se notificaría una decisión que no ocurrió). Destinatario: el coordinador asignado de la solicitud, o el alias. Nunca el solicitante. 7 tests, incluyendo que un fallo de envío no deshace la decisión ya registrada |
 | 4.9.3 | Correo 3 con trazabilidad | **A MEDIAS** | Se dispara en background y sus excepciones se tragan (`estado/route.ts:191-193`). Sin evento `envio_correo` en la timeline |
 | 4.9.4 | Correo 5 al coordinador afectado | **A MEDIAS** | Solo va al `destinatario_alertas` global. La doc dice "coordinador + administración" |
 

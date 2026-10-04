@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
+import { enviarCorreo } from "@/lib/mail/enviar";
+import { formatoMoneda } from "@/lib/domain/moneda";
 
 const repo = new PostgresRepositorio();
 
@@ -47,6 +49,27 @@ export async function POST(
       }
     }
 
+    // Datos del correo 4, recogidos ANTES de cerrar: después el estado ya
+    // es terminal y no se vuelve a leer. `cotizaciones` viene del paso de validación de
+    // arriba o se pide aquí cuando no hubo opción elegida.
+    const cotizaciones = await repo.listarCotizaciones(comparativa.solicitudId);
+    const elegida = body.ningunaOpcion
+      ? undefined
+      : cotizaciones.find((c) => c.id === body.cotizacionId);
+    const duracionMs = solicitud.fechaEnvio ? Date.now() - new Date(solicitud.fechaEnvio).getTime() : null;
+    const datosCorreo = {
+      numeroReferencia: solicitud.numeroReferencia ?? undefined,
+      solicitanteNombre: solicitud.solicitanteNombre,
+      solicitanteEmail: solicitud.solicitanteEmail,
+      proveedorSeleccionado: elegida?.proveedorNombre ?? "Ninguna opción",
+      valorNeto: elegida ? formatoMoneda(elegida.moneda ?? "HNL", elegida.valorNeto ?? null) : "—",
+      valorTotal: elegida ? formatoMoneda(elegida.moneda ?? "HNL", elegida.valorTotal ?? null) : "—",
+      plazoEntrega: elegida?.plazoEntrega ?? "—",
+      fechaDecision: new Date().toLocaleDateString("es-HN"),
+      tiempoCiclo: duracionMs === null ? "—" : `${Math.max(1, Math.round(duracionMs / 86400000))} días`,
+      urlDetalle: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/panel`,
+    };
+
     await repo.registrarDecisionYCerrar({
       comparativaId: comparativa.id,
       solicitudId: comparativa.solicitudId,
@@ -56,6 +79,26 @@ export async function POST(
       comentario: body.comentario,
     });
 
+    // Correo 4: la decisión le llega a quien tiene que actuar sobre ella. Antes la plantilla
+    // existía pero `tipoCorreo: "4"` no se invocaba en ningún lado: la solicitud se cerraba
+    // en silencio y el coordinador se enteraba solo si miraba la bandeja.
+    const destinatario = await destinatarioDeDecision(solicitud.coordinadorId);
+    if (destinatario) {
+      try {
+        await enviarCorreo({ repo, tipoCorreo: "4", solicitudId: solicitud.id, destinatario, datos: datosCorreo });
+      } catch (e) {
+        // La decisión ya está registrada y es el hecho de negocio (RF-25): un fallo de
+        // notificación no la revierte ni puede devolver un error al solicitante que ya
+        // decidió. `enviarCorreo` ya dejó su propio registro en `correo_enviado`.
+        console.error(`[correo4] no se pudo notificar la decisión de ${solicitud.id}:`, e);
+      }
+    } else {
+      console.error(
+        `[correo4] ${solicitud.numeroReferencia ?? solicitud.id}: decisión registrada sin notificar. ` +
+          "La solicitud no tiene coordinador asignado con email, o la solicitud no trae MAIL_COORDINADOR_DEFAULT."
+      );
+    }
+
     return NextResponse.json({ ok: true, estadoFinal: body.ningunaOpcion ? "CERRADA_SIN_DECISION" : "CERRADA_CON_DECISION" });
   } catch (e) {
     if (e instanceof z.ZodError) {
@@ -63,4 +106,14 @@ export async function POST(
     }
     return NextResponse.json({ error: "Error al registrar la decisión" }, { status: 500 });
   }
+}
+
+/**
+ * A quién va el correo 4: el coordinador asignado de la solicitud, o el alias configurado.
+ * Nunca el solicitante — ya recibió el correo 2 y el correo con el enlace.
+ */
+async function destinatarioDeDecision(coordinadorId?: string): Promise<string | null> {
+  const coordinadores = await repo.listarCoordinadores();
+  const asignado = coordinadorId ? coordinadores.find((c) => c.id === coordinadorId) : undefined;
+  return asignado?.email ?? process.env.MAIL_COORDINADOR_DEFAULT ?? null;
 }

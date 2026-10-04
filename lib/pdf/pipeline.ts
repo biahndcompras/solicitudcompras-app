@@ -87,18 +87,39 @@ export async function pipelineEnvioACompras(opts: {
     fechaRequerida: solicitud.fechaRequerida,
     resumen: solicitud.descripcion,
   };
-  const correoCoordinadorDest = process.env.MAIL_COORDINADOR_DEFAULT ?? solicitud.solicitanteEmail;
+  // Destinatario del correo 1 (el que lleva el PDF del RFQ): el coordinador ASIGNADO, y si
+  // no hay ninguno, el alias configurado. Antes caía a `solicitud.solicitanteEmail`: el
+  // solicitante recibía su propia solicitud con sus cotizaciones y precios adjuntos, y
+  // Compras no se enteraba de nada. `MAIL_COORDINADOR_DEFAULT` tampoco estaba en
+  // `.env.example`, así que ese era el camino por defecto, no la excepción.
+  //
+  // Si no hay destinatario NO se envía el correo 1: es preferible que Compras no reciba nada
+  // a que el solicitante reciba su propio RFQ. El hueco queda registrado en el log.
+  // `||` y no `??`: un coordinador con email VACÍO (columna sin rellenar) devuelve `""`, que
+  // `??` no trata como ausente — el alias configurado nunca se usaba y el correo se perdía.
+  const correoCoordinadorDest =
+    coordinadores.find((c) => c.id === coordinadorId)?.email || process.env.MAIL_COORDINADOR_DEFAULT || null;
+
+  if (!correoCoordinadorDest) {
+    console.error(
+      `[pipeline] ${solicitud.numeroReferencia ?? solicitud.id}: se envió pero NO hay destinatario para el correo 1. ` +
+        "Definí MAIL_COORDINADOR_DEFAULT o asigná un coordinador con email en la tabla `usuario`. " +
+        "Compras no fue notificada."
+    );
+  }
 
   const enviarLosDos = async () => {
-    // Correo 1 al coordinador (con el PDF adjunto).
-    const c1 = await enviarCorreo({
-      repo,
-      tipoCorreo: "1",
-      solicitudId: solicitud.id,
-      destinatario: correoCoordinadorDest,
-      datos: { ...baseDatos, coordinadorNombre: coordenadorNombre, urlPanel: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/panel` },
-      adjuntoPdf: { filename: `${solicitud.numeroReferencia ?? "solicitud"}.pdf`, content: pdf.buffer },
-    });
+    // Correo 1 al coordinador (con el PDF adjunto). Sin destinatario no se envía.
+    const c1 = correoCoordinadorDest
+      ? await enviarCorreo({
+          repo,
+          tipoCorreo: "1",
+          solicitudId: solicitud.id,
+          destinatario: correoCoordinadorDest,
+          datos: { ...baseDatos, coordinadorNombre: coordenadorNombre, urlPanel: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/panel` },
+          adjuntoPdf: { filename: `${solicitud.numeroReferencia ?? "solicitud"}.pdf`, content: pdf.buffer },
+        })
+      : { estadoEnvio: "sin-destinatario" as const };
     // Correo 2 al solicitante (acuse de recibo).
     const c2 = await enviarCorreo({
       repo,

@@ -62,6 +62,7 @@ export async function POST(
       solicitanteNombre: solicitud.solicitanteNombre,
       solicitanteEmail: solicitud.solicitanteEmail,
       proveedorSeleccionado: elegida?.proveedorNombre ?? "Ninguna opción",
+      ningunaOpcionAceptada: body.ningunaOpcion,
       valorNeto: elegida ? formatoMoneda(elegida.moneda ?? "HNL", elegida.valorNeto ?? null) : "—",
       valorTotal: elegida ? formatoMoneda(elegida.moneda ?? "HNL", elegida.valorTotal ?? null) : "—",
       plazoEntrega: elegida?.plazoEntrega ?? "—",
@@ -99,7 +100,12 @@ export async function POST(
       );
     }
 
-    return NextResponse.json({ ok: true, estadoFinal: body.ningunaOpcion ? "CERRADA_SIN_DECISION" : "CERRADA_CON_DECISION" });
+    // "Ninguna me sirve" devuelve la solicitud a Compras; no la cierra.
+    return NextResponse.json({
+      ok: true,
+      estadoFinal: body.ningunaOpcion ? "EN_COTIZACION" : "CERRADA_CON_DECISION",
+      vuelveACompras: body.ningunaOpcion,
+    });
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: "Datos inválidos", detalles: e.issues }, { status: 400 });

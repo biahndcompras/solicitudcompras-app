@@ -32,6 +32,9 @@ export function VistaPublica({
   const [ningunaSirve, setNingunaSirve] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
   const [enviando, setEnviando] = useState(false);
+  // "Ninguna me sirve" devuelve la solicitud a Compras: el enlace deja de invitar a decidir
+  // (el servidor ya lo rechaza con 409, pero una pantalla que ofrece botones muertos miente).
+  const [vuelveACompras, setVuelveACompras] = useState(false);
 
   const vencimiento = vencimientoEn(fechaExpiracion);
   // Un solo aviso de referencia de moneda (no repetido bajo cada tarjeta).
@@ -52,11 +55,17 @@ export function VistaPublica({
         throw new Error(d.error ?? "No se pudo registrar la decisión");
       }
       const d = await res.json();
+      if (d.vuelveACompras) {
+        setVuelveACompras(true);
+        setMensaje({
+          tipo: "ok",
+          texto: "Se notificó a Compras y tu solicitud vuelve a revisión. No se cerró: Compras la va a evaluar.",
+        });
+        return true;
+      }
       setMensaje({
         tipo: "ok",
-        texto: d.ningunaOpcion
-          ? "Se notificó a Compras. La solicitud vuelve a revisión."
-          : "Tu decisión fue registrada. Compras recibirá la notificación.",
+        texto: "Tu decisión fue registrada. Compras recibirá la notificación.",
       });
       return true;
     } catch (e) {
@@ -139,16 +148,23 @@ export function VistaPublica({
               <h2 className="text-sm font-medium text-slate-900">Opciones cotizadas ({cotizaciones.length})</h2>
               <p className="text-[12px] text-slate-500">{referenciaMoneda}</p>
             </div>
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Pendiente de decisión</span>
+            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              {vuelveACompras ? "Devuelta a Compras" : "Pendiente de decisión"}
+            </span>
           </div>
 
-          {cotizaciones.length === 0 ? (
+          {vuelveACompras ? (
+            <p className="text-sm text-slate-600 text-center py-8 px-4">
+              Esta solicitud volvió a Compras para que evalúen tu pedido. Cuando haya una nueva
+              comparativa te la vamos a mandar por correo.
+            </p>
+          ) : cotizaciones.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-6">
               La comparativa todavía no tiene cotizaciones cargadas.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {cotizaciones.map((c) => {
+              {!vuelveACompras && cotizaciones.map((c) => {
                 const pc = prosContras[c.id];
                 const equiv = equivalenteOrientativo(c.valorTotal, c.moneda);
                 return (

@@ -78,3 +78,64 @@ describeDb("PostgresRepositorio", () => {
     expect(rfp.length).toBeGreaterThan(0);
   });
 });
+/**
+ * "Ninguna me sirve" NO debe cerrar la solicitud: la devuelve a Compras. Dos cosas se
+ * verifican aquí contra la base real, porque las dos se pueden romper sin que nadie lo note:
+ *  1. El estado final es EN_COTIZACION, no un terminal.
+ *  2. `fecha_cierre` queda en NULL. Antes el UPDATE la ponía siempre; una solicitud reabierta
+ *     con fecha de cierre es incoherente y el semáforo de "sin decisión" la cuenta como cerrada.
+ */
+describeDb("registrarDecisionYCerrar · 'ninguna me sirve' no cierra", () => {
+  async function solicitudEnEsperaDeDecision(repo: PostgresRepositorio, email: string) {
+    const s = await repo.crearSolicitud(
+      { titulo: "Ninguna me sirve", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+    await repo.transicionarEstado({ solicitudId: s.id, hacia: "ENVIADA_A_COMPRAS", actorTipo: "solicitante", actorIdentificador: email });
+    const comparativa = await repo.guardarComparativa(s.id, {
+      id: "",
+      solicitudId: s.id,
+      fechaGeneracion: new Date().toISOString(),
+      prosContras: {},
+      discrepanciasDetectadas: [],
+    });
+    await repo.transicionarEstado({ solicitudId: s.id, hacia: "COMPARATIVA_LISTA", actorTipo: "coordinador" });
+    await repo.transicionarEstado({ solicitudId: s.id, hacia: "ENVIADA_A_SOLICITANTE", actorTipo: "coordinador", nota: "Recomiendo la A." });
+    return { id: s.id, comparativaId: comparativa.id };
+  }
+
+  it("con 'ninguna opción' vuelve a EN_COTIZACION y fecha_cierre queda NULL", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `no.cierra.${Date.now()}@bia.hn`;
+    const { id, comparativaId } = await solicitudEnEsperaDeDecision(repo, email);
+
+    await repo.registrarDecisionYCerrar({
+      comparativaId,
+      solicitudId: id,
+      decididoPorEmail: email,
+      ningunaOpcion: true,
+      comentario: "Ninguna cumple el plazo",
+    });
+
+    const tras = await repo.obtenerSolicitud(id);
+    expect(tras?.estado).toBe("EN_COTIZACION");
+    expect(tras?.fechaCierre ?? null).toBeNull();
+  }, 30000);
+
+  it("eligiendo una opción sí cierra y sí fecha_cierre", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `si.cierra.${Date.now()}@bia.hn`;
+    const { id, comparativaId } = await solicitudEnEsperaDeDecision(repo, email);
+
+    await repo.registrarDecisionYCerrar({
+      comparativaId,
+      solicitudId: id,
+      decididoPorEmail: email,
+      ningunaOpcion: false,
+    });
+
+    const tras = await repo.obtenerSolicitud(id);
+    expect(tras?.estado).toBe("CERRADA_CON_DECISION");
+    expect(tras?.fechaCierre).toBeTruthy();
+  }, 30000);
+});

@@ -17,6 +17,8 @@ export type DatosCorreo = {
   cantidadCotizaciones?: number;
   recomendacion?: string;
   proveedorSeleccionado?: string;
+  /** "Ninguna me sirve": la solicitud vuelve a Compras en vez de cerrarse. */
+  ningunaOpcionAceptada?: boolean;
   valorNeto?: string;
   valorTotal?: string;
   plazoEntrega?: string;
@@ -95,7 +97,11 @@ export const PLANTILLAS_CORREO = {
         <tr><td><b>Fecha</b></td><td>${esc(d.fechaDecision)}</td></tr>
         <tr><td><b>Tiempo de ciclo</b></td><td>${esc(d.tiempoCiclo)}</td></tr>
       </table>
-      <p>La solicitud queda cerrada en el portal. Podés continuar con la orden de compra.</p>
+      <p>${
+        d.ningunaOpcionAceptada
+          ? "La solicitud <b>vuelve a Compras</b>: no se cerró. Evaluá por qué ninguna opción le sirve y decidí si se re-cotiza o se necesitas información adicional del solicitante."
+          : "La solicitud queda cerrada en el portal. Podés continuar con la orden de compra."
+      }</p>
       <p>Portal de Compras BIA</p>`,
   },
   // 5 — Alerta de solicitud sin movimiento (configurable)

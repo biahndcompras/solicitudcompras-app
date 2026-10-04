@@ -333,11 +333,20 @@ export class PostgresRepositorio implements Repositorio {
         ]
       );
 
-      const hacia = input.ningunaOpcion ? "CERRADA_SIN_DECISION" : "CERRADA_CON_DECISION";
+      // "Ninguna me sirve" NO cierra la solicitud: la devuelve a Compras para que evalúe y
+      // cotice de nuevo. Antes iba a CERRADA_SIN_DECISION, que además es una decisión
+      // TERMINAL: la solicitud quedaba muerta para siempre aunque la pantalla le hubiera
+      // prometido al solicitante que "vuelve a revisión". La transición
+      // ENVIADA_A_SOLICITANTE → EN_COTIZACION ya estaba permitida en la máquina de estados;
+      // simplemente nadie la invocaba.
+      const hacia = input.ningunaOpcion ? "EN_COTIZACION" : "CERRADA_CON_DECISION";
+      const esTerminal = hacia !== "EN_COTIZACION";
       await client.query(
-        `UPDATE solicitud SET estado = $2, fecha_cierre = now()
-         WHERE id = $1`,
-        [input.solicitudId, hacia]
+        `UPDATE solicitud
+            SET estado = $2,
+                fecha_cierre = CASE WHEN $3::boolean THEN now() ELSE NULL END
+          WHERE id = $1`,
+        [input.solicitudId, hacia, esTerminal]
       );
       await client.query(
         `INSERT INTO evento_trazabilidad
@@ -348,7 +357,9 @@ export class PostgresRepositorio implements Repositorio {
           actual.estado,
           hacia,
           input.decididoPorEmail,
-          input.ningunaOpcion ? "Ninguna opción seleccionada" : "Decisión por enlace público",
+          input.ningunaOpcion
+            ? "El solicitante no aceptó ninguna opción; vuelve a Compras para re-cotizar"
+            : "Decisión por enlace público",
         ]
       );
 
@@ -618,7 +629,7 @@ export class PostgresRepositorio implements Repositorio {
   }
 
   async guardarComparativa(solicitudId: string, comparativa: Comparativa): Promise<Comparativa> {
-    await this.pg.query(
+    const res = await this.pg.query(
       `INSERT INTO comparativa
          (solicitud_id, pros_contras, discrepancias_detectadas, sugerencia_ia, cotizacion_sugerida_id)
        VALUES ($1,$2,$3,$4,$5)
@@ -636,7 +647,21 @@ export class PostgresRepositorio implements Repositorio {
         comparativa.cotizacionSugeridaId ?? null,
       ]
     );
-    return comparativa;
+    // Devolver la fila insertada, no la entrada: el INSERT no manda la columna `id` (la
+    // genera Postgres) y el motor arma su propio id textual `cmp-<epoch>`, que no existe en
+    // la base. Quien llama a este método recibía un id que no corresponde a ninguna fila.
+    const f = res.rows[0];
+    return {
+      id: String(f.id),
+      solicitudId: String(f.solicitud_id),
+      prosContras: (f.pros_contras as Record<string, { pros: string[]; contras: string[] }>) ?? {},
+      discrepanciasDetectadas: f.discrepancias_detectadas ?? [],
+      sugerenciaIA: f.sugerencia_ia ?? undefined,
+      cotizacionSugeridaId: f.cotizacion_sugerida_id ?? undefined,
+      recomendacionComprador: f.recomendacion_comprador ?? undefined,
+      fechaRecomendacion: f.fecha_recomendacion ?? undefined,
+      fechaGeneracion: String(f.fecha_generacion),
+    };
   }
 
   async actualizarRutaExcel(solicitudId: string, ruta: string): Promise<void> {

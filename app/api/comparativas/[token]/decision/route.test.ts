@@ -129,6 +129,38 @@ describe("correo 4 · la decisión se notifica a quien tiene que actuar", () => 
     expect(correo4()).toBeUndefined();
   });
 
+  it("'ninguna me sirve' devuelve la solicitud a Compras y NO la cierra", async () => {
+    const res = await pedir({ ningunaOpcion: true, comentario: "Ninguna cumple el plazo" });
+    const body = await res.json();
+
+    // El bug: la UI promete "vuelve a revisión" y el sistema la cerraba como
+    // CERRADA_SIN_DECISION, que es terminal. La transición ENVIADA_A_SOLICITANTE →
+    // EN_COTIZACION ya estaba permitida en la máquina de estados; nadie la invocaba.
+    expect(body.estadoFinal).toBe("EN_COTIZACION");
+    expect(body.vuelveACompras).toBe(true);
+    expect(body.estadoFinal).not.toBe("CERRADA_SIN_DECISION");
+  });
+
+  it("elegir una opción sí sigue cerrando la solicitud", async () => {
+    const res = await pedir({ cotizacionId: "c1" });
+    const body = await res.json();
+
+    expect(body.estadoFinal).toBe("CERRADA_CON_DECISION");
+    expect(body.vuelveACompras).toBe(false);
+  });
+
+  it("el correo 4 avisa que vuelve a Compras, no que quedó cerrada", async () => {
+    await pedir({ ningunaOpcion: true });
+
+    expect(correo4()?.datos.ningunaOpcionAceptada).toBe(true);
+  });
+
+  it("eligiendo una opción, el correo 4 no dice que volvió a Compras", async () => {
+    await pedir({ cotizacionId: "c1" });
+
+    expect(correo4()?.datos.ningunaOpcionAceptada).toBe(false);
+  });
+
   it("si el envío del correo falla, la decisión sigue registrada", async () => {
     enviarCorreo.mockRejectedValue(new Error("Resend 500"));
 

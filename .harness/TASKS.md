@@ -196,9 +196,9 @@ no estaban en ninguna lista.
 |---|---|---|---|
 | ~~**4.7.1**~~ | ~~B3 validado en el servidor~~ | ✅ **RESUELTO 2026-10-03** | `estado/route.ts:118-126`: sin recomendación (`trim()` vacío) devuelve **409** y **no transiciona, no guarda, no genera enlace**. 5 tests nuevos en `estado/route.test.ts`, 2 de ellos verificados **fallando** contra el código anterior. Reproducido en navegador con sesión real de coordinador: PATCH directo sin `nota` → 409; solo espacios → 409; con recomendación → 200 + enlace. Confirmado que la recomendación **llega al solicitante** por `/comparativa/[token]` |
 | **4.7.2** | **Correo 4: decisión registrada → coordinador + admin** | **FALTA** | No existe. `grep 'tipoCorreo: "4"'` → 0 resultados. Solo se envían 1, 2, 3 y 5. `decision/route.ts:49-59` cierra la solicitud **sin notificar a nadie**: el coordinador se entera solo si mira la bandeja |
-| **4.7.3** | **"Ninguna me sirve" reabre en `EN_COTIZACION`** | **FALTA** — cierra en su lugar | `decision/route.ts:50-59` → `estadoFinal: "CERRADA_SIN_DECISION"`. La UI le dice al solicitante *"la solicitud vuelve a revisión"* (`VistaPublica.tsx:58,224`). La máquina de estados **sí permite** `ENVIADA_A_SOLICITANTE → EN_COTIZACION` (`state-machine.ts:10`) pero **nadie la invoca**. El sistema hace lo contrario de lo que promete en pantalla |
-| 4.7.5 | Limpiar la recomendación previa al regenerar la comparativa | bajo | `guardarComparativa` (`postgres-repo.ts:603-616`) hace upsert de precios/pros pero **no borra `recomendacion_comprador`**. **Riesgo contenido**: B3 fuerza una recomendación nueva en cada envío y el textarea arranca vacío, así que no puede llegar una vieja al solicitante. Es higiene, no bug vivo |
-| 4.7.4 | `clasificacion_corregida` se persiste (métrica de precisión del doc 16) | FALTA | El flag existe en estado y borrador pero **no viaja al servidor** y ningún INSERT/UPDATE lo escribe. La métrica de "precisión del clasificador" **no se puede calcular** |
+| ~~**4.7.3**~~ | ~~"Ninguna me sirve" reabre en `EN_COTIZACION`~~ | ✅ **RESUELTO 2026-10-03** | "Ninguna opción" devuelve la solicitud a `EN_COTIZACION` en vez de cerrarla como `CERRADA_SIN_DECISION` (que es terminal). La transición ya estaba permitida en la máquina de estados; nadie la invocaba. **Segunda mitad del bug**: el UPDATE ponía `fecha_cierre = now()` siempre, así que una solicitud reabierta quedaba con fecha de cierre y el semáforo la contaba como cerrada → ahora es condicional. La UI usa el dato real de la respuesta y deja de ofrecer tarjetas y botones muertos. Verificado contra la base real: `ENVIADA_A_SOLICITANTE` → `EN_COTIZACION` con `fecha_cierre` NULL |
+| 4.7.6 | Limpiar la recomendación previa al regenerar la comparativa | bajo | `guardarComparativa` (`postgres-repo.ts:603-616`) hace upsert de precios/pros pero **no borra `recomendacion_comprador`**. **Riesgo contenido**: B3 fuerza una recomendación nueva en cada envío y el textarea arranca vacío, así que no puede llegar una vieja al solicitante. Es higiene, no bug vivo |
+| 4.7.7 | `clasificacion_corregida` se persiste (métrica de precisión del doc 16) | FALTA | El flag existe en estado y borrador pero **no viaja al servidor** y ningún INSERT/UPDATE lo escribe. La métrica de "precisión del clasificador" **no se puede calcular** |
 
 ### 4.8 Seguridad — fronteras entre roles ⚠️ CRÍTICO
 
@@ -324,7 +324,9 @@ Salieron de la verificación de §11 contra código:
 |---|---|---|
 | ~~4.7.1~~ | ~~B3 no validado en servidor~~ | ✅ **resuelto 2026-10-03** |
 | 4.7.2 | Correo 4 (decisión registrada) nunca se envía | **crítica** |
-| 4.7.3 | "Ninguna me sirve" cierra la solicitud en vez de reabrirla | **crítica** |
+| ~~4.7.3~~ | ~~"Ninguna me sirve" cerraba la solicitud~~ | ✅ **resuelto 2026-10-03** |
+| **4.7.4** | **`guardarComparativa` devolvía un id inexistente** | alta — resuelta sin querer | El INSERT no manda la columna `id` y el motor arma un id textual `cmp-<epoch>`; el método devolvía la entrada, así que quien lo llamaba recibía un id que no era de ninguna fila. Ahora devuelve la fila insertada. **Bug latente**: la API de comparativa respondía con ese id falso |
+| **4.7.5** | Los tests del assessment fallan si hay `OPENROUTER_API_KEY` en el entorno | media | La suite pasa sin `.env.local` y falla con él: los tests del assessment pegan contra la IA y el catálogo reales. Nadie lo descubre salvo que cargue el env a mano. Verificar siempre **sin** el env cargado |
 | ~~4.8.1~~ | ~~`GET /api/solicitudes/[id]` sin auth~~ | ✅ **resuelto 2026-10-03** |
 | 4.8.3 | Sin aislamiento horizontal entre coordinadores | **crítica** — sigue abierto |
 | 4.9.1 | Correo 1 cae al solicitante si falta `MAIL_COORDINADOR_DEFAULT` | **crítica** |

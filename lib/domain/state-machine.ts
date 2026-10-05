@@ -71,3 +71,18 @@ export function aplicarTransicion(
 function ahora(iso: string): string {
   return iso;
 }
+
+/**
+ * Estados sin vuelta atrás: desde ellos no hay ninguna transición válida. Un estado terminal
+ * no es lo mismo que "no se puede pedir nada": significa que el ciclo terminó, y una
+ * solicitud cerrada no admite ni información nueva ni re-cotización.
+ */
+export const ESTADOS_TERMINALES: EstadoSolicitud[] = [
+  "CERRADA_CON_DECISION",
+  "CERRADA_SIN_DECISION",
+  "CANCELADA",
+];
+
+export function esTerminal(estado: EstadoSolicitud): boolean {
+  return ESTADOS_TERMINALES.includes(estado);
+}

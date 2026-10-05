@@ -1,6 +1,7 @@
 // Adaptador PostgreSQL del Repositorio — Portal de Compras BIA.
 // Persistencia sobre el esquema migrado 001–006. Transición de estado + evento en la misma transacción.
 import type { Pool } from "pg";
+import { esTerminal } from "@/lib/domain/state-machine";
 import { pool as obtenerPool } from "./pool";
 import type {
   CampoCatalogo,
@@ -11,7 +12,9 @@ import type {
   DocumentoGenerado,
   EventoTrazabilidad,
   LinkPublico,
+  PreguntaAlSolicitante,
   RespuestaCampo,
+  RespuestaDelSolicitante,
   Solicitud,
   Usuario,
 } from "@/lib/domain/types";
@@ -48,6 +51,10 @@ function filaSolicitud(f: Record<string, unknown>): Solicitud {
     clasificacionConfianza: f.clasificacion_confianza != null ? Number(f.clasificacion_confianza) : undefined,
     clasificacionCorregida: Boolean(f.clasificacion_corregida),
     notificacionFallida: Boolean(f.notificacion_fallida),
+    informacionPendiente: Boolean(f.informacion_pendiente),
+    informacionPreguntas: (f.informacion_preguntas as PreguntaAlSolicitante | null) ?? undefined,
+    informacionDesde: f.informacion_desde ? new Date(f.informacion_desde as string).toISOString() : undefined,
+    informacionRespuesta: (f.informacion_respuesta as RespuestaDelSolicitante | null) ?? undefined,
     archivoLogoNombre: (f.archivo_logo_nombre as string) ?? undefined,
   };
 }
@@ -592,6 +599,161 @@ export class PostgresRepositorio implements Repositorio {
     await this.pg.query(
       `UPDATE solicitud SET archivo_logo_nombre = $2, archivo_logo_bytea = $3 WHERE id = $1`,
       [solicitudId, nombre, Buffer.from(bytea)]
+    );
+  }
+
+  /**
+   * Compas pide información al solicitante (spec 010). Deja la ronda abierta y anota el
+   * evento: la solicitud NO cambia de estado, para no alterar el significado de los filtros
+   * de la bandeja ni de los KPI.
+   *
+   * Dos escrituras (solicitud + evento) en una transacción: un evento sin la bandera, o una
+   * bandera sin su evento, dejan un estado que nadie puede explicar.
+   */
+  async pedirInformacion(input: {
+    solicitudId: string;
+    preguntas: { campoKey: string; pregunta: string }[];
+    pedidaPor?: string;
+  }): Promise<{ ronda: number; pedidaEn: string }> {
+    const client = await this.pg.connect();
+    try {
+      await client.query("BEGIN");
+      const sel = await client.query("SELECT * FROM solicitud WHERE id = $1 FOR UPDATE", [input.solicitudId]);
+      if (!sel.rows[0]) throw new Error("Solicitud no encontrada");
+      const actual = filaSolicitud(sel.rows[0]);
+      if (esTerminal(actual.estado)) {
+        throw new Error("La solicitud está cerrada; no se puede pedir información.");
+      }
+      if (actual.informacionPendiente) {
+        // Una ronda abierta a la vez. El ciclo se repite RONDAS SEGUIDAS, no en paralelo: dos
+        // series de preguntas abiertas harían imposible saber cuál respuesta va con cuál.
+        throw new Error("Ya hay una ronda de preguntas esperando respuesta del solicitante.");
+      }
+      const rondaAnterior = Number(
+        (await client.query(
+          `SELECT count(*)::int AS n FROM evento_trazabilidad
+            WHERE solicitud_id = $1 AND tipo_evento = 'pregunta_solicitante'`,
+          [input.solicitudId]
+        )).rows[0]?.n ?? 0
+      );
+      const ronda = rondaAnterior + 1;
+      const pedidaEn = new Date().toISOString();
+      const preguntas: PreguntaAlSolicitante = {
+        ronda,
+        pedidaEn,
+        pedidaPor: input.pedidaPor,
+        preguntas: input.preguntas,
+      };
+      await client.query(
+        `UPDATE solicitud
+            SET informacion_pendiente = true,
+                informacion_preguntas = $2::jsonb,
+                informacion_desde = now(),
+                informacion_respuesta = NULL
+          WHERE id = $1`,
+        [input.solicitudId, JSON.stringify(preguntas)]
+      );
+      await client.query(
+        `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota)
+         VALUES ($1,'pregunta_solicitante','coordinador',$2,$3)`,
+        [
+          input.solicitudId,
+          input.pedidaPor ?? null,
+          `Ronda ${ronda}: ${input.preguntas.length} pregunta(s) al solicitante`,
+        ]
+      );
+      await client.query("COMMIT");
+      return { ronda, pedidaEn };
+    } catch (e) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * El solicitante responde. Idempotente por ronda: si ya no hay bandera abierta, devuelve
+   * `{ yaRespondida: true }` sin escribir nada. Un doble clic o un refresh en pleno envío no
+   * pueden duplicar la respuesta ni generar dos correos al coordinador.
+   */
+  async responderInformacion(input: {
+    solicitudId: string;
+    respuestas: Record<string, string>;
+    respondidoPor?: string;
+  }): Promise<{ yaRespondida: boolean; ronda?: number }> {
+    const client = await this.pg.connect();
+    try {
+      await client.query("BEGIN");
+      const sel = await client.query("SELECT * FROM solicitud WHERE id = $1 FOR UPDATE", [input.solicitudId]);
+      if (!sel.rows[0]) throw new Error("Solicitud no encontrada");
+      const actual = filaSolicitud(sel.rows[0]);
+      if (!actual.informacionPendiente) {
+        await client.query("ROLLBACK");
+        return { yaRespondida: true };
+      }
+      const ronda = actual.informacionPreguntas?.ronda ?? 0;
+      const respuesta: RespuestaDelSolicitante = {
+        ronda,
+        respondidaEn: new Date().toISOString(),
+        respuestas: input.respuestas,
+      };
+      await client.query(
+        `UPDATE solicitud
+            SET informacion_pendiente = false,
+                informacion_respuesta = $2::jsonb
+          WHERE id = $1`,
+        [input.solicitudId, JSON.stringify(respuesta)]
+      );
+      await client.query(
+        `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota)
+         VALUES ($1,'respuesta_solicitante','solicitante',$2,$3)`,
+        [
+          input.solicitudId,
+          input.respondidoPor ?? null,
+          `Ronda ${ronda} respondida: ${Object.keys(input.respuestas).length} campo(s)`,
+        ]
+      );
+      await client.query("COMMIT");
+      return { yaRespondida: false, ronda };
+    } catch (e) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Rondas abiertas cuya antigüedad supera el umbral (spec 010, RF-62). Es lo que alimenta el
+   * recordatorio del correo 8. `excluirRonda` evita reenviar el mismo recordatorio cada día.
+   */
+  async informacionVencida(umbralDias: number, excluirRonda?: number): Promise<
+    { solicitud: Solicitud; ronda: number; dias: number }[]
+  > {
+    const res = await this.pg.query(
+      `SELECT s.*, EXTRACT(DAY FROM (now() - s.informacion_desde))::int AS dias
+         FROM solicitud s
+        WHERE s.informacion_pendiente = true
+          AND s.informacion_desde IS NOT NULL
+          AND now() - s.informacion_desde > make_interval(days => $1)
+          AND (s.informacion_preguntas->>'ronda')::int <> COALESCE($2::int, -1)
+        ORDER BY s.informacion_desde ASC`,
+      [umbralDias, excluirRonda ?? null]
+    );
+    return res.rows.map((f) => ({
+      solicitud: filaSolicitud(f),
+      ronda: Number((f.informacion_preguntas as PreguntaAlSolicitante | null)?.ronda ?? 0),
+      dias: Number(f.dias ?? 0),
+    }));
+  }
+
+  async marcarRecordatorioInformacion(solicitudId: string, ronda: number): Promise<void> {
+    await this.pg.query(
+      `UPDATE solicitud
+          SET informacion_preguntas = jsonb_set(informacion_preguntas, '{recordatorioRonda}', to_jsonb($2::int))
+        WHERE id = $1`,
+      [solicitudId, ronda]
     );
   }
 

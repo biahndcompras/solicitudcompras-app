@@ -69,6 +69,23 @@ export interface Repositorio {
    */
   usuarioLocalPorEmail(email: string): Promise<Usuario | null>;
 
+  /** Ronda de preguntas abierta al solicitante (spec 010). */
+  pedirInformacion(input: {
+    solicitudId: string;
+    preguntas: { campoKey: string; pregunta: string }[];
+    pedidaPor?: string;
+  }): Promise<{ ronda: number; pedidaEn: string }>;
+  responderInformacion(input: {
+    solicitudId: string;
+    respuestas: Record<string, string>;
+    respondidoPor?: string;
+  }): Promise<{ yaRespondida: boolean; ronda?: number }>;
+  informacionVencida(
+    umbralDias: number,
+    excluirRonda?: number
+  ): Promise<{ solicitud: Solicitud; ronda: number; dias: number }[]>;
+  marcarRecordatorioInformacion(solicitudId: string, ronda: number): Promise<void>;
+
   obtenerSolicitud(id: string): Promise<Solicitud | null>;
 
   guardarCotizacion(cotizacion: Omit<Cotizacion, "id">): Promise<Cotizacion>;

@@ -4,13 +4,13 @@ Estado: `- [ ]` pendiente · `- [x]` hecha con evidencia
 
 ## Bloque 1 — Migración
 
-- [ ] T001 Migración `018_preguntas_solicitante.sql` con las 4 columnas y los 2 tipos de evento
-- [ ] T002 Idempotente (`ADD COLUMN IF NOT EXISTS`, `ADD VALUE IF NOT EXISTS`)
-- [ ] T003 Verificar con `psql` que quedó aplicada y que una solicitud vieja tiene la bandera en `false`
+- [x] T001 Migración `018_preguntas_solicitante.sql` con las 4 columnas y los 2 tipos de evento
+- [x] T002 Idempotente (`ADD COLUMN IF NOT EXISTS`, `ADD VALUE IF NOT EXISTS`)
+- [x] T003 Verificar con `psql` que quedó aplicada y que una solicitud vieja tiene la bandera en `false`
 
 ## Bloque 2 — Pedir información (coordinador)
 
-- [ ] T004 Repo: `pedirInformacion`, `informacionVencida`, `responderInformacion`
+- [x] T004 Repo: `pedirInformacion`, `informacionVencida`, `responderInformacion`, `marcarRecordatorioInformacion`
 - [ ] T005 Ruta `POST /api/solicitudes/[id]/informacion` — exige rol, valida que la solicitud no sea terminal
 - [ ] T006 Correo 6 al solicitante con el enlace a "mis solicitudes"
 - [ ] T007 Tests: rechaza sin rol · rechaza si ya hay una ronda abierta · no hace nada en terminal

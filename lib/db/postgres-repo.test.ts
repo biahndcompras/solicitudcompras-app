@@ -139,3 +139,106 @@ describeDb("registrarDecisionYCerrar · 'ninguna me sirve' no cierra", () => {
     expect(tras?.fechaCierre).toBeTruthy();
   }, 30000);
 });
+
+describeDb("preguntas al solicitante (spec 010) · el ciclo se repite", () => {
+  const PREGUNTAS = [{ campoKey: "materiales", pregunta: "¿De qué material?" }];
+
+  async function solicitudViva(email: string) {
+    const repo = new PostgresRepositorio();
+    const s = await repo.crearSolicitud(
+      { titulo: "Preguntas", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+    await repo.transicionarEstado({
+      solicitudId: s.id,
+      hacia: "ENVIADA_A_COMPRAS",
+      actorTipo: "solicitante",
+      actorIdentificador: email,
+    });
+    return { repo, id: s.id };
+  }
+
+  it("pedir información NO cambia el estado y deja la ronda abierta", async () => {
+    const { repo, id } = await solicitudViva(`preguntas.${Date.now()}@bia.hn`);
+
+    const r = await repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS, pedidaPor: "c@b.co" });
+
+    expect(r.ronda).toBe(1);
+    const tras = await repo.obtenerSolicitud(id);
+    // El estado intacto es el punto de todo el diseño: los filtros de la bandeja y los KPI
+    // no deben enterarse de que hay una ronda abierta.
+    expect(tras?.estado).toBe("ENVIADA_A_COMPRAS");
+    expect(tras?.informacionPendiente).toBe(true);
+    expect(tras?.informacionPreguntas?.preguntas).toHaveLength(1);
+    expect(tras?.informacionDesde).toBeTruthy();
+  });
+
+  it("responder limpia la bandera y guarda las respuestas con su ronda", async () => {
+    const { repo, id } = await solicitudViva(`respuesta.${Date.now()}@bia.hn`);
+    await repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS });
+
+    const r = await repo.responderInformacion({ solicitudId: id, respuestas: { materiales: "Acero" } });
+
+    expect(r.yaRespondida).toBe(false);
+    const tras = await repo.obtenerSolicitud(id);
+    expect(tras?.informacionPendiente).toBe(false);
+    expect(tras?.informacionRespuesta?.respuestas.materiales).toBe("Acero");
+    expect(tras?.informacionRespuesta?.ronda).toBe(1);
+    expect(tras?.estado).toBe("ENVIADA_A_COMPRAS");
+  });
+
+  it("responder dos veces no duplica: la segunda es no-op", async () => {
+    const { repo, id } = await solicitudViva(`doble.${Date.now()}@bia.hn`);
+    await repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS });
+    await repo.responderInformacion({ solicitudId: id, respuestas: { materiales: "Acero" } });
+
+    const segunda = await repo.responderInformacion({ solicitudId: id, respuestas: { materiales: "Otro" } });
+
+    expect(segunda.yaRespondida).toBe(true);
+    const tras = await repo.obtenerSolicitud(id);
+    expect(tras?.informacionRespuesta?.respuestas.materiales).toBe("Acero");
+  });
+
+  it("no admite dos rondas abiertas a la vez", async () => {
+    const { repo, id } = await solicitudViva(`paralelo.${Date.now()}@bia.hn`);
+    await repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS });
+
+    await expect(repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS })).rejects.toThrow(/Ya hay una ronda/);
+  });
+
+  it("la segunda ronda se numera 2 y el ciclo continúa", async () => {
+    const { repo, id } = await solicitudViva(`rondas.${Date.now()}@bia.hn`);
+    await repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS });
+    await repo.responderInformacion({ solicitudId: id, respuestas: { materiales: "Acero" } });
+
+    const segunda = await repo.pedirInformacion({
+      solicitudId: id,
+      preguntas: [{ campoKey: "plazo_entrega", pregunta: "¿Para cuándo?" }],
+    });
+
+    expect(segunda.ronda).toBe(2);
+    const tras = await repo.obtenerSolicitud(id);
+    expect(tras?.informacionPreguntas?.ronda).toBe(2);
+  });
+
+  it("una solicitud cerrada no admite preguntas", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `cerrada.${Date.now()}@bia.hn`;
+    const { id } = await solicitudViva(email);
+    await repo.transicionarEstado({ solicitudId: id, hacia: "CANCELADA", actorTipo: "admin", nota: "prueba" });
+
+    await expect(repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS })).rejects.toThrow(/cerrada/);
+  });
+
+  it("informacionVencida solo ve las que superan el umbral", async () => {
+    const { repo, id } = await solicitudViva(`vencida.${Date.now()}@bia.hn`);
+    await repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS });
+
+    // Recién pedida: con umbral de 3 días todavía no aparece.
+    expect((await repo.informacionVencida(3)).some((v) => v.solicitud.id === id)).toBe(false);
+    // Y el umbral 0 la trae, que es la prueba de que la consulta filtra bien.
+    const vencidas = await repo.informacionVencida(0);
+    const mia = vencidas.find((v) => v.solicitud.id === id);
+    expect(mia?.ronda).toBe(1);
+  }, 30000);
+});

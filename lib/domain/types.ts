@@ -106,6 +106,26 @@ export type Solicitud = {
   motivoCancelacion?: string;
   notificacionFallida: boolean;
   archivoLogoNombre?: string;
+  /** Ronda de preguntas abierta al solicitante (spec 010). No es un estado: la solicitud
+   *  sigue en su estado real, esto solo dice que encima hay algo que la está esperando. */
+  informacionPendiente?: boolean;
+  informacionPreguntas?: PreguntaAlSolicitante;
+  informacionDesde?: string;
+  informacionRespuesta?: RespuestaDelSolicitante;
+};
+
+export type PreguntaAlSolicitante = {
+  ronda: number;
+  pedidaEn: string;
+  pedidaPor?: string;
+  preguntas: { campoKey: string; pregunta: string }[];
+};
+
+export type RespuestaDelSolicitante = {
+  ronda: number;
+  respondidaEn: string;
+  /** Se conserva la respuesta original aunque Compras edite el campo después (spec 010, D4). */
+  respuestas: Record<string, string>;
 };
 
 export type RespuestaCampo = {

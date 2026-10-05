@@ -121,6 +121,13 @@ Requerimientos numerados (RF-xx), trazables con el backlog (17) y las historias 
 | RF-56 | El administrador gestiona coordinadores, categorías y reglas de asignación | Debe |
 | RF-57 | El administrador configura umbrales y destinatarios de alertas | Debe |
 | RF-58 | El solicitante consulta el estado de sus solicitudes por correo, sin sesión | Debería |
+| RF-59 | Compras pide información **al solicitante** cuando faltan datos que solo él tiene, y la solicitud vuelve a él sin cambiar de estado | Debe |
+| RF-60 | El solicitante responde esas preguntas **sin sesión**, desde "mis solicitudes", y su respuesta queda disponible para el coordinador | Debe |
+| RF-61 | El ciclo de preguntas se puede repetir sobre la misma solicitud | Debe |
+| RF-62 | Si el solicitante no responde en 3 días, Compras recibe un recordatorio | Debe |
+| RF-63 | Compras puede cancelar la solicitud en cualquier estado no terminal; las cotizaciones ya cargadas se conservan | Debe |
+| RF-64 | El solicitante **no** puede cancelar su solicitud | Debe |
+| RF-65 | Cuando el solicitante rechaza todas las opciones, la solicitud vuelve a Compras para evaluación y **no** se cierra | Debe |
 
 ## Non-functional requirements
 
@@ -217,9 +224,37 @@ El producto se considera entregado cuando (fuente 18 §14):
 
 ## Correos del sistema (nomenclatura vigente)
 
-- **4 correos del ciclo** (transición de estado, siempre se envían): 1 nueva solicitud (coordinador), 2 acuse (solicitante), 3 comparativo listo (solicitante), 4 decisión registrada (coordinador + admin).
-- **1 correo de alerta** (configurable, no del ciclo): 5 solicitud sin movimiento — se envía solo si el umbral de días está configurado.
-- Los cinco se registran en la bitácora `correo_enviado`.
+> **Ampliado de 5 a 8 el 2026-10-03** (RF-59…RF-65), por decisión del cliente en el taller.
+> Los correos 6, 7 y 8 cubren el ciclo de preguntas al solicitante. La numeración 1–5 no cambia:
+> los registros históricos de `correo_enviado` siguen significando lo mismo.
+
+**5 correos del ciclo** (transición de estado, siempre se envían):
+
+| # | Cuándo | Quién lo recibe |
+|---|---|---|
+| 1 | Nueva solicitud | coordinador asignado |
+| 2 | Acuse de recibo | solicitante |
+| 3 | Comparativo listo, con el enlace público | solicitante |
+| 4 | Decisión registrada — o devuelta a Compras si ninguna opción le sirvió | coordinador asignado + admin |
+| 6 | Se necesita información del solicitante | solicitante |
+
+**1 correo de respuesta** (dispara el solicitante):
+
+| # | Cuándo | Quién lo recibe |
+|---|---|---|
+| 7 | El solicitante respondió las preguntas | coordinador asignado |
+
+**2 correos de alerta** (configurables, no del ciclo):
+
+| # | Cuándo | Quién lo recibe |
+|---|---|---|
+| 5 | Solicitud sin movimiento | destinatario de alertas |
+| 8 | El solicitante no respondió las preguntas en 3 días | coordinador asignado |
+
+- Los ocho se registran en la bitácora `correo_enviado`.
+- El correo 1 **nunca** se envía al solicitante: lleva el PDF de su propia solicitud con precios.
+- El correo 8 depende de un programador (cron). Mientras no exista ninguno desplegado, se
+  dispara desde el botón "Ejecutar alertas" del panel de administración, que ya existe.
 
 ## Stack de PDF y correo (vigente)
 

@@ -62,3 +62,63 @@ describe("envio de correo", () => {
     expect(asunto).toContain("comparativo");
   });
 });
+// Correos del ciclo de preguntas al solicitante (spec 010). Un error de plantilla no se ve
+// hasta que el correo sale de verdad, y para entonces ya le llegó a una persona.
+describe("correos del ciclo de preguntas (6, 7 y 8)", () => {
+  const base = { numeroReferencia: "RFQ-2026-0042", titulo: "Pintura epóxica", solicitanteNombre: "María" };
+  const preguntas = [
+    { pregunta: "¿De qué material?", respuesta: "Acero" },
+    { pregunta: "¿Para cuándo?" },
+  ];
+
+  it("el correo 6 lista todas las preguntas y enlaza con el correo del solicitante", () => {
+    const { asunto, html } = renderCorreo("6", {
+      ...base,
+      coordinadorNombre: "Bryan",
+      preguntas,
+      urlDetalle: "https://bia.com/mis-solicitudes/abc?email=m%40b.co",
+    });
+
+    expect(asunto).toContain("RFQ-2026-0042");
+    expect(html).toContain("¿De qué material?");
+    expect(html).toContain("¿Para cuándo?");
+    expect(html).toContain("mis-solicitudes/abc?email=");
+    // El saludo va al solicitante, no al coordinador: este correo lo recibe quien pidió.
+    expect(html).toContain("María");
+  });
+
+  it("el correo 7 muestra cada pregunta con su respuesta", () => {
+    const { html } = renderCorreo("7", { ...base, coordinadorNombre: "Bryan", preguntas, ronda: 2 });
+
+    expect(html).toContain("¿De qué material?");
+    expect(html).toContain("Acero");
+    // Una pregunta sin responder se dice, no se deja el hueco en blanco.
+    expect(html).toContain("sin responder");
+    expect(html).toContain("ronda 2");
+  });
+
+  it("el correo 8 dice cuántos días pasaron y repite las preguntas pendientes", () => {
+    const { asunto, html } = renderCorreo("8", { ...base, coordinadorNombre: "Bryan", preguntas, diasEsperando: 4 });
+
+    expect(asunto).toContain("4 días");
+    expect(html).toContain("4 días");
+    expect(html).toContain("¿De qué material?");
+  });
+
+  it("sin preguntas no revienta (una ronda vacía no debería existir, pero no puede tirar el envío)", () => {
+    expect(() => renderCorreo("6", base)).not.toThrow();
+    expect(() => renderCorreo("7", base)).not.toThrow();
+    expect(() => renderCorreo("8", base)).not.toThrow();
+  });
+
+  it("escapa el HTML de las respuestas: vienen del solicitante sin sesión", () => {
+    const { html } = renderCorreo("7", {
+      ...base,
+      coordinadorNombre: "Bryan",
+      preguntas: [{ pregunta: "¿Material?", respuesta: '<script>alert("x")</script>' }],
+    });
+
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
+  });
+});

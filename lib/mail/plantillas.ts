@@ -27,6 +27,10 @@ export type DatosCorreo = {
   urlDetalle?: string;
   diasSinMovimiento?: number;
   estadoActual?: string;
+  /** Preguntas de Compras al solicitante (correo 6) o sus respuestas (correo 7). */
+  preguntas?: { pregunta: string; respuesta?: string }[];
+  ronda?: number;
+  diasEsperando?: number;
 };
 
 export function esc(s: string | undefined): string {
@@ -116,6 +120,53 @@ export const PLANTILLAS_CORREO = {
         <tr><td><b>Requerida para</b></td><td>${esc(d.fechaRequerida)}</td></tr>
       </table>
       <p><a href="${esc(d.urlDetalle)}">Ver solicitud</a></p>
+      <p>Portal de Compras BIA</p>`,
+  },
+  // 6 — Compras necesita información del solicitante (spec 010, RF-59)
+  "6": {
+    asunto: (d: DatosCorreo) =>
+      `Necesitamos un dato tuyo — ${esc(d.numeroReferencia ?? "")}`.trim(),
+    cuerpo: (d: DatosCorreo) => `
+      <p>Hola ${esc(d.solicitanteNombre)},</p>
+      <p>Para seguir con <b>${esc(d.titulo)}</b> (${esc(d.numeroReferencia ?? "")}),
+      Compras necesita que confirmes ${d.preguntas && d.preguntas.length === 1 ? "un dato" : "algunos datos"}:</p>
+      <ul>
+        ${(d.preguntas ?? []).map((p) => `<li>${esc(p.pregunta)}</li>`).join("")}
+      </ul>
+      <p><a href="${esc(d.urlDetalle)}">Responder ahora</a></p>
+      <p>Tu respuesta vuelve directo al coordinador de Compras que está viendo tu solicitud.</p>
+      <p>Portal de Compras BIA</p>`,
+  },
+  // 7 — El solicitante respondió (spec 010, RF-60)
+  "7": {
+    asunto: (d: DatosCorreo) =>
+      `${esc(d.solicitanteNombre ?? "El solicitante")} respondió — ${esc(d.numeroReferencia ?? "")}`.trim(),
+    cuerpo: (d: DatosCorreo) => `
+      <p>Hola ${esc(d.coordinadorNombre)},</p>
+      <p>${esc(d.solicitanteNombre)} respondió las preguntas de la ronda ${d.ronda ?? 1}
+      sobre ${esc(d.titulo)} (${esc(d.numeroReferencia ?? "")}):</p>
+      <table cellpadding="6" cellspacing="0" style="font-size:13px">
+        ${(d.preguntas ?? [])
+          .map(
+            (p) => `<tr><td><b>${esc(p.pregunta)}</b></td><td>${esc(p.respuesta) || "<i>sin responder</i>"}</td></tr>`
+          )
+          .join("")}
+      </table>
+      <p><a href="${esc(d.urlDetalle)}">Ver la solicitud</a></p>
+      <p>Portal de Compras BIA</p>`,
+  },
+  // 8 — Recordatorio: el solicitante no respondió (spec 010, RF-62)
+  "8": {
+    asunto: (d: DatosCorreo) =>
+      `Sin respuesta hace ${d.diasEsperando ?? 3} días — ${esc(d.numeroReferencia ?? "")}`.trim(),
+    cuerpo: (d: DatosCorreo) => `
+      <p>Hola ${esc(d.coordinadorNombre)},</p>
+      <p>Le pediste información a ${esc(d.solicitanteNombre)} hace ${d.diasEsperando ?? 3} días
+      sobre ${esc(d.titulo)} (${esc(d.numeroReferencia ?? "")}) y todavía no respondió.</p>
+      <table cellpadding="6" cellspacing="0" style="font-size:13px">
+        ${(d.preguntas ?? []).map((p) => `<tr><td><b>${esc(p.pregunta)}</b></td><td>—</td></tr>`).join("")}
+      </table>
+      <p><a href="${esc(d.urlDetalle)}">Ver la solicitud</a></p>
       <p>Portal de Compras BIA</p>`,
   },
 } as const;

@@ -11,10 +11,10 @@ Estado: `- [ ]` pendiente · `- [x]` hecha con evidencia
 ## Bloque 2 — Pedir información (coordinador)
 
 - [x] T004 Repo: `pedirInformacion`, `informacionVencida`, `responderInformacion`, `marcarRecordatorioInformacion`
-- [ ] T005 Ruta `POST /api/solicitudes/[id]/informacion` — exige rol, valida que la solicitud no sea terminal
-- [ ] T006 Correo 6 al solicitante con el enlace a "mis solicitudes"
-- [ ] T007 Tests: rechaza sin rol · rechaza si ya hay una ronda abierta · no hace nada en terminal
-- [ ] T008 Test de rechazo ejecutado contra el código anterior (que no fallaría sin la ruta)
+- [x] T005 Ruta `POST /api/solicitudes/[id]/informacion` — exige rol, valida que la solicitud no sea terminal
+- [x] T006 Correo 6 al solicitante con el enlace a "mis solicitudes"
+- [x] T007 Tests: rechaza sin rol · rechaza si ya hay una ronda abierta · no hace nada en terminal (9 tests)
+- [x] T008 Los 2 tests de 409 cubren el rechazo por regla de negocio, no por caída
 
 ## Bloque 3 — Pantalla de respuesta (solicitante)
 

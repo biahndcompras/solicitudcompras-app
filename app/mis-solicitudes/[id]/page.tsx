@@ -5,6 +5,7 @@ import { Badge, type BadgeTone } from "@/components/Badge";
 import { SemParoBadge } from "@/components/Semaforo";
 import { TrackerEtapas } from "@/components/TrackerEtapas";
 import { CTADecision } from "@/components/solicitante/CTADecision";
+import { ResponderPreguntas } from "@/components/solicitante/ResponderPreguntas";
 import { duracionAtencion, formatoFechaLegible } from "@/lib/domain/semaforo";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { formatoMoneda } from "@/lib/domain/moneda";
@@ -45,6 +46,19 @@ export default async function DetalleSolicitudSolicitantePage({
           Volver
         </Link>
 
+        {/* Va arriba de todo a propósito: es lo único que la persona tiene que hacer. Si se
+            entierra debajo del detalle, Compras queda esperando por algo que nadie vio. */}
+        {solicitud.informacionPendiente && solicitud.informacionPreguntas ? (
+          <div className="mb-6">
+            <ResponderPreguntas
+              solicitudId={solicitud.id}
+              email={email}
+              ronda={solicitud.informacionPreguntas.ronda}
+              preguntas={solicitud.informacionPreguntas.preguntas}
+            />
+          </div>
+        ) : null}
+
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-xl">{solicitud.numeroReferencia ?? "—"}</span>
           <SemParoBadge solicitud={solicitud} />
@@ -63,6 +77,22 @@ export default async function DetalleSolicitudSolicitantePage({
           <DetalleCampo label="Categoría" valor={nombreCategoria(solicitud.categoria)} />
           <DetalleCampo label="Fecha requerida" valor={formatoFechaLegible(solicitud.fechaRequerida)} />
         </div>
+
+        {solicitud.informacionRespuesta ? (
+          <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5">
+            <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">
+              Lo que respondiste a Compras (ronda {solicitud.informacionRespuesta.ronda})
+            </span>
+            <ul className="space-y-1.5">
+              {(solicitud.informacionPreguntas?.preguntas ?? []).map((p) => (
+                <li key={p.campoKey} className="text-xs text-slate-600">
+                  <span className="font-semibold text-slate-800">{p.pregunta}</span>{" "}
+                  {solicitud.informacionRespuesta?.respuestas[p.campoKey] || <em className="text-slate-400">no lo sé</em>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {solicitud.descripcion ? (
           <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5">

@@ -18,10 +18,10 @@ Estado: `- [ ]` pendiente · `- [x]` hecha con evidencia
 
 ## Bloque 3 — Pantalla de respuesta (solicitante)
 
-- [ ] T009 `mis-solicitudes/[id]`: bloque de preguntas cuando hay bandera
-- [ ] T010 Sin sesión: el correo es la identidad, como ya pasa con esa pantalla
-- [ ] T011 Verificación en navegador del recorrido completo
-- [ ] T012 La pantalla no cambia cuando no hay preguntas (no se toca lo que ya funciona)
+- [x] T009 `mis-solicitudes/[id]`: bloque de preguntas cuando hay bandera
+- [x] T010 Sin sesión: el correo es la identidad, como ya pasa con esa pantalla
+- [x] T011 Verificación en navegador del recorrido completo
+- [x] T012 La pantalla no cambia cuando no hay preguntas (no se toca lo que ya funciona)
 
 ## Bloque 4 — Responder
 

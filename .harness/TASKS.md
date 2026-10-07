@@ -177,7 +177,7 @@ Esto sí es trabajo real. Ordenado por tema. Las referencias `RF-xx` son del PRD
 | 4.5.3 | **Descripción breve obligatoria** | medio | La doc la marca obligatoria. No está en `pasoValido` ni en `faltantes`; la API la acepta como optional |
 | 4.5.4 | **Retomar borrador desde P1** | medio | `app/page.tsx:22` borra el borrador antes de navegar con `?nuevo=1`, dejando el modal inalcanzable por ese camino |
 | 4.5.5 | **Alinear el tope de preguntas con la norma** | bajo | `MAX_PEGUNTAS = 10`, la doc pide 6. Y puede exceder 10 cuando hay obligatorios (deliberado: preferimos exceder que truncar un obligatorio) |
-| 4.5.6 | **Persistir las respuestas del assessment** | medio | Viajan al PDF de Compras pero nunca se guardan en `respuesta_campo`. Como dato estructurado no existen |
+| 4.5.6 | **Persistir las respuestas del assessment** | medio | Viajan al PDF de Compras pero nunca se guardan en `respuesta_campo`. Como dato estructurado no existen. Relacionado: 4.10.11 |
 
 ### 4.6 Otros
 | # | Tarea | Ref | Nota |
@@ -238,6 +238,7 @@ no estaban en ninguna lista.
 | 4.10.8 | Detección determinística de discrepancias | **A MEDIAS — inerte** | `comparativa/route.ts:33,100` pasa `especificacionesSolicitadas: {}` hardcodeado, y `comparativa.ts:28-47` itera ese objeto vacío. **Sin IA configurada → cero discrepancias siempre**. Y la UI solo muestra `[0]`, así que aunque la IA devuelva varias, se pierden |
 | 4.10.9 | **KPI "Sin decisión" debe leer el umbral configurado** | medio | `repo:835` lo fija en 5 y la UI nunca manda `umbralDias`; el valor de `/admin/configuracion` solo lo lee `alertas/ejecutar`. Además **incluye borradores** y la etiqueta "> 5 días" está cableada al literal |
 | 4.10.10 | Aviso de monedas distintas en la comparativa del coordinador | bajo | La conversión orientativa existe pero solo en la vista pública |
+| **4.10.11** | **`respuesta_campo` era una tabla de solo escritura** | **alta** | Se escribía desde la edición de Compras y desde las respuestas del solicitante, y **ningún punto del sistema la leía**. Los datos entraban y no salían: editar "respuestas" para re-cotizar no cambiaba nada visible. Encontrado al construir 010; se agregó `listarRespuestas` en `12e...` (bloque 4) pero **falta que la UI las muestre** |
 
 ## 5. Decisiones pendientes del cliente — NO son trabajo mío hasta que respondan
 

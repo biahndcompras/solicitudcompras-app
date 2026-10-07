@@ -52,7 +52,9 @@ export type TipoEvento =
   | "reasignacion"
   | "edicion"
   | "cancelacion"
-  | "error";
+  | "error"
+  | "pregunta_solicitante"
+  | "respuesta_solicitante";
 
 export type CampoCatalogo = {
   campoKey: string;

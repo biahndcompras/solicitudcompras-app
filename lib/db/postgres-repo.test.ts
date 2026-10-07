@@ -242,3 +242,33 @@ describeDb("preguntas al solicitante (spec 010) · el ciclo se repite", () => {
     expect(mia?.ronda).toBe(1);
   }, 30000);
 });
+
+describeDb("registro de respuestas del solicitante (spec 010, D4)", () => {
+  it("la respuesta queda como valor del campo y el evento la distingue de una edición de Compras", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `campos.${Date.now()}@bia.hn`;
+    const s = await repo.crearSolicitud(
+      { titulo: "Campos", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+    await repo.transicionarEstado({ solicitudId: s.id, hacia: "ENVIADA_A_COMPRAS", actorTipo: "solicitante", actorIdentificador: email });
+
+    // `materiales` existe en el catálogo semilla, así que la respuesta tiene dónde escribirse.
+    await repo.pedirInformacion({
+      solicitudId: s.id,
+      preguntas: [{ campoKey: "materiales", pregunta: "¿De qué material?" }],
+    });
+    await repo.responderInformacion({ solicitudId: s.id, respuestas: { materiales: "Acero inoxidable" }, respondidoPor: email });
+
+    const campos = await repo.listarRespuestas(s.id);
+    const material = campos.find((c) => c.campoKey === "materiales");
+    expect(material?.valor).toBe("Acero inoxidable");
+
+    // La trazabilidad deja ver que fue el solicitante y en qué ronda, no una edición de Compras.
+    const eventos = await repo.listarEventos(s.id);
+    const resp = eventos.find((e) => e.tipoEvento === "respuesta_solicitante");
+    expect(resp).toBeTruthy();
+    expect(resp?.actorTipo).toBe("solicitante");
+    expect(resp?.nota).toMatch(/Ronda 1/);
+  }, 30000);
+});

@@ -149,6 +149,27 @@ export class PostgresRepositorio implements Repositorio {
     ]);
   }
 
+  /**
+   * Campos respondidos de una solicitud. Faltaba: `respuesta_campo` era una tabla de SOLO
+   * ESCRITURA — se escribía desde la edición de Compras y desde las respuestas del
+   * solicitante, y ningún punto del sistema la leía. Los datos entraban y no salían.
+   */
+  async listarRespuestas(solicitudId: string): Promise<RespuestaCampo[]> {
+    const res = await this.pg.query(
+      "SELECT * FROM respuesta_campo WHERE solicitud_id = $1 ORDER BY campo_key",
+      [solicitudId]
+    );
+    return res.rows.map((f) => ({
+      id: String(f.id),
+      solicitudId: String(f.solicitud_id),
+      campoKey: String(f.campo_key),
+      campoLabel: String(f.campo_label),
+      valor: f.valor ?? undefined,
+      valorNumerico: f.valor_numerico ?? undefined,
+      origen: f.origen,
+    }));
+  }
+
   async guardarRespuestas(solicitudId: string, respuestas: RespuestaCampo[]): Promise<void> {
     for (const r of respuestas) {
       await this.pg.query(
@@ -698,6 +719,29 @@ export class PostgresRepositorio implements Repositorio {
         respondidaEn: new Date().toISOString(),
         respuestas: input.respuestas,
       };
+      // Las respuestas se escriben como valores de campo EN LA MISMA transacción que apaga
+      // la bandera (D4). Si se hiciera en dos pasos, un fallo en el medio dejaría la ronda
+      // cerrada y las respuestas sin guardar: el coordinador vería "ya respondió" y ningún
+      // dato, sin forma de saber que se perdió.
+      const claves = Object.keys(input.respuestas);
+      if (claves.length > 0) {
+        const cat = await client.query(
+          "SELECT campo_key, label FROM campo_catalogo WHERE campo_key = ANY($1::text[])",
+          [claves]
+        );
+        for (const c of cat.rows) {
+          const valor = input.respuestas[String(c.campo_key)] ?? "";
+          const numerico = Number.isFinite(Number(valor)) && valor.trim() !== "" ? Number(valor) : null;
+          await client.query(
+            `INSERT INTO respuesta_campo (solicitud_id, campo_key, campo_label, valor, valor_numerico, origen)
+             VALUES ($1,$2,$3,$4,$5,'assessment')
+             ON CONFLICT (solicitud_id, campo_key) DO UPDATE
+               SET valor = EXCLUDED.valor, valor_numerico = EXCLUDED.valor_numerico`,
+            [input.solicitudId, String(c.campo_key), String(c.label), valor || null, numerico]
+          );
+        }
+      }
+
       await client.query(
         `UPDATE solicitud
             SET informacion_pendiente = false,
@@ -711,7 +755,7 @@ export class PostgresRepositorio implements Repositorio {
         [
           input.solicitudId,
           input.respondidoPor ?? null,
-          `Ronda ${ronda} respondida: ${Object.keys(input.respuestas).length} campo(s)`,
+          `Ronda ${ronda} respondida: ${claves.length} campo(s)`,
         ]
       );
       await client.query("COMMIT");

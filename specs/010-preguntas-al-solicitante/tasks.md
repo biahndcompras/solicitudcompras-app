@@ -25,11 +25,11 @@ Estado: `- [ ]` pendiente · `- [x]` hecha con evidencia
 
 ## Bloque 4 — Responder
 
-- [ ] T013 Ruta `POST /api/solicitudes/[id]/informacion/respuesta`
-- [ ] T014 Idempotencia por ronda (doble clic o refresh no duplica)
-- [ ] T015 Escribe las respuestas en los campos y guarda el original con procedencia (D4)
-- [ ] T016 Correo 7 al coordinador con las respuestas
-- [ ] T017 Un fallo de correo no deshace la respuesta ya registrada
+- [x] T013 Ruta `POST /api/solicitudes/[id]/informacion/respuesta`
+- [x] T014 Idempotencia por ronda (doble clic o refresh no duplica)
+- [x] T015 Escribe las respuestas en los campos y guarda el original con procedencia (D4)
+- [x] T016 Correo 7 al coordinador con las respuestas
+- [x] T017 Un fallo de correo no deshace la respuesta ya registrada
 
 ## Bloque 5 — Recordatorio de 3 días
 

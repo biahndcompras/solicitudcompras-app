@@ -42,6 +42,7 @@ export interface Repositorio {
   marcarNotificacionFallida(solicitudId: string): Promise<void>;
 
   guardarRespuestas(solicitudId: string, respuestas: RespuestaCampo[]): Promise<void>;
+  listarRespuestas(solicitudId: string): Promise<RespuestaCampo[]>;
 
   transicionarEstado(input: {
     solicitudId: string;

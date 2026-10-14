@@ -404,6 +404,9 @@ Para que nadie lo re-propononga como si fuera un olvido. Todas tienen justificac
 
 ## 10. Próxima sesión — orden sugerido
 
+> **El plan completo y el porqué del orden viven en `docs/references/plan-desarrollo.md`.**
+> Acá queda solo el primer movimiento.
+
 **Cerrado en esta sesión:** la feature **010 completa** (7 bloques). El ciclo de preguntas al
 solicitante funciona de punta a punta y está verificado en navegador. Ver
 `specs/010-preguntas-al-solicitante/verification.md`.

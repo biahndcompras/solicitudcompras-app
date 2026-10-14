@@ -20,6 +20,18 @@ type Orden = { col: "referencia" | "solicitante" | "coordinador" | "estado" | "t
 
 const POR_PAGINA = 25;
 
+// Orden canónico del ciclo para listar el tiempo por etapa igual que ocurre en la vida real.
+const ORDEN_ETAPAS = [
+  "BORRADOR",
+  "ENVIADA_A_COMPRAS",
+  "EN_COTIZACION",
+  "COMPARATIVA_LISTA",
+  "ENVIADA_A_SOLICITANTE",
+  "CERRADA_CON_DECISION",
+  "CERRADA_SIN_DECISION",
+  "CANCELADA",
+];
+
 const METRICAS_VACIAS: MetricasDashboard = {
   tasaConversion: null,
   tiempoCicloPromedioDias: null,
@@ -27,6 +39,8 @@ const METRICAS_VACIAS: MetricasDashboard = {
   solicitudesSinDecision: 0,
   volumenPorCoordinador: {},
   distribucionPorTipo: {},
+  distribucionPorSubtipo: {},
+  tiempoPorEtapa: {},
 };
 
 export default function AdminDashboardPage() {
@@ -129,6 +143,16 @@ export default function AdminDashboardPage() {
 
   const distribucion = Object.entries(metricas.distribucionPorTipo);
   const distribucionTotal = Math.max(1, distribucion.reduce((a, [, v]) => a + v, 0));
+
+  const distribucionSubtipo = Object.entries(metricas.distribucionPorSubtipo);
+  const distribucionSubtipoTotal = Math.max(1, distribucionSubtipo.reduce((a, [, v]) => a + v, 0));
+
+  const etapas = Object.entries(metricas.tiempoPorEtapa ?? {}).sort(
+    ([a], [b]) => ORDEN_ETAPAS.indexOf(a) - ORDEN_ETAPAS.indexOf(b)
+  );
+
+  // El umbral del KPI no es un literal: es el que el admin configuró (4.10.9).
+  const umbralSinDecision = metricas.umbralDias ?? 5;
 
   function ejecutarAlertas() {
     setAlertasEstado("loading");
@@ -236,7 +260,13 @@ export default function AdminDashboardPage() {
               error={errorMetricas}
             />
             <StatCard label="Procesos Activos" value={errorMetricas ? "—" : String(metricas.solicitudesActivas)} sub="en curso" tone="sky" />
-            <StatCard label="Sin decisión > 5 días" value={errorMetricas ? "—" : String(metricas.solicitudesSinDecision)} sub="alertas" tone="rose" danger />
+            <StatCard
+              label={errorMetricas ? "Sin decisión" : `Sin decisión > ${umbralSinDecision} días`}
+              value={errorMetricas ? "—" : String(metricas.solicitudesSinDecision)}
+              sub="alertas"
+              tone="rose"
+              danger
+            />
           </div>
 
           {errorMetricas && (
@@ -294,6 +324,56 @@ export default function AdminDashboardPage() {
                           style={{ width: `${(v / distribucionTotal) * 100}%` }}
                         />
                       </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[12px] text-slate-400 self-center">Sin datos</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
+            <div className="bg-white rounded-lg border border-slate-200 p-4 flex flex-col">
+              <div className="text-[12px] font-semibold text-slate-700 mb-3">Distribución por Subtipo</div>
+              <div className="flex-1 flex flex-col justify-center gap-3">
+                {distribucionSubtipo.length ? (
+                  distribucionSubtipo.map(([subtipo, v]) => (
+                    <div key={subtipo}>
+                      <div className="flex justify-between text-[12px] mb-1">
+                        <span>{subtipoLegible(subtipo)}</span>
+                        <span className="font-semibold text-slate-900 tabular-nums">
+                          {v} · {Math.round((v / distribucionSubtipoTotal) * 100)}%
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-slate-100">
+                        <div
+                          className={cn(
+                            "h-1.5 rounded-full",
+                            subtipo === "producto" ? "bg-amber-500" : subtipo === "servicio" ? "bg-teal-500" : subtipo === "mixto" ? "bg-violet-500" : "bg-slate-400"
+                          )}
+                          style={{ width: `${(v / distribucionSubtipoTotal) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[12px] text-slate-400 self-center">Sin datos</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-slate-200 p-4 flex flex-col">
+              <div className="text-[12px] font-semibold text-slate-700 mb-3">Tiempo por Etapa</div>
+              <div className="flex-1 flex flex-col justify-center gap-2">
+                {etapas.length ? (
+                  etapas.map(([etapa, d]) => (
+                    <div key={etapa} className="flex justify-between text-[12px]">
+                      <span className="text-slate-700">{estadoLegible(etapa)}</span>
+                      {/* null/ausente = no hay tramos cerrados para esa etapa: "—", no 0. */}
+                      <span className="font-semibold text-slate-900 tabular-nums">
+                        {d == null ? "—" : `${d.toFixed(1)} días`}
+                      </span>
                     </div>
                   ))
                 ) : (
@@ -618,6 +698,11 @@ function StatCard({
 function tipoLegible(t: string): string {
   const m: Record<string, string> = { RFI: "RFI · Información", RFQ: "RFQ · Cotización", RFP: "RFP · Propuesta", SIN_TIPO: "Sin clasificar" };
   return m[t] ?? t;
+}
+
+function subtipoLegible(s: string): string {
+  const m: Record<string, string> = { producto: "Producto", servicio: "Servicio", mixto: "Mixto", SIN_SUBTIPO: "Sin clasificar" };
+  return m[s] ?? s;
 }
 
 function estadoLegible(e: string): string {

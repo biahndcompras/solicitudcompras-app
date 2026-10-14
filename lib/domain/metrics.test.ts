@@ -68,4 +68,25 @@ describe("metrics", () => {
     const m = calcularMetricas([sol({ estado: "CERRADA_CON_DECISION" })], { hoy: "2026-07-27" });
     expect(tasaConversionTexto(m)).toBe("100%");
   });
+
+  it("sin decisión no cuenta borradores ni usa un umbral cableado (4.10.9)", () => {
+    const hace10 = "2026-07-17T00:00:00Z";
+    const m = calcularMetricas(
+      [
+        sol({ estado: "BORRADOR", fechaCreacion: hace10 }),
+        sol({ estado: "ENVIADA_A_COMPRAS", fechaCreacion: hace10 }),
+      ],
+      { hoy: "2026-07-27T00:00:00Z" }
+    );
+    // El borrador no espera decisión; la enviada de 10 días sí supera el umbral por defecto (5).
+    expect(m.solicitudesSinDecision).toBe(1);
+    expect(m.umbralDias).toBe(5);
+
+    const m2 = calcularMetricas([sol({ estado: "ENVIADA_A_COMPRAS", fechaCreacion: hace10 })], {
+      hoy: "2026-07-27T00:00:00Z",
+      umbralDias: 20,
+    });
+    expect(m2.solicitudesSinDecision).toBe(0);
+    expect(m2.umbralDias).toBe(20);
+  });
 });

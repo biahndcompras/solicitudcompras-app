@@ -7,6 +7,7 @@ import { CargaCotizaciones } from "./CargaCotizaciones";
 import { ComparativaView } from "./Comparativa";
 import { Recomendacion } from "./Recomendacion";
 import { Modal } from "./Modal";
+import { PedirInformacion, type CampoParaPreguntar } from "./PedirInformacion";
 import { api } from "@/lib/api-client";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { formatoFechaLegible, fechaInput } from "@/lib/domain/semaforo";
@@ -28,9 +29,11 @@ type DetalleSolicitudProps = {
   solicitud: Solicitud;
   decision?: Decision;
   proveedorElegido?: string;
+  /** Campos del catálogo, para atar una pregunta a un campo (opcional al preguntar). */
+  campos?: CampoParaPreguntar[];
 };
 
-export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: DetalleSolicitudProps) {
+export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos = [] }: DetalleSolicitudProps) {
   const router = useRouter();
   const terminal = ESTADOS_TERMINALES.includes(solicitud.estado);
   const [etapa, setEtapa] = useState<Etapa>(7);
@@ -51,6 +54,7 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
   const [guardandoEdicion, setGuardandoEdicion] = useState(false);
   // Confirmaciones in-app: `window.confirm` no dice la consecuencia ni abre en móvil (P3-11).
   const [confirmarCancelar, setConfirmarCancelar] = useState(false);
+  const [pidiendoInfo, setPidiendoInfo] = useState(false);
   const [confirmarReabrir, setConfirmarReabrir] = useState(false);
   const generandoRef = useRef(false);
 
@@ -212,6 +216,12 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
   }, [tieneComparativa, comparativaData, errorComparativa, solicitud.id, etapa, terminal]);
 
   const puedeReabrir = ["COMPARATIVA_LISTA", "ENVIADA_A_SOLICITANTE"].includes(solicitud.estado);
+  // Con una ronda ya abierta no se puede pedir otra: el servidor lo rechaza con 409 y el
+  // botón no debe ofrecer algo que va a fallar.
+  const rondaAbierta = solicitud.informacionPendiente === true;
+  const puedePedirInfo = !terminal && !rondaAbierta;
+  const ronda = solicitud.informacionPreguntas;
+  const respuesta = solicitud.informacionRespuesta;
   const indiceEtapa = ETAPAS.findIndex((e) => e.n === etapa);
 
   return (
@@ -241,6 +251,50 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
         </div>
       ) : null}
 
+      {/* Ronda de preguntas al solicitante (spec 010). Muestra las dos mitades del ciclo:
+          lo que Compras preguntó y lo que le respondieron. Sin este bloque el coordinador
+          pide información y no puede leer la respuesta en ningún lado. */}
+      {ronda ? (
+        <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50/60 p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-sky-600 shrink-0">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
+              </svg>
+              <span className="text-sm font-semibold text-sky-900">
+                Preguntas al solicitante · ronda {ronda.ronda}
+              </span>
+            </div>
+            <span
+              className={
+                "shrink-0 inline-flex items-center text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded-full " +
+                (rondaAbierta ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800")
+              }
+            >
+              {rondaAbierta ? "Esperando respuesta" : "Respondida"}
+            </span>
+          </div>
+
+          <ul className="space-y-2">
+            {ronda.preguntas.map((p) => {
+              const r = respuesta?.respuestas?.[p.campoKey];
+              return (
+                <li key={p.campoKey} className="rounded-xl bg-white border border-sky-100 px-3 py-2.5">
+                  <span className="block text-xs font-semibold text-slate-800">{p.pregunta}</span>
+                  {rondaAbierta ? (
+                    <span className="block text-xs text-slate-400 mt-0.5">Sin responder todavía</span>
+                  ) : (
+                    <span className="block text-xs text-slate-600 mt-0.5">
+                      {r || <em className="text-slate-400">no lo sé</em>}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+
       {/* Barra de acciones. Antes eran 7 controles en una sola fila sin wrap dentro de un
           shell con `overflow-hidden`: a 390px "Cancelar solicitud" quedaba cortada y los
           tres pasos desaparecían (P0-2). Ahora en <sm se apila en dos filas — Volver +
@@ -256,6 +310,15 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
               <MenuMas>
                 {(cerrar) => (
                   <div className="flex flex-col">
+                    {puedePedirInfo ? (
+                      <button
+                        type="button"
+                        onClick={() => { cerrar(); setPidiendoInfo(true); }}
+                        className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-semibold text-sky-800 hover:bg-sky-50 transition-colors"
+                      >
+                        Pedir información al solicitante
+                      </button>
+                    ) : null}
                     {puedeReabrir ? (
                       <button
                         type="button"
@@ -288,6 +351,15 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
 
         {terminal ? null : (
           <div className="hidden sm:flex items-center gap-2">
+            {puedePedirInfo ? (
+              <button
+                type="button"
+                onClick={() => setPidiendoInfo(true)}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-sky-700 hover:bg-sky-50 border border-sky-200 bg-white/70"
+              >
+                Pedir información
+              </button>
+            ) : null}
             {puedeReabrir ? (
               <button
                 type="button"
@@ -527,6 +599,13 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido }: Deta
       {/* Confirmaciones in-app (P3-11): cada una dice la consecuencia concreta, no solo
           el nombre de la acción. CANCELADA es terminal y el enlace público deja de
           permitir decidir, así que ambas consecuencias se dicen antes de confirmar. */}
+      <PedirInformacion
+        solicitudId={solicitud.id}
+        campos={campos}
+        abierto={pidiendoInfo}
+        onCerrar={() => setPidiendoInfo(false)}
+      />
+
       {confirmarCancelar ? (
         <Modal
           onCerrar={() => setConfirmarCancelar(false)}

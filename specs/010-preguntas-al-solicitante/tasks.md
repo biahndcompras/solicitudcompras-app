@@ -42,9 +42,9 @@ Estado: `- [ ]` pendiente · `- [x]` hecha con evidencia
 
 ## Bloque 6 — Distintivo en el panel
 
-- [ ] T024 Panel: distintivo "Esperando respuesta del solicitante · hace N días"
-- [ ] T025 La bandeja y los KPI no cambian (es una bandera, no un estado)
-- [ ] T026 El botón de re-cotizar sigue funcionando con una ronda abierta (se avisa)
+- [x] T024 Panel: distintivo "Esperando respuesta del solicitante · hace N días"
+- [x] T025 La bandeja y los KPI no cambian (es una bandera, no un estado)
+- [x] T026 El botón de re-cotizar sigue funcionando con una ronda abierta (se avisa)
 
 ## Bloque 7 — Documentación
 

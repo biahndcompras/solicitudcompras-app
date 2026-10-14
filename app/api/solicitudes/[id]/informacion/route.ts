@@ -13,7 +13,11 @@ const schema = z.object({
   preguntas: z
     .array(
       z.object({
-        campoKey: z.string().min(1),
+        // OPCIONAL: no toda pregunta de Compras corresponde a un campo del catálogo. Cuando
+        // lo es, la respuesta se escribe además en ese campo; cuando no, vive en la ronda y
+        // el coordinador la lee igual. Exigirlo obligaba a inventar un campo para preguntar
+        // algo tan simple como "¿tenés una foto de referencia?".
+        campoKey: z.string().trim().max(80).optional(),
         // `trim()` ANTES de `min`: una pregunta de solo espacios no es una pregunta, y sin el
         // trim pasaba la validación y llegaba vacía al solicitante.
         pregunta: z.string().trim().min(1).max(400),
@@ -45,10 +49,17 @@ export async function POST(
 
     // El repo valida además que no sea terminal y que no haya una ronda abierta. Se deja que
     // lance: son reglas de negocio del mismo hecho, y duplicarlas acá las desincronizaría.
+    // Una sola lista normalizada: la que se guarda y la que viaja en el correo tienen que ser
+    // la misma, o el solicitante leería preguntas con claves que no existen en la ronda.
+    const preguntas = body.preguntas.map((p, i) => ({
+      campoKey: p.campoKey || `libre_${i + 1}`,
+      pregunta: p.pregunta,
+    }));
+
     let ronda: number;
     let pedidaEn: string;
     try {
-      const r = await repo.pedirInformacion({ solicitudId: id, preguntas: body.preguntas, pedidaPor: auth.sesion.email });
+      const r = await repo.pedirInformacion({ solicitudId: id, preguntas, pedidaPor: auth.sesion.email });
       ronda = r.ronda;
       pedidaEn = r.pedidaEn;
     } catch (e) {
@@ -72,7 +83,7 @@ export async function POST(
           titulo: solicitud.titulo,
           solicitanteNombre: solicitud.solicitanteNombre,
           ronda,
-          preguntas: body.preguntas.map((p) => ({ pregunta: p.pregunta })),
+          preguntas: preguntas.map((p) => ({ pregunta: p.pregunta })),
           urlDetalle: urlResponder,
         },
       });

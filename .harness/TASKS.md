@@ -240,7 +240,7 @@ no estaban en ninguna lista.
 | 4.10.8 | Detección determinística de discrepancias | **A MEDIAS — inerte** | `comparativa/route.ts:33,100` pasa `especificacionesSolicitadas: {}` hardcodeado, y `comparativa.ts:28-47` itera ese objeto vacío. **Sin IA configurada → cero discrepancias siempre**. Y la UI solo muestra `[0]`, así que aunque la IA devuelva varias, se pierden |
 | 4.10.9 | **KPI "Sin decisión" debe leer el umbral configurado** | medio | `repo:835` lo fija en 5 y la UI nunca manda `umbralDias`; el valor de `/admin/configuracion` solo lo lee `alertas/ejecutar`. Además **incluye borradores** y la etiqueta "> 5 días" está cableada al literal |
 | 4.10.10 | Aviso de monedas distintas en la comparativa del coordinador | bajo | La conversión orientativa existe pero solo en la vista pública |
-| **4.10.11** | **`respuesta_campo` era una tabla de solo escritura** | **alta** | Se escribía desde la edición de Compras y desde las respuestas del solicitante, y **ningún punto del sistema la leía**. Los datos entraban y no salían: editar "respuestas" para re-cotizar no cambiaba nada visible. Encontrado al construir 010; se agregó `listarRespuestas` en `12e...` (bloque 4) pero **falta que la UI las muestre** |
+| **4.10.11** | **`respuesta_campo` era una tabla de solo escritura** | **A MEDIAS** | Resuelto para las respuestas del ciclo de preguntas (010): el coordinador ya ve lo que le contestaron, en el bloque "Preguntas al solicitante". **Sigue abierto para los campos editados** por "Editar datos" de la re-cotización: se escriben en `respuesta_campo` y ninguna pantalla los lee. `listarRespuestas` existe y no se usa todavía |
 
 ## 5. Decisiones pendientes del cliente — NO son trabajo mío hasta que respondan
 

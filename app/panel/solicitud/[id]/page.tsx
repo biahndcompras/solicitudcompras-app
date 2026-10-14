@@ -16,6 +16,11 @@ export default async function SolicitudDetallePage({
   const { id } = await params;
   const solicitud = await repo.obtenerSolicitud(id);
   if (!solicitud) notFound();
+  // Catálogo vigente para atar una pregunta a un campo (spec 010). Solo los de assessment:
+  // los de plantilla ya se responden en el wizard y no tiene sentido preguntarlos de nuevo.
+  const campos = (await repo.listarCampoCatalogo(true))
+    .filter((c) => c.activo && c.origen === "assessment")
+    .map((c) => ({ campoKey: c.campoKey, label: c.label }));
   const decision = await repo.obtenerDecisionPorSolicitud(id);
   // Nombre del proveedor elegido (para mostrar la decisión en lenguaje usuario).
   const proveedorElegido =
@@ -60,7 +65,7 @@ export default async function SolicitudDetallePage({
           </div>
         </div>
         <div className="px-6 md:px-10 pb-10">
-          <DetalleSolicitud solicitud={solicitud} decision={decision ?? undefined} proveedorElegido={proveedorElegido} />
+          <DetalleSolicitud solicitud={solicitud} decision={decision ?? undefined} proveedorElegido={proveedorElegido} campos={campos} />
         </div>
       </div>
     </main>

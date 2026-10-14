@@ -18,6 +18,7 @@ const obtenerComparativaPorId = vi.fn();
 const obtenerSolicitud = vi.fn();
 const listarCotizaciones = vi.fn();
 const registrarDecisionYCerrar = vi.fn();
+const obtenerDecisionPorSolicitud = vi.fn();
 
 vi.mock("@/lib/mail/enviar", () => ({ enviarCorreo: (...a: unknown[]) => enviarCorreo(...a) }));
 vi.mock("@/lib/db/postgres-repo", () => ({
@@ -28,10 +29,11 @@ vi.mock("@/lib/db/postgres-repo", () => ({
     listarCotizaciones = (...a: unknown[]) => listarCotizaciones(...a);
     registrarDecisionYCerrar = (...a: unknown[]) => registrarDecisionYCerrar(...a);
     listarCoordinadores = (...a: unknown[]) => listarCoordinadores(...a);
+    obtenerDecisionPorSolicitud = (...a: unknown[]) => obtenerDecisionPorSolicitud(...a);
   },
 }));
 
-import { POST as decidir } from "./route";
+import { POST as decidir, GET as estado } from "./route";
 
 const SOLICITUD = {
   id: "sol-1",
@@ -50,6 +52,9 @@ const COTIZACIONES = [
 
 function params() {
   return { params: Promise.resolve({ token: "AAAA-BBBB-CCCC" }) };
+}
+function pedirEstado() {
+  return estado(new Request("http://localhost/api/comparativas/AAAA-BBBB-CCCC/decision"), params());
 }
 function pedir(body: Record<string, unknown>) {
   return decidir(
@@ -78,6 +83,7 @@ beforeEach(() => {
     { id: "coord-1", nombre: "Bryan Bonilla", email: "bbonilla@biabrands.co", activo: true, categoriasAsignadas: [] },
     { id: "coord-2", nombre: "Otro", email: "otro@biabrands.co", activo: true, categoriasAsignadas: [] },
   ]);
+  obtenerDecisionPorSolicitud.mockReset().mockResolvedValue(null);
 });
 
 describe("correo 4 · la decisión se notifica a quien tiene que actuar", () => {
@@ -185,5 +191,73 @@ describe("correo 4 · la decisión se notifica a quien tiene que actuar", () => 
     await pedir({ cotizacionId: "c1" });
 
     expect(orden).toEqual(["cerrar", "correo4"]);
+  });
+});
+
+// 4.7.8 — El enlace NO se revoca al decidir (ADR 0007), pero la pantalla no puede seguir
+// ofreciendo decidir cuando la solicitud ya no está en espera: el POST lo rechazaría con 409.
+// Este GET le dice a la vista pública qué mostrar al recargar (tarjetas, "ya decidió" o
+// "volvió a Compras"). Sin él, la pantalla miente hasta que la persona intenta decidir de nuevo.
+describe("estado del enlace · la pantalla no ofrece decidir dos veces", () => {
+  it("en espera: puede decidir y no hay decisión previa", async () => {
+    const res = await pedirEstado();
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toMatchObject({
+      estado: "ENVIADA_A_SOLICITANTE",
+      puedeDecidir: true,
+      vuelveACompras: false,
+      decision: null,
+    });
+  });
+
+  it("ya decidió: no puede decidir y devuelve qué opción eligió", async () => {
+    obtenerSolicitud.mockResolvedValue({ ...SOLICITUD, estado: "CERRADA_CON_DECISION" });
+    obtenerDecisionPorSolicitud.mockResolvedValue({
+      id: "d1",
+      comparativaId: "cmp-1",
+      cotizacionSeleccionadaId: "c1",
+      decididoPorEmail: "mj.e2e@biabrands.co",
+      fechaDecision: "2026-10-01T00:00:00Z",
+      ningunaOpcion: false,
+    });
+
+    const body = await (await pedirEstado()).json();
+
+    expect(body.puedeDecidir).toBe(false);
+    expect(body.vuelveACompras).toBe(false);
+    expect(body.decision).toMatchObject({ cotizacionSeleccionadaId: "c1", ningunaOpcion: false });
+  });
+
+  it("'ninguna me sirve': la solicitud volvió a Compras y ya no se decide", async () => {
+    obtenerSolicitud.mockResolvedValue({ ...SOLICITUD, estado: "EN_COTIZACION" });
+    obtenerDecisionPorSolicitud.mockResolvedValue({
+      id: "d1",
+      comparativaId: "cmp-1",
+      decididoPorEmail: "mj.e2e@biabrands.co",
+      fechaDecision: "2026-10-01T00:00:00Z",
+      ningunaOpcion: true,
+    });
+
+    const body = await (await pedirEstado()).json();
+
+    expect(body.puedeDecidir).toBe(false);
+    expect(body.vuelveACompras).toBe(true);
+  });
+
+  it("enlace inválido → 404", async () => {
+    obtenerLinkPorToken.mockResolvedValue(null);
+    expect((await pedirEstado()).status).toBe(404);
+  });
+
+  it("enlace revocado → 403 (no filtra estado)", async () => {
+    obtenerLinkPorToken.mockResolvedValue({ comparativaId: "cmp-1", revocado: true, fechaExpiracion: null });
+    expect((await pedirEstado()).status).toBe(403);
+  });
+
+  it("enlace expirado → 403", async () => {
+    obtenerLinkPorToken.mockResolvedValue({ comparativaId: "cmp-1", revocado: false, fechaExpiracion: "2020-01-01T00:00:00Z" });
+    expect((await pedirEstado()).status).toBe(403);
   });
 });

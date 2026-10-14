@@ -16,6 +16,12 @@ type VistaPublicaProps = {
   advertenciaGeneral?: string | null;
   /** El solicitante necesita saber si tiene tiempo: sin esto no se avisaba del vencimiento. */
   fechaExpiracion?: string | null;
+  /** Estado de la solicitud al cargar: si ya se decidió o volvió a Compras, no se ofrece decidir. */
+  estadoSolicitud?: string | null;
+  /** Decisión ya registrada, para mostrar qué se eligió al recargar el enlace. */
+  decision?: { cotizacionSeleccionadaId?: string | null; ningunaOpcion?: boolean } | null;
+  /** `false` si no se pudo consultar el estado: se degrada honestamente, sin pantalla en blanco. */
+  estadoConsultado?: boolean;
 };
 
 export function VistaPublica({
@@ -26,6 +32,9 @@ export function VistaPublica({
   recomendacion,
   advertenciaGeneral,
   fechaExpiracion,
+  estadoSolicitud,
+  decision,
+  estadoConsultado = true,
 }: VistaPublicaProps) {
   const [elegida, setElegida] = useState<string | null>(null); // id del proveedor
   const [modal, setModal] = useState<{ id: string; nombre: string } | null>(null);
@@ -40,6 +49,18 @@ export function VistaPublica({
   // Un solo aviso de referencia de moneda (no repetido bajo cada tarjeta).
   const hayVariasMonedas = nuevasMonedas(cotizaciones).length > 1;
   const referenciaMoneda = notaReferencia(hayVariasMonedas, cotizaciones);
+
+  // 4.7.8: el enlace no se revoca al decidir (ADR 0007), pero la pantalla deja de ofrecer
+  // decidir. `ENVIADA_A_SOLICITANTE` es el único estado en el que el POST acepta la decisión;
+  // con estados conocidos y distintos, mostrar botones solo invitaba a un 409.
+  const estadoConocido = estadoSolicitud != null;
+  const enEspera = !estadoConocido || estadoSolicitud === "ENVIADA_A_SOLICITANTE";
+  const devueltaACompras = vuelveACompras || estadoSolicitud === "EN_COTIZACION";
+  const yaDecidio = estadoSolicitud === "CERRADA_CON_DECISION";
+  const bloqueada = vuelveACompras || (estadoConocido && !enEspera);
+  const proveedorDecidido = decision?.cotizacionSeleccionadaId
+    ? cotizaciones.find((c) => c.id === decision.cotizacionSeleccionadaId)?.proveedorNombre
+    : undefined;
 
   async function enviarDecision(payload: { cotizacionId?: string; ningunaOpcion?: boolean; comentario?: string }) {
     setEnviando(true);
@@ -93,7 +114,9 @@ export function VistaPublica({
             <span className="bg-white/80 border border-slate-200 rounded-full px-2 py-1">Enlace público · sin iniciar sesión</span>
           </div>
           <h1 className="text-2xl font-medium tracking-tight mb-1">Comparativa lista</h1>
-          <p className="text-sm text-slate-500">Revise las opciones y decida cuál quiere.</p>
+          <p className="text-sm text-slate-500">
+            {bloqueada ? "Esta comparativa ya fue resuelta." : "Revise las opciones y decida cuál quiere."}
+          </p>
         </div>
 
         {vencimiento ? (
@@ -149,14 +172,23 @@ export function VistaPublica({
               <p className="text-[12px] text-slate-500">{referenciaMoneda}</p>
             </div>
             <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              {vuelveACompras ? "Devuelta a Compras" : "Pendiente de decisión"}
+              {devueltaACompras ? "Devuelta a Compras" : yaDecidio ? "Decisión registrada" : bloqueada ? "Cerrada" : "Pendiente de decisión"}
             </span>
           </div>
 
-          {vuelveACompras ? (
+          {!bloqueada && !estadoConsultado ? (
+            <p className="mb-4 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-[12px] text-slate-500">
+              No pudimos confirmar el estado de esta solicitud. Si usted ya decidió, puede cerrar esta página.
+            </p>
+          ) : null}
+
+          {bloqueada ? (
             <p className="text-sm text-slate-600 text-center py-8 px-4">
-              Esta solicitud volvió a Compras para que evalúen su pedido. Cuando haya una nueva
-              comparativa te la vamos a mandar por correo.
+              {devueltaACompras
+                ? "Se notificó a Compras y su solicitud volvió a revisión para que evalúen su pedido. Cuando haya una nueva comparativa se la vamos a enviar por correo."
+                : yaDecidio
+                  ? `Su decisión ya fue registrada${proveedorDecidido ? `: eligió a ${proveedorDecidido}` : ""}. Compras recibirá la notificación.`
+                  : "Esta solicitud ya no está en espera de decisión."}
             </p>
           ) : cotizaciones.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-6">
@@ -164,7 +196,7 @@ export function VistaPublica({
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {!vuelveACompras && cotizaciones.map((c) => {
+              {cotizaciones.map((c) => {
                 const pc = prosContras[c.id];
                 const equiv = equivalenteOrientativo(c.valorTotal, c.moneda);
                 return (
@@ -226,34 +258,38 @@ export function VistaPublica({
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={elegida !== null || ningunaSirve || enviando}
-            onClick={async () => {
-              const ok = await enviarDecision({ ningunaOpcion: true, comentario: undefined });
-              if (ok) {
-                setNingunaSirve(true);
-              }
-            }}
-            className="mt-4 w-full bg-white text-slate-700 text-sm px-6 min-h-[44px] rounded-full font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 border border-slate-200 shadow-sm"
-          >
-            {enviando ? "Enviando…" : ningunaSirve ? "Se notificó a Compras — la solicitud vuelve a revisión" : "Ninguna me sirve, necesito hablar con Compras"}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-500"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>
-          </button>
+          {!bloqueada ? (
+            <>
+              <button
+                type="button"
+                disabled={elegida !== null || ningunaSirve || enviando}
+                onClick={async () => {
+                  const ok = await enviarDecision({ ningunaOpcion: true, comentario: undefined });
+                  if (ok) {
+                    setNingunaSirve(true);
+                  }
+                }}
+                className="mt-4 w-full bg-white text-slate-700 text-sm px-6 min-h-[44px] rounded-full font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 border border-slate-200 shadow-sm"
+              >
+                {enviando ? "Enviando…" : ningunaSirve ? "Se notificó a Compras — la solicitud vuelve a revisión" : "Ninguna me sirve, necesito hablar con Compras"}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-500"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>
+              </button>
 
-          {mensaje ? (
-            <div
-              role={mensaje.tipo === "error" ? "alert" : "status"}
-              aria-live="polite"
-              className={
-                "mt-4 rounded-xl px-4 py-3 text-sm " +
-                (mensaje.tipo === "ok"
-                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                  : "bg-rose-50 text-rose-800 border border-rose-200")
-              }
-            >
-              {mensaje.texto}
-            </div>
+              {mensaje ? (
+                <div
+                  role={mensaje.tipo === "error" ? "alert" : "status"}
+                  aria-live="polite"
+                  className={
+                    "mt-4 rounded-xl px-4 py-3 text-sm " +
+                    (mensaje.tipo === "ok"
+                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                      : "bg-rose-50 text-rose-800 border border-rose-200")
+                  }
+                >
+                  {mensaje.texto}
+                </div>
+              ) : null}
+            </>
           ) : null}
         </div>
       </div>

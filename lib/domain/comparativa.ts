@@ -5,6 +5,7 @@ import type {
   Cotizacion,
   Discrepancia,
   ProsContras,
+  RespuestaCampo,
 } from "./types";
 
 export type ResultadoComparativa = {
@@ -29,7 +30,7 @@ export function detectarDiscrepancias(opts: {
     const valoresPorProveedor: Record<string, string> = {};
     const distintos: string[] = [];
     for (const c of cotizaciones) {
-      const ofrecido = c.especificacionesOfertadas[aspecto];
+      const ofrecido = valorOfertado(c.especificacionesOfertadas, aspecto);
       valoresPorProveedor[c.proveedorNombre] = ofrecido ?? "(no especificado)";
       if (ofrecido !== undefined && !distintos.includes(ofrecido)) {
         distintos.push(ofrecido);
@@ -54,6 +55,49 @@ export function detectarDiscrepancias(opts: {
       ? "Las ofertas difieren en especificaciones clave; comparar solo por precio sería engañoso."
       : null,
   };
+}
+
+// 4.10.8 — Las especificaciones que realmente se pidieron viven en las respuestas del
+// solicitante (`respuesta_campo`). Se usan como `Record<campoKey, valor>`: la clave es la
+// identidad estable del catálogo (RN-02) y es la que el extractor IA debe espejar al armar
+// `especificacionesOfertadas`. Un campo sin valor no se incluye, para no ensuciar el motor.
+export function especificacionesSolicitadasDesdeRespuestas(
+  respuestas: RespuestaCampo[]
+): Record<string, string> {
+  const specs: Record<string, string> = {};
+  for (const r of respuestas) {
+    const valor = r.valor ?? (typeof r.valorNumerico === "number" ? String(r.valorNumerico) : undefined);
+    if (valor !== undefined && valor.trim() !== "") specs[r.campoKey] = valor;
+  }
+  return specs;
+}
+
+// El extractor IA guarda `especificacionesOfertadas` con las claves que infiere del documento
+// y que «deberían» ser comparables con lo solicitado, pero en la práctica varían de forma
+// ("material" vs "materiales", "color" vs "color_acabado"). Sin esta tolerancia, un `campoKey`
+// exacto del catálogo nunca encontraría su par ofertado y el detector seguiría inerte. Misma
+// idea que `resolverCampoKey` del orquestador, pero pura y local al dominio.
+function normalizarClave(s: string): string {
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+function valorOfertado(
+  ofertadas: Record<string, string> | undefined,
+  aspecto: string
+): string | undefined {
+  if (!ofertadas) return undefined;
+  if (Object.prototype.hasOwnProperty.call(ofertadas, aspecto)) return ofertadas[aspecto];
+  const objetivo = normalizarClave(aspecto);
+  if (!objetivo) return undefined;
+  let porIgualdad: string | undefined;
+  let porContencion: string | undefined;
+  for (const [clave, valor] of Object.entries(ofertadas)) {
+    const n = normalizarClave(clave);
+    if (!n) continue;
+    if (n === objetivo && porIgualdad === undefined) porIgualdad = valor;
+    else if (porContencion === undefined && (n.includes(objetivo) || objetivo.includes(n))) porContencion = valor;
+  }
+  return porIgualdad ?? porContencion;
 }
 
 // Ahorro potencial (en moneda) de elegir la opción más económica frente a cada alternativa.

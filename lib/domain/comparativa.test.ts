@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { construirComparativa, detectarDiscrepancias, fusionarProsContras, generarProsContras } from "./comparativa";
-import type { Cotizacion } from "./types";
+import {
+  construirComparativa,
+  detectarDiscrepancias,
+  especificacionesSolicitadasDesdeRespuestas,
+  fusionarProsContras,
+  generarProsContras,
+} from "./comparativa";
+import type { Cotizacion, RespuestaCampo } from "./types";
 
 function cot(id: string, nombre: string, ofertado: Record<string, string>, precios: {
   neto?: number; total?: number; montoIsv?: number; desglosado?: boolean; moneda?: string;
@@ -164,5 +170,60 @@ describe("construirComparativa", () => {
     expect(cmp.id).toContain("cmp-");
     expect(cmp.cotizacionSugeridaId).toBe("c2");
     expect(cmp.sugerenciaIA).toBeTruthy();
+  });
+});
+
+describe("4.10.8 — especificaciones solicitadas desde las respuestas", () => {
+  function resp(
+    campoKey: string,
+    campoLabel: string,
+    valor?: string,
+    valorNumerico?: number
+  ): RespuestaCampo {
+    return { id: `${campoKey}-1`, solicitudId: "s1", campoKey, campoLabel, valor, valorNumerico, origen: "assessment" };
+  }
+
+  it("usa campoKey como aspecto y toma el valor respondido", () => {
+    const specs = especificacionesSolicitadasDesdeRespuestas([
+      resp("materiales", "Materiales", "melamina"),
+      resp("dimensiones", "Dimensiones", "2.0 m"),
+    ]);
+    expect(specs).toEqual({ materiales: "melamina", dimensiones: "2.0 m" });
+  });
+
+  it("cae al valorNumérico y omite respuestas vacías", () => {
+    const specs = especificacionesSolicitadasDesdeRespuestas([
+      resp("cantidad", "Cantidad", undefined, 25),
+      resp("color_acabado", "Color y acabado", "   "),
+      resp("calidad", "Calidad"),
+    ]);
+    expect(specs).toEqual({ cantidad: "25" });
+  });
+
+  it("con datos reales (respuestas + ofertas con clave variante) encuentra la discrepancia", () => {
+    const specs = especificacionesSolicitadasDesdeRespuestas([
+      resp("materiales", "Materiales", "melamina"),
+    ]);
+    const r = detectarDiscrepancias({
+      especificacionesSolicitadas: specs,
+      cotizaciones: [
+        // La IA suele devolver "material" en singular, no el campoKey del catálogo.
+        cot("c1", "Muebles A", { material: "madera maciza" }),
+        cot("c2", "Muebles B", { material: "melamina" }),
+      ],
+    });
+    expect(r.discrepancias.map((d) => d.aspecto)).toContain("materiales");
+    expect(r.comparablesEntreSi).toBe(false);
+  });
+
+  it("la tolerancia de claves no inventa discrepancias si los valores coinciden", () => {
+    const r = detectarDiscrepancias({
+      especificacionesSolicitadas: { materiales: "melamina" },
+      cotizaciones: [
+        cot("c1", "A", { material: "melamina" }),
+        cot("c2", "B", { material: "melamina" }),
+      ],
+    });
+    expect(r.discrepancias).toEqual([]);
   });
 });

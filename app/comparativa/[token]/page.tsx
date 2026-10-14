@@ -15,6 +15,12 @@ type Datos = {
   recomendacion?: string;
   advertenciaGeneral?: string | null;
   fechaExpiracion?: string | null;
+  /** Estado de la solicitud para no ofrecer decidir cuando ya se decidió o volvió a Compras. */
+  estadoSolicitud?: string | null;
+  /** Decisión ya registrada (para mostrar qué se eligió al recargar el enlace). */
+  decision?: { cotizacionSeleccionadaId?: string | null; ningunaOpcion?: boolean } | null;
+  /** `false` cuando no se pudo consultar el estado: la vista degrada, no se cae. */
+  estadoConsultado?: boolean;
 };
 
 export default function ComparativaPublicaPage() {
@@ -42,17 +48,27 @@ export default function ComparativaPublicaPage() {
       }, 0);
       return;
     }
-    fetch(`/api/comparativas/${encodeURIComponent(token)}`)
-      .then(async (r) => {
-        if (!r.ok) {
-          const d = await r.json().catch(() => ({}));
-          const e = new Error(d.error ?? "Enlace no válido") as Error & { status?: number };
-          e.status = r.status;
-          throw e;
-        }
-        return r.json();
-      })
-      .then((d) => {
+    let activo = true;
+
+    const comparativaP = fetch(`/api/comparativas/${encodeURIComponent(token)}`).then(async (r) => {
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        const e = new Error(d.error ?? "Enlace no válido") as Error & { status?: number };
+        e.status = r.status;
+        throw e;
+      }
+      return r.json();
+    });
+
+    // Estado del enlace en paralelo. Su fallo NO tumba la vista: se degrada a ofrecer la
+    // decisión (que es el flujo normal) en lugar de dejar la pantalla en blanco.
+    const estadoP = fetch(`/api/comparativas/${encodeURIComponent(token)}/decision`)
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+
+    Promise.all([comparativaP, estadoP])
+      .then(([d, estado]) => {
+        if (!activo) return;
         setDatos({
           solicitudId: d.solicitudId,
           cotizaciones: Array.isArray(d.cotizaciones) ? d.cotizaciones : [],
@@ -60,13 +76,26 @@ export default function ComparativaPublicaPage() {
           recomendacion: d.comparativa?.recomendacionComprador,
           advertenciaGeneral: d.comparativa?.analysis?.advertenciaGeneral ?? null,
           fechaExpiracion: d.fechaExpiracion ?? null,
+          // El fallback lee el estado si el GET de la comparativa llegara a traerlo
+          // (la intención de la spec era devolver `solicitud`); así no dependemos de un solo camino.
+          estadoSolicitud: estado?.estado ?? d.solicitud?.estado ?? d.estadoSolicitud ?? null,
+          decision: estado?.decision ?? null,
+          estadoConsultado: estado !== null,
         });
         // El token ya lo tiene quien abrió el enlace: se guarda solo en SU navegador para
         // que "Mis solicitudes" pueda ofrecer "Decidir" sin exponerlo por la API.
         guardarDecisionToken(d.solicitudId, token);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Error al cargar"))
-      .finally(() => setCargando(false));
+      .catch((e) => {
+        if (activo) setError(e instanceof Error ? e.message : "Error al cargar");
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+
+    return () => {
+      activo = false;
+    };
   }, [token]);
 
   if (cargando) {
@@ -84,6 +113,9 @@ export default function ComparativaPublicaPage() {
       recomendacion={datos.recomendacion}
       advertenciaGeneral={datos.advertenciaGeneral}
       fechaExpiracion={datos.fechaExpiracion ?? null}
+      estadoSolicitud={datos.estadoSolicitud ?? null}
+      decision={datos.decision ?? null}
+      estadoConsultado={datos.estadoConsultado ?? true}
     />
   );
 }

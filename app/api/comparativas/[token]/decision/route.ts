@@ -114,6 +114,50 @@ export async function POST(
   }
 }
 
+// Estado público del enlace de decisión. La vista lo consulta al cargar para no ofrecer botones
+// que el POST rechazará con 409 (solicitud ya decidida o devuelta a Compras). El enlace NO se
+// revoca al decidir (ADR 0007), así que el token sigue vivo: lo que debe morir es la invitación
+// a decidir, no el acceso a ver qué pasó.
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  try {
+    const { token } = await params;
+    const link = await repo.obtenerLinkPorToken(token);
+    if (!link) return NextResponse.json({ error: "Enlace no válido" }, { status: 404 });
+    if (link.revocado) return NextResponse.json({ error: "Este enlace fue revocado" }, { status: 403 });
+    if (link.fechaExpiracion && new Date(link.fechaExpiracion).getTime() < Date.now()) {
+      return NextResponse.json({ error: "Este enlace expiró" }, { status: 403 });
+    }
+
+    const comparativa = await repo.obtenerComparativaPorId(link.comparativaId);
+    if (!comparativa) return NextResponse.json({ error: "Comparativa no encontrada" }, { status: 404 });
+    const solicitud = await repo.obtenerSolicitud(comparativa.solicitudId);
+    if (!solicitud) return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
+
+    const decision = await repo.obtenerDecisionPorSolicitud(comparativa.solicitudId);
+
+    // `ENVIADA_A_SOLICITANTE` es el único estado en el que el POST acepta una decisión.
+    // Cualquier otro significa que ya se decidió (CERRADA_CON_DECISION) o que la solicitud
+    // volvió a Compras (EN_COTIZACION); la vista decide qué mostrar con esto.
+    return NextResponse.json({
+      estado: solicitud.estado,
+      puedeDecidir: solicitud.estado === "ENVIADA_A_SOLICITANTE",
+      vuelveACompras: solicitud.estado === "EN_COTIZACION",
+      decision: decision
+        ? {
+            cotizacionSeleccionadaId: decision.cotizacionSeleccionadaId ?? null,
+            ningunaOpcion: decision.ningunaOpcion,
+            fechaDecision: decision.fechaDecision,
+          }
+        : null,
+    });
+  } catch {
+    return NextResponse.json({ error: "Error al consultar el estado del enlace" }, { status: 500 });
+  }
+}
+
 /**
  * A quién va el correo 4: el coordinador asignado de la solicitud, o el alias configurado.
  * Nunca el solicitante — ya recibió el correo 2 y el correo con el enlace.

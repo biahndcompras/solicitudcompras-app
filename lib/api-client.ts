@@ -44,6 +44,9 @@ export const api = {
       tipo?: "RFI" | "RFQ" | "RFP";
       subtipo?: "producto" | "servicio" | "mixto";
       fechaRequerida?: string;
+      /** RN-04: el solicitante corrigió el tipo sugerido por la IA. Alimenta la métrica de
+       *  precisión del clasificador (doc 16); sin este campo el dato se perdía. */
+      clasificacionCorregida?: boolean;
       idempotencyKey?: string;
     },
     opts?: { signal?: AbortSignal }

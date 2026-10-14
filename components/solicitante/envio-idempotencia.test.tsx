@@ -118,6 +118,34 @@ describe("envío · idempotencia", () => {
   });
 });
 
+/**
+ * 4.7.7 / RN-04 — El solicitante puede corregir el tipo que sugirió la IA. Ese hecho (no el
+ * tipo en sí) es lo que alimenta la métrica de precisión del clasificador (doc 16); si no
+ * viaja en el payload de creación, nadie puede contar cuántas veces el modelo acertó.
+ */
+describe("envío · la corrección de clasificación viaja al servidor (4.7.7 / RN-04)", () => {
+  it("manda clasificacionCorregida=true cuando el solicitante corrigió el tipo de la IA", async () => {
+    const result = await wizardListoParaEnviar();
+    await act(async () => {
+      result.current.set("clasificacionCorregida", true);
+    });
+    await act(async () => {
+      await result.current.enviarSolicitud();
+    });
+    expect(result.current.envio.estado).toBe("ok");
+    expect(crearSolicitud.mock.calls[0][0]).toMatchObject({ clasificacionCorregida: true });
+  });
+
+  it("manda clasificacionCorregida=false cuando aceptó la sugerencia", async () => {
+    const result = await wizardListoParaEnviar();
+    await act(async () => {
+      await result.current.enviarSolicitud();
+    });
+    expect(result.current.envio.estado).toBe("ok");
+    expect(crearSolicitud.mock.calls[0][0]).toMatchObject({ clasificacionCorregida: false });
+  });
+});
+
 describe("envío · el techo de espera cancela de verdad", () => {
   it("al agotarse el plazo aborta la petición, no solo deja de esperarla", async () => {
     // El servidor nunca contesta: reproduce el "se tardó mucho" que reportó el solicitante.

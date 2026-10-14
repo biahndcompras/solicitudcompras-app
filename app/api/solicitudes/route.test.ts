@@ -209,3 +209,35 @@ describe("POST /api/solicitudes · fecha y descripción obligatorias (4.5.2 / 4.
     expect(crearSolicitud).toHaveBeenCalledTimes(1);
   });
 });
+
+/**
+ * 4.7.7 / RN-04 — Cuando el solicitante corrige el tipo que sugirió la IA, esa corrección
+ * debe llegar al repositorio. Sin ella la métrica de precisión del clasificador (doc 16) es
+ * incalculable. El schema no puede descartarla como campo desconocido.
+ */
+describe("POST /api/solicitudes · persiste la corrección de clasificación (4.7.7)", () => {
+  const base: Record<string, unknown> = {
+    titulo: "Sombrillas",
+    solicitanteEmail: "maria@bia.hn",
+    solicitanteNombre: "Maria",
+    areaSolicitante: "Marketing",
+    descripcion: "500 sombrillas con logo de la marca",
+    fechaRequerida: isoEnDias(10),
+  };
+
+  beforeEach(() => {
+    crearSolicitud.mockReset().mockResolvedValue({ id: "s-1" });
+  });
+
+  it("reenvía clasificacionCorregida=true al repositorio", async () => {
+    const res = await pedirPost({ ...base, tipo: "RFQ", clasificacionCorregida: true });
+    expect(res.status).toBe(201);
+    expect(crearSolicitud.mock.calls[0][1]).toMatchObject({ clasificacionCorregida: true });
+  });
+
+  it("reenvía clasificacionCorregida=false cuando no hubo corrección", async () => {
+    const res = await pedirPost({ ...base, tipo: "RFQ", clasificacionCorregida: false });
+    expect(res.status).toBe(201);
+    expect(crearSolicitud.mock.calls[0][1]).toMatchObject({ clasificacionCorregida: false });
+  });
+});

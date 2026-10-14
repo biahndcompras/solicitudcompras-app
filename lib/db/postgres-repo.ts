@@ -113,9 +113,10 @@ export class PostgresRepositorio implements Repositorio {
     const res = await this.pg.query(
       `WITH nueva AS (
          INSERT INTO solicitud (titulo, solicitante_email, solicitante_nombre, estado,
-           area_solicitante, descripcion, categoria, tipo, subtipo, fecha_requerida, idempotency_key)
+           area_solicitante, descripcion, categoria, tipo, subtipo, fecha_requerida, idempotency_key,
+           clasificacion_corregida)
          VALUES ($1,$2,$3,$4,$5,$6,$7,
-           $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11)
+           $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11, $12)
          ON CONFLICT (solicitante_email, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
          RETURNING *
        ), evento AS (
@@ -137,6 +138,9 @@ export class PostgresRepositorio implements Repositorio {
         opciones?.subtipo && ["producto", "servicio", "mixto"].includes(opciones.subtipo) ? opciones.subtipo : null,
         opciones?.fechaRequerida ?? null,
         idempotencyKey,
+        // RN-04 / 4.7.7: la corrección humana del tipo sugerido por la IA. La columna es
+        // NOT NULL DEFAULT false; se normaliza a boolean para nunca mandar null.
+        Boolean(opciones?.clasificacionCorregida),
       ]
     );
     if (res.rows[0]) return filaSolicitud(res.rows[0]);

@@ -622,3 +622,47 @@ describeDb("transicionarEstado valida la máquina de estados (4.10.5)", () => {
     expect((await repo.obtenerSolicitud(s.id))?.estado).toBe("CANCELADA");
   }, 30000);
 });
+
+/**
+ * 4.7.7 / RN-04 — La columna `clasificacion_corregida` existía desde la migración 004 y el
+ * mapeo de lectura la exponía, pero el INSERT nunca la escribía: toda solicitud nacía con el
+ * DEFAULT false, así que la precisión del clasificador (doc 16) era incalculable. Aquí se ata
+ * la escritura al INSERT (mismo statement que el evento `creacion`).
+ */
+describeDb("crearSolicitud persiste la corrección de clasificación (4.7.7)", () => {
+  it("guarda clasificacionCorregida=true y lo relee de la fila", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await repo.crearSolicitud(
+      { titulo: "Corregida", solicitanteEmail: `corregida.${Date.now()}@bia.hn`, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa", tipo: "RFQ", clasificacionCorregida: true }
+    );
+
+    expect(s.clasificacionCorregida).toBe(true);
+    // Y persiste tras releer, no solo en el RETURNING del INSERT.
+    expect((await repo.obtenerSolicitud(s.id))?.clasificacionCorregida).toBe(true);
+  }, 30000);
+
+  it("una solicitud sin corrección queda en false por defecto", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await repo.crearSolicitud(
+      { titulo: "Sin corregir", solicitanteEmail: `sincorregir.${Date.now()}@bia.hn`, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa", tipo: "RFQ" }
+    );
+
+    expect(s.clasificacionCorregida).toBe(false);
+  }, 30000);
+
+  it("el alta idempotente conserva el valor de clasificacionCorregida de la fila existente", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `corregida-idem.${Date.now()}@bia.hn`;
+    const clave = "clave-corregida-idem-1234";
+    const datos = { titulo: "Idem corregida", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" as const };
+
+    const s1 = await repo.crearSolicitud(datos, { descripcion: "d", categoria: "administrativa", clasificacionCorregida: true, idempotencyKey: clave });
+    // Un reintento con otra clasificación NO reescribe la fila ya creada: devuelve la original.
+    const s2 = await repo.crearSolicitud(datos, { descripcion: "d", categoria: "administrativa", clasificacionCorregida: false, idempotencyKey: clave });
+
+    expect(s2.id).toBe(s1.id);
+    expect(s2.clasificacionCorregida).toBe(true);
+  }, 30000);
+});

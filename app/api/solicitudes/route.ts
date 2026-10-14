@@ -72,6 +72,10 @@ const crearSchema = z.object({
   categoria: z.string().max(80).optional(),
   tipo: z.enum(["RFI", "RFQ", "RFP"]).optional(),
   subtipo: z.enum(["producto", "servicio", "mixto"]).optional(),
+  // RN-04 / 4.7.7: el solicitante corrigió el tipo sugerido por la IA. Opcional (los
+  // clientes viejos no lo mandan → default false en la columna), pero si viene hay que
+  // persistirlo: es el insumo de la métrica de precisión del clasificador (doc 16).
+  clasificacionCorregida: z.boolean().optional(),
   // No admite fechas pasadas: una solicitud no puede vencer antes de existir.
   fechaRequerida: z
     .string()
@@ -103,6 +107,7 @@ export async function POST(request: Request) {
         tipo: body.tipo,
         subtipo: body.subtipo,
         fechaRequerida: body.fechaRequerida,
+        clasificacionCorregida: body.clasificacionCorregida,
         idempotencyKey: CLAVE_IDEMPOTENCIA_RE.test(clave) ? clave : undefined,
       }
     );

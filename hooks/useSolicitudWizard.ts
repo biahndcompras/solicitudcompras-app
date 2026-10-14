@@ -613,6 +613,10 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
               // de distribución por tipo quedaban vacíos).
               tipo: estado.clasificacion,
               subtipo: estado.subtipo,
+              // RN-04 / 4.7.7: si el solicitante corrigió el tipo que sugirió la IA, hay que
+              // decirlo en el alta. Es el insumo de la métrica de precisión del clasificador
+              // (doc 16); antes viajaba en el borrador y moría en el cliente.
+              clasificacionCorregida: estado.clasificacionCorregida,
               fechaRequerida: estado.fechaRequerida,
               idempotencyKey: claveEnvio,
             },

@@ -55,7 +55,7 @@ Ordenados por gravedad. Ninguno es código nuestro: dos son del cliente, uno es 
 | # | Tarea | Quién | Por qué importa | Dónde está registrado |
 |---|---|---|---|---|
 | **B1** | **Rotar la contraseña de Postgres** y actualizar `DATABASE_URL` al pooler | **Cliente** 🔴 | La contraseña está expuesta en chat. Es el activo más sensible del proyecto. | `specs/009.../assessment.md:127` |
-| **B2** | **Verificar el dominio de correo en Resend** | **Cliente** 🔴 | Hoy el remitente es un placeholder (`no-reply@compras.bia`) → todos los correos quedan registrados como `fallido`. El ciclo notifica a nadie. | `specs/009.../assessment.md:125` |
+| ~~**B2**~~ | ~~Verificar el dominio de correo en Resend~~ | ✅ **RESUELTO 2026-10-14** | Dominio `biahnd.website` verificado (status `verified`). `MAIL_FROM` apunta a él. **Verificado end-to-end por la aplicación**: el correo 6 salió `enviado` en la bitácora y Resend lo reporta `delivered`. Los envíos anteriores fallaban con "The compras.bia domain is not verified" |
 | **B3** | **Aceptación por escrito del riesgo del link público** | **Cliente** 🔴 | El enlace expone precios de proveedores a cualquiera que lo tenga. Aparece 4 veces en la documentación como *"debe quedar aceptado por escrito antes de producción"* y **no consta que se haya obtenido**. | `prd.md:244`, `brief.md:45`, `architecture.md:98` |
 | **B4** | Obtener confirmación escrita de las 6 decisiones D1/D2/D3/D7/D9/D10 | **Cliente** 🟠 | Sin esto el piloto arranca sobre base no aprobada. El documento mismo dice *"se requiere confirmación por escrito"*. | `propuesta-decisiones-piloto.md:5, 26-38` |
 

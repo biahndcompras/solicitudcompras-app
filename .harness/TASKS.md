@@ -390,32 +390,29 @@ Para que nadie lo re-propononga como si fuera un olvido. Todas tienen justificac
 
 ## 10. Próxima sesión — orden sugerido
 
+**Cerrado en esta sesión:** la feature **010 completa** (7 bloques). El ciclo de preguntas al
+solicitante funciona de punta a punta y está verificado en navegador. Ver
+`specs/010-preguntas-al-solicitante/verification.md`.
+
 **Cerrado desde la sesión anterior:** los 6 críticos de la auditoría (B3, la fuga de los 3
 endpoints, la bandeja del coordinador, los correos 1 y 4, y "Ninguna me sirve"). Los 8 pasos
 que estaban acá ya no aplican; este es el orden vigente.
 
-**En curso:** la feature **010** — preguntas al solicitante y ciclo de re-cotización. Bloques
-1–4 hechos. Falta:
+Lo primero, por gravedad:
 
-1. **Bloque 5** de 010: el recordatorio de 3 días. Va atado al botón "Ejecutar alertas" del
-   admin, porque el proyecto no tiene ningún programador automático: sin eso el recordatorio
-   no existe.
-2. **Bloque 6** de 010: el distintivo en el panel del coordinador **y mostrarle las respuestas**.
-   Sin esto, el hallazgo 4.10.11 (`respuesta_campo` es de solo escritura) sigue abierto para el
-   usuario final: el coordinador pide información y no ve lo que le respondieron.
-3. **Bloque 7** de 010: documentación y `verification.md`.
-
-Después, por gravedad:
-
-4. **Tasa ISV desde configuración (4.10.1)** y **que la alerta de inactividad pueda dispararse
+1. **Tasa ISV desde configuración (4.10.1)** y **que la alerta de inactividad pueda dispararse
    (4.10.2)**. El doc 16 lo pide; hoy está hardcodeada e inalcanzable.
-5. **`respuesta_campo` sin lectores (4.10.11)** — se resuelve junto con el bloque 6.
-6. **Aislamiento de escrituras entre coordinadores (4.8.3)** — **bloqueado por decisión de
+2. **Mostrar los campos respondidos al coordinador (4.10.11)**: `respuesta_campo` sigue sin
+   lectores para lo que se edita por re-cotización. Las respuestas del ciclo de preguntas ya se
+   ven; estos no.
+3. **Aislamiento de escrituras entre coordinadores (4.8.3)** — **bloqueado por decisión de
    negocio** (Q2 del PRD, pendiente de Lady). El `PATCH` de cotizaciones que ignora el `id`
    sí se puede cerrar ya.
-7. Prueba manual del bloque de assessment (§2, `6dc64d5`) — lo único con evidencia solo de
-   navegador automatizado.
-8. Lo demás de §4, por valor: 4.10.6, 4.10.7, 4.10.3, 4.4.2, 4.1.1.
+4. **Prueba manual del bloque de assessment (§2, `6dc64d5`)** y **del ciclo de 010**: 010 se
+   verificó en navegador con sesión real, pero **los e2e no se corrieron** y no cubren el flujo.
+5. **Higiene de tests (4.10.13)**: la suite deja solicitudes con `informacion_pendiente` en la
+   base de desarrollo, que el botón de alertas tomaría como reales.
+6. Lo demás de §4, por valor: 4.10.6, 4.10.7, 4.10.3, 4.4.2, 4.1.1.
 
 Los bloqueantes B1–B4 (§1) no dependen del equipo interno: van por correo al cliente.
 

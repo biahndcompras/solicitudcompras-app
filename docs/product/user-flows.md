@@ -49,9 +49,33 @@ BORRADOR
         → COMPARATIVA_LISTA (cotizaciones cargadas + comparativa generada)
            → ENVIADA_A_SOLICITANTE (correo con enlace público)
               → CERRADA_CON_DECISION
-Terminales alternos: CANCELADA · CERRADA_SIN_DECISION
+              → EN_COTIZACION  ("ninguna me sirve": vuelve a Compras, NO se cierra)
+Terminales: CANCELADA · CERRADA_SIN_DECISION · CERRADA_CON_DECISION
 ```
 Toda transición escribe un evento de trazabilidad en la misma transacción.
+
+**"Ninguna me sirve" no cierra.** El solicitante rechaza todas las opciones y la solicitud
+vuelve a `EN_COTIZACION` con un evento y el correo 4 avisando al coordinador. Antes iba a
+`CERRADA_SIN_DECISION`, que es terminal: la solicitud quedaba muerta para siempre aunque la
+pantalla prometiera que "vuelve a revisión".
+
+### Preguntas al solicitante (RF-59…RF-62) — no es un estado
+
+Compras puede devolver la solicitud al solicitante para pedirle un dato que solo él tiene:
+
+```
+EN_COTIZACION / ENVIADA_A_COMPRAS / COMPARATIVA_LISTA
+   │  Compras pide información          → correo 6 al solicitante
+   │  + marca `informacion_pendiente`   → el ESTADO NO CAMBIA
+   │  ◄── el solicitante responde desde "mis solicitudes"  → correo 7 al coordinador
+   │      la bandera se apaga; la solicitud sigue donde estaba
+   │  (a los 3 días sin respuesta → correo 8 al coordinador, una vez por ronda)
+```
+
+Es una **bandera, no un estado**. Un estado nuevo habría sacado esas solicitudes de
+"esperando cotizaciones" en la bandeja y habría cambiado lo que significan los KPI: un cambio
+de producto escondido dentro de una implementación. El ciclo se puede repetir por rondas, y
+una ronda abierta a la vez.
 
 ## 0.6 Navegación / rutas reales de la plataforma
 | Ruta | Pantalla | Acceso |
@@ -266,15 +290,24 @@ Se muestra un bloque "Registro de solicitud en proceso" con: fecha de registro, 
 
 # 5. CORREOS DEL SISTEMA
 
-**Nomenclatura vigente:** 4 correos del ciclo (siempre se envían al darse su transición) + 1 correo de alerta (configurable; se envía solo si el umbral está definido).
+**Nomenclatura vigente:** 5 correos del ciclo + 1 de respuesta + 2 de alerta. La numeración
+1–5 no cambió al ampliarse, para no invalidar los registros históricos de `correo_enviado`.
 
 | # | Correo | Disparador | Destinatario |
 |---|---|---|---|
-| 1 | Nueva solicitud asignada | `ENVIADA_A_COMPRAS` | Coordinador (con PDF) |
+| 1 | Nueva solicitud asignada | `ENVIADA_A_COMPRAS` | **Coordinador asignado** (con PDF) |
 | 2 | Acuse de recibo | `ENVIADA_A_COMPRAS` | Solicitante |
 | 3 | Comparativo listo | `ENVIADA_A_SOLICITANTE` | Solicitante (enlace público) |
-| 4 | Decisión registrada | `CERRADA_CON_DECISION` | Coordinador + administración |
-| 5 | Solicitud sin movimiento (alerta) | Umbral de días superado (configurable) | Coordinador + administración |
+| 4 | Decisión registrada — o devuelta a Compras si ninguna le sirvió | Decisión del solicitante | Coordinador asignado + administración |
+| 5 | Solicitud sin movimiento (alerta) | Umbral de días superado (configurable) | Destinatario de alertas |
+| 6 | Se necesita información del solicitante | Compras pide información (RF-59) | Solicitante |
+| 7 | El solicitante respondió | El solicitante responde (RF-60) | Coordinador asignado |
+| 8 | El solicitante no respondió en 3 días | Ronda vencida (RF-62) | Coordinador asignado |
+
+- El correo **1 nunca va al solicitante**: lleva el PDF de su propia solicitud con precios.
+  Si no hay coordinador con email ni alias configurado, no se envía y se registra el hueco.
+- El correo **8 no tiene un programador propio**: se dispara desde el botón "Ejecutar alertas"
+  del panel de administración, y además hay una ruta de cron lista para cuando se despliegue.
 
 ---
 

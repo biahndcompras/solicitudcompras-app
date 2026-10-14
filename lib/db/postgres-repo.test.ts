@@ -334,3 +334,35 @@ describeDb("recordatorio de información vencida (spec 010, RF-62)", () => {
     expect(segunda?.ronda).toBe(2);
   }, 30000);
 });
+
+describeDb("el solicitante solo puede responder lo que le preguntaron", () => {
+  it("descarta una respuesta a un campo que la ronda no pregunto", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `solo-preguntado.${Date.now()}@bia.hn`;
+    const s = await repo.crearSolicitud(
+      { titulo: "Solo lo preguntado", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+    await repo.transicionarEstado({ solicitudId: s.id, hacia: "ENVIADA_A_COMPRAS", actorTipo: "solicitante", actorIdentificador: email });
+    await repo.pedirInformacion({
+      solicitudId: s.id,
+      preguntas: [{ campoKey: "color_acabado", pregunta: "¿Qué color?" }],
+    });
+
+    // La ronda preguntó por color; esto intenta escribir un campo que Compras no pidió, y que
+    // igual termina en el RFQ de los proveedores.
+    const r = await repo.responderInformacion({
+      solicitudId: s.id,
+      respuestas: { color_acabado: "Gris", plazo_entrega: "entrega inmediata garantizada" },
+    });
+
+    expect(r.yaRespondida).toBe(false);
+    const tras = await repo.obtenerSolicitud(s.id);
+    // La válida pasa…
+    expect(tras?.informacionRespuesta?.respuestas.color_acabado).toBe("Gris");
+    // …y la que nadie pidió no queda ni en la ronda ni en el campo.
+    expect(tras?.informacionRespuesta?.respuestas.plazo_entrega).toBeUndefined();
+    const campos = await repo.listarRespuestas(s.id);
+    expect(campos.find((c) => c.campoKey === "plazo_entrega")).toBeUndefined();
+  }, 30000);
+});

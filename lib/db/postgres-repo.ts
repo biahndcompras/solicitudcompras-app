@@ -714,23 +714,40 @@ export class PostgresRepositorio implements Repositorio {
         return { yaRespondida: true };
       }
       const ronda = actual.informacionPreguntas?.ronda ?? 0;
+      // Solo se aceptan respuestas de las preguntas que ESTA ronda hizo. Sin este filtro,
+      // quien conozca el id y el correo escribe cualquier campo del catálogo —incluido uno que
+      // Compras no preguntó y que igual termina en el RFQ de los proveedores—. Se ignoran en
+      // vez de rechazar la respuesta entera: el dato legítimo ya viajó y no se puede perder por
+      // un campo de más. Lo descartado se registra para que no sea silencioso.
+      const pedidas = new Set((actual.informacionPreguntas?.preguntas ?? []).map((p) => p.campoKey));
+      const respuestasValidas: Record<string, string> = {};
+      const descartadas: string[] = [];
+      for (const [k, v] of Object.entries(input.respuestas)) {
+        if (pedidas.has(k)) respuestasValidas[k] = v;
+        else descartadas.push(k);
+      }
+      if (descartadas.length > 0) {
+        console.warn(
+          `[informacion] ${input.solicitudId}: ${descartadas.length} respuesta(s) descartada(s) por no corresponder a la ronda ${ronda}: ${descartadas.join(", ")}`
+        );
+      }
       const respuesta: RespuestaDelSolicitante = {
         ronda,
         respondidaEn: new Date().toISOString(),
-        respuestas: input.respuestas,
+        respuestas: respuestasValidas,
       };
       // Las respuestas se escriben como valores de campo EN LA MISMA transacción que apaga
       // la bandera (D4). Si se hiciera en dos pasos, un fallo en el medio dejaría la ronda
       // cerrada y las respuestas sin guardar: el coordinador vería "ya respondió" y ningún
       // dato, sin forma de saber que se perdió.
-      const claves = Object.keys(input.respuestas);
+      const claves = Object.keys(respuestasValidas);
       if (claves.length > 0) {
         const cat = await client.query(
           "SELECT campo_key, label FROM campo_catalogo WHERE campo_key = ANY($1::text[])",
           [claves]
         );
         for (const c of cat.rows) {
-          const valor = input.respuestas[String(c.campo_key)] ?? "";
+          const valor = respuestasValidas[String(c.campo_key)] ?? "";
           const numerico = Number.isFinite(Number(valor)) && valor.trim() !== "" ? Number(valor) : null;
           await client.query(
             `INSERT INTO respuesta_campo (solicitud_id, campo_key, campo_label, valor, valor_numerico, origen)

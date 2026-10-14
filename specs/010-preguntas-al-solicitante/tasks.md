@@ -49,6 +49,6 @@ Estado: `- [ ]` pendiente · `- [x]` hecha con evidencia
 ## Bloque 7 — Documentación
 
 - [x] T027 PRD: RF-59…RF-65 y nomenclatura de 8 correos — commit pendiente
-- [ ] T028 `user-flows.md`: el flujo en el diagrama de estados y en los correos
-- [ ] T029 `TASKS.md`: registrar el trabajo y mover lo resuelto
-- [ ] T030 `specs/010/verification.md` con la evidencia
+- [x] T028 `user-flows.md`: el flujo en el diagrama de estados y en los correos
+- [x] T029 `TASKS.md`: registrar el trabajo y mover lo resuelto
+- [x] T030 `specs/010/verification.md` con la evidencia

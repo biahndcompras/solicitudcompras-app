@@ -1,12 +1,13 @@
 ---
 schemaVersion: 1
-lifecycle: feature-en-curso
-currentGate: G5
-activeFeature: remediacion-auditoria-piloto
+lifecycle: feature-closed
+currentGate: G6
+activeFeature: null
+ultimaFeatureCerrada: 010-preguntas-al-solicitante
 supersedes: "STATE.md y HANDOFF.md como fuente de estado operativo"
 fuenteDeEstado: .harness/TASKS.md
-ultimaActualizacion: 2026-10-02
-commit: b28c5cd
+ultimaActualizacion: 2026-10-07
+commit: 7ad7089
 ---
 
 # Project State — puntero
@@ -17,16 +18,16 @@ debe encontrar contradicciones.
 
 ## Estado actual
 
-- El ciclo completo funciona de punta a punta y está verificado (230 tests, tsc limpio,
-  eslint 0 errores).
-- Hay una **remediación de auditoría UX piloto** abierta y recién commiteada
-  (`b28c5cd`): el código está en git, pero su registro administrativo está incompleto
-  (ver `TASKS.md` §3.1 y §6.4).
+- El ciclo completo funciona de punta a punta y está verificado (**324 tests**, tsc limpio,
+  eslint 0 errores). Migraciones 18/18 aplicadas.
+- **010 cerrada** (7 bloques, G5): preguntas al solicitante y ciclo de re-cotización. Ver
+  `specs/010-preguntas-al-solicitante/verification.md`. Incluye la QA adversarial, que
+  encontró y corrigió un crítico (el solicitante podía escribir campos que nadie le preguntó).
+- La **remediación de auditoría** cerró los 6 críticos que encontró la verificación por rol.
 - **Tres bloqueantes de producción, ninguno resoluble por el equipo interno**: contraseña de
   Postgres expuesta, dominio de correo sin verificar, riesgo del link público sin aceptación
   escrita. Ver `TASKS.md` §1.
-- El working tree está **limpio**. Las 4 tareas de §3.2 de `TASKS.md` que estaban sueltas se
-  resolvieron en `b28c5cd`.
+- El working tree está **limpio**.
 
 ## Approvals
 

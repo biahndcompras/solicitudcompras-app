@@ -245,6 +245,19 @@ export function mensajeErrorAmigable(e: unknown, porDefecto: string): string {
   return crudo;
 }
 
+/**
+ * ¿La fecha "YYYY-MM-DD" ya pasó respecto a hoy? Compara días de calendario, no instantes:
+ * "hoy" no es pasado (la solicitud creada hoy todavía no venció). Un valor que no tenga el
+ * formato AAAA-MM-DD devuelve `false`: de eso se ocupa la validación de formato, no esta.
+ */
+export function fechaEnPasado(fecha: string, ahora: Date = new Date()): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha.trim());
+  if (!m) return false;
+  const valor = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime();
+  const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()).getTime();
+  return valor < hoy;
+}
+
 /** ¿El texto parece una frase humana destined al solicitante y no un error de servidor? */
 function esFraseParaPersona(s: string): boolean {
   const t = s.trim();
@@ -555,6 +568,24 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
   //     pantalla diga qué está pasando en vez de un "Enviando..." de 30 s a oscuras.
   const enviarSolicitud = useCallback(async () => {
     if (enviandoRef.current) return;
+    // Backstop de última hora: un borrador retomado días después puede traer una fecha ya
+    // pasada o la descripción vaciada. El paso 2 lo explica mientras se edita, pero aquí el
+    // solicitante ya no lo ve; sin esta guarda el servidor devuelve un "Datos inválidos" que
+    // no dice qué corregir.
+    if (fechaEnPasado(estado.fechaRequerida)) {
+      setEnvio({
+        estado: "error",
+        mensaje: "La fecha requerida ya pasó. Vuelva al paso de captura y elija hoy o una fecha futura.",
+      });
+      return;
+    }
+    if (!estado.descripcion.trim()) {
+      setEnvio({
+        estado: "error",
+        mensaje: "Falta la descripción: sin ella el asistente no puede clasificar bien su solicitud. Vuelva al paso de captura.",
+      });
+      return;
+    }
     enviandoRef.current = true;
     // Un borrador escrito por una versión anterior no trae clave: se genera una en el acto y
     // se mete al estado (no a una variable local) para que el autoguardado la persista. Si
@@ -670,7 +701,17 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
       case 1:
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email.trim());
       case 2:
-        return Boolean(s.titulo.trim() && s.tipoNecesidad && s.fechaRequerida && s.area.trim());
+        // La descripción es obligatoria (la doc la marca así y la IA la necesita para
+        // clasificar bien) y la fecha no puede ser pasada (una solicitud que vence antes
+        // de existir no tiene sentido). El motivo del bloqueo lo explica `faltantes`.
+        return Boolean(
+          s.titulo.trim() &&
+            s.tipoNecesidad &&
+            s.fechaRequerida &&
+            !fechaEnPasado(s.fechaRequerida) &&
+            s.area.trim() &&
+            s.descripcion.trim()
+        );
       case 3:
         return true;
       case 4:
@@ -691,7 +732,9 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
       if (!s.titulo.trim()) out.push("el título");
       if (!s.tipoNecesidad) out.push("el tipo de necesidad");
       if (!s.fechaRequerida) out.push("la fecha requerida");
-      if (!s.area.trim()) out.push("tu área");
+      else if (fechaEnPasado(s.fechaRequerida)) out.push("una fecha requerida de hoy en adelante (la elegida ya pasó)");
+      if (!s.area.trim()) out.push("su área");
+      if (!s.descripcion.trim()) out.push("la descripción (sin ella el asistente no puede clasificar bien)");
       return out;
     }
     if (s.paso === 4 && bloqueoB2Activo({ llevaBranding: s.llevaBranding, archivoLogo: s.archivoLogo })) {

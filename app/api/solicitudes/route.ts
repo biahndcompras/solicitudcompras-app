@@ -33,16 +33,53 @@ const MAX_DESCRIPCION = 5000;
 const MAX_CLAVE_IDEMPOTENCIA = 64;
 const CLAVE_IDEMPOTENCIA_RE = /^[A-Za-z0-9_-]{8,64}$/;
 
+/** La fecha viaja como "YYYY-MM-DD" desde el `<input type="date">` del wizard. */
+const FECHA_ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Hoy en "YYYY-MM-DD" según el día de calendario del negocio (Honduras), no el del servidor.
+ * Si se usara la fecha del servidor (UTC en el despliegue), una solicitud creada por la noche
+ * en Honduras —que para el usuario es "hoy"— ya sería "ayer" para el servidor y se rechazaría
+ * sin motivo. El offset fijo sería frágil; el formato por zona horaria es determinista.
+ */
+function hoyISO(): string {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Tegucigalpa",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const valor = (tipo: string) => partes.find((p) => p.type === tipo)?.value ?? "";
+  return `${valor("year")}-${valor("month")}-${valor("day")}`;
+}
+
+function esFechaPasada(valor: string): boolean {
+  return valor < hoyISO();
+}
+
 const crearSchema = z.object({
   titulo: z.string().min(1).max(MAX_TITULO),
   solicitanteEmail: z.string().email().max(320),
   solicitanteNombre: z.string().min(1).max(MAX_NOMBRE),
   areaSolicitante: z.string().max(MAX_AREA).optional(),
-  descripcion: z.string().max(MAX_DESCRIPCION).optional(),
+  // Obligatoria: la doc la marca así y sin ella la IA no puede clasificar bien. Se rechaza
+  // el vacío real (solo espacios) después de recortar, no solo la ausencia.
+  descripcion: z
+    .string()
+    .trim()
+    .min(1, "La descripción es obligatoria: sin ella el asistente no puede clasificar bien la solicitud.")
+    .max(MAX_DESCRIPCION),
   categoria: z.string().max(80).optional(),
   tipo: z.enum(["RFI", "RFQ", "RFP"]).optional(),
   subtipo: z.enum(["producto", "servicio", "mixto"]).optional(),
-  fechaRequerida: z.string().max(10).optional(),
+  // No admite fechas pasadas: una solicitud no puede vencer antes de existir.
+  fechaRequerida: z
+    .string()
+    .regex(FECHA_ISO_RE, "La fecha requerida debe tener el formato AAAA-MM-DD.")
+    .refine((v) => !esFechaPasada(v), {
+      message: "La fecha requerida no puede ser anterior a hoy. Elija hoy o una fecha futura.",
+    })
+    .optional(),
   // Opcional y sin efecto si no viene: la API pública no exige idempotencia, la aprovecha
   // cuando el cliente la manda. Un valor con forma rara se ignora en vez de rechazar el envío.
   idempotencyKey: z.string().max(MAX_CLAVE_IDEMPOTENCIA).optional(),

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, renderHook } from "@testing-library/react";
-import { useSolicitudWizard, mensajeErrorAmigable, estadoInicialWizard } from "@/hooks/useSolicitudWizard";
+import { useSolicitudWizard, mensajeErrorAmigable, estadoInicialWizard, fechaEnPasado } from "@/hooks/useSolicitudWizard";
 import { CLAVE_BORRADOR } from "@/lib/cookie";
 import { envolverBorrador } from "@/lib/domain/borrador";
 
@@ -321,5 +321,62 @@ describe("gate de envío: el assessment no preparado se avisa, no se deja pasar"
       result.current.set("assessmentRespuestas", { cantidad: { valor: "45 galones", noSe: false } });
     });
     expect(result.current.obligatoriosPendientes).toHaveLength(0);
+  });
+});
+
+/** "YYYY-MM-DD" local a N días de hoy (negativo = pasado). */
+function isoEnDias(dias: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+describe("validación del paso 2 · fecha requerida y descripción (4.5.2 / 4.5.3)", () => {
+  function paso2(overrides: Record<string, unknown> = {}) {
+    const { result } = renderHook(() => useSolicitudWizard(false, IDENTIDAD));
+    act(() => {
+      result.current.set("titulo", "Sombrillas brandeadas");
+      result.current.set("tipoNecesidad", "mercadeo_publicidad");
+      result.current.set("area", "Marketing");
+      result.current.set("fechaRequerida", isoEnDias(10));
+      result.current.set("descripcion", "500 sombrillas con logo de la marca");
+      for (const [k, v] of Object.entries(overrides)) {
+        result.current.set(k as never, v as never);
+      }
+    });
+    return result;
+  }
+
+  it("4.5.2: una fecha requerida pasada bloquea el paso y el motivo explica qué hacer", () => {
+    const result = paso2({ fechaRequerida: "2020-01-01" });
+    expect(result.current.pasoValido).toBe(false);
+    const motivo = result.current.faltantes.join(" ");
+    expect(motivo).toMatch(/fecha/i);
+    expect(motivo).toMatch(/hoy|futura|adelante/i);
+  });
+
+  it("4.5.2: hoy (o una fecha futura) sí es válida", () => {
+    const result = paso2({ fechaRequerida: isoEnDias(0) });
+    expect(result.current.pasoValido).toBe(true);
+    expect(result.current.faltantes).toEqual([]);
+  });
+
+  it("4.5.3: la descripción vacía bloquea el paso y aparece en el motivo", () => {
+    const result = paso2({ descripcion: "   " });
+    expect(result.current.pasoValido).toBe(false);
+    expect(result.current.faltantes.join(" ")).toMatch(/descripci/i);
+  });
+
+  it("4.5.3: con descripción no vacía el paso es válido", () => {
+    const result = paso2();
+    expect(result.current.pasoValido).toBe(true);
+    expect(result.current.faltantes).toEqual([]);
+  });
+
+  it("fechaEnPasado: hoy no es pasado; ayer sí; mañana no", () => {
+    expect(fechaEnPasado(isoEnDias(0))).toBe(false);
+    expect(fechaEnPasado(isoEnDias(-1))).toBe(true);
+    expect(fechaEnPasado(isoEnDias(1))).toBe(false);
   });
 });

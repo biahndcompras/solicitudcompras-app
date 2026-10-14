@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui-ext/Modal";
 import {
   useSolicitudWizard,
   TEXTO_FASE_ENVIO,
+  fechaEnPasado,
   type WizardState,
   type CoordinadorPublico,
   type EstadoEnvio,
@@ -677,13 +678,26 @@ function PasoCaptura({
           </div>
           <div>
             <label htmlFor="fecha-requerida" className="block text-xs font-medium text-slate-700 mb-1.5">¿Para cuándo lo necesita?</label>
-            <input id="fecha-requerida" type="date" value={estado.fechaRequerida} onChange={(e) => set("fechaRequerida", e.target.value)} className="w-full min-h-[44px] bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:bg-white transition-all text-slate-600" />
-            {estado.fechaRequerida && diasHasta(estado.fechaRequerida) < 5 ? (
+            <input
+              id="fecha-requerida"
+              type="date"
+              min={hoyISO()}
+              value={estado.fechaRequerida}
+              onChange={(e) => set("fechaRequerida", e.target.value)}
+              aria-invalid={estado.fechaRequerida && fechaEnPasado(estado.fechaRequerida) ? true : undefined}
+              aria-describedby={estado.fechaRequerida && fechaEnPasado(estado.fechaRequerida) ? "error-fecha-requerida" : undefined}
+              className="w-full min-h-[44px] bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:bg-white transition-all text-slate-600"
+            />
+            {estado.fechaRequerida && fechaEnPasado(estado.fechaRequerida) ? (
+              <p id="error-fecha-requerida" role="alert" className="text-[11px] text-rose-600 mt-1.5 font-medium">
+                La fecha requerida ya pasó. Elija hoy o una fecha futura.
+              </p>
+            ) : estado.fechaRequerida && diasHasta(estado.fechaRequerida) < 5 ? (
               <p className="text-[11px] text-amber-600 mt-1.5 font-medium">Este plazo es muy corto para cotizar. ¿Es una urgencia real?</p>
             ) : null}
           </div>
           <div className="md:col-span-2">
-            <label htmlFor="descripcion" className="block text-xs font-medium text-slate-700 mb-1.5">Descripción breve</label>
+            <label htmlFor="descripcion" className="block text-xs font-medium text-slate-700 mb-1.5">Descripción breve <span className="text-rose-600">*</span></label>
             <textarea id="descripcion" value={estado.descripcion} onChange={(e) => set("descripcion", e.target.value)} rows={3} placeholder="Añadí un poco más de contexto..." maxLength={5000} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:bg-white transition-all resize-none" />
             <p className="text-[11px] text-slate-400 mt-1 md:hidden">
               {estado.descripcion.length}/5000 caracteres
@@ -1448,6 +1462,13 @@ function diasHasta(fecha: string): number {
   const val = new Date(fecha);
   const hoy = new Date();
   return Math.ceil(Math.abs(val.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/** Hoy en "YYYY-MM-DD" local: el `min` del input de fecha (no admite días pasados). */
+function hoyISO(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
 // Badge de tipo de solicitud: RFQ = celeste, RFI = naranja, RFP = amarillo.

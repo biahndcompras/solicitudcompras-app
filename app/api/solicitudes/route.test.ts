@@ -7,12 +7,14 @@ const listarPorCoordinador = vi.fn();
 const listarTodas = vi.fn();
 const usuarioLocalPorEmail = vi.fn();
 const guardApi = vi.fn();
+const crearSolicitud = vi.fn();
 
 vi.mock("@/lib/db/postgres-repo", () => ({
   PostgresRepositorio: class {
     listarPorCoordinador = (...a: unknown[]) => listarPorCoordinador(...a);
     listarTodas = (...a: unknown[]) => listarTodas(...a);
     usuarioLocalPorEmail = (...a: unknown[]) => usuarioLocalPorEmail(...a);
+    crearSolicitud = (...a: unknown[]) => crearSolicitud(...a);
   },
 }));
 
@@ -20,7 +22,7 @@ vi.mock("@/lib/api-guard", () => ({
   guardApi: (...a: unknown[]) => guardApi(...a),
 }));
 
-import { GET } from "./route";
+import { GET, POST } from "./route";
 import type { EstadoSolicitud, Solicitud } from "@/lib/domain/types";
 
 function sol(estado: EstadoSolicitud, id = `id-${estado}`): Solicitud {
@@ -133,5 +135,77 @@ describe("GET /api/solicitudes · la bandeja es la de la sesión, no la del quer
     expect(res.status).toBe(403);
     expect(listarPorCoordinador).not.toHaveBeenCalled();
     expect((await res.json()).error).toMatch(/alta/i);
+  });
+});
+
+/** "YYYY-MM-DD" local a N días de hoy (negativo = pasado). */
+function isoEnDias(dias: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function pedirPost(body: Record<string, unknown>) {
+  return POST(
+    new Request("http://localhost/api/solicitudes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+  );
+}
+
+describe("POST /api/solicitudes · fecha y descripción obligatorias (4.5.2 / 4.5.3)", () => {
+  const base: Record<string, unknown> = {
+    titulo: "Sombrillas",
+    solicitanteEmail: "maria@bia.hn",
+    solicitanteNombre: "Maria",
+    areaSolicitante: "Marketing",
+    descripcion: "500 sombrillas con logo de la marca",
+    fechaRequerida: isoEnDias(10),
+  };
+
+  beforeEach(() => {
+    crearSolicitud.mockReset().mockResolvedValue({ id: "s-1" });
+  });
+
+  it("rechaza una fecha requerida en el pasado", async () => {
+    const res = await pedirPost({ ...base, fechaRequerida: "2020-01-01" });
+    expect(res.status).toBe(400);
+    expect(crearSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("el rechazo de la fecha se explica en español y dice qué hacer", async () => {
+    const res = await pedirPost({ ...base, fechaRequerida: "2020-01-01" });
+    const texto = JSON.stringify(await res.json());
+    expect(texto).toMatch(/fecha/i);
+    expect(texto).toMatch(/hoy|futura|pas/i);
+  });
+
+  it("rechaza una fecha requerida con formato inválido", async () => {
+    const res = await pedirPost({ ...base, fechaRequerida: "05/06/2020" });
+    expect(res.status).toBe(400);
+    expect(crearSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("rechaza una descripción vacía (solo espacios)", async () => {
+    const res = await pedirPost({ ...base, descripcion: "   " });
+    expect(res.status).toBe(400);
+    expect(crearSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("rechaza una solicitud sin descripción", async () => {
+    const sinDesc = { ...base };
+    delete sinDesc.descripcion;
+    const res = await pedirPost(sinDesc);
+    expect(res.status).toBe(400);
+    expect(crearSolicitud).not.toHaveBeenCalled();
+  });
+
+  it("acepta y crea una solicitud con fecha futura y descripción", async () => {
+    const res = await pedirPost(base);
+    expect(res.status).toBe(201);
+    expect(crearSolicitud).toHaveBeenCalledTimes(1);
   });
 });

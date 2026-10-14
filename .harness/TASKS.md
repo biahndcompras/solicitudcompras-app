@@ -54,7 +54,7 @@ Ordenados por gravedad. Ninguno es código nuestro: dos son del cliente, uno es 
 
 | # | Tarea | Quién | Por qué importa | Dónde está registrado |
 |---|---|---|---|---|
-| **B1** | **Rotar la contraseña de Postgres** y actualizar `DATABASE_URL` al pooler | **Cliente** 🔴 | La contraseña está expuesta en chat. Es el activo más sensible del proyecto. | `specs/009.../assessment.md:127` |
+| **B1** | **Rotar la contraseña de Postgres y migrar a Supabase Cloud** | **Cliente** 🔴 | La base local **no tiene contraseña** (auth por confianza del usuario del sistema): no hay nada que rotar *ahí*. El bloqueante es la contraseña de la base de **Supabase**, que se usará al migrar los datos. Se resuelven las dos cosas de un movimiento: resetear la contraseña en el dashboard **es** el paso 1 de la migración. Ver `docs/references/migracion-supabase-cloud.md` | `specs/009.../assessment.md:127` |
 | ~~**B2**~~ | ~~Verificar el dominio de correo en Resend~~ | ✅ **RESUELTO 2026-10-14** | Dominio `biahnd.website` verificado (status `verified`). `MAIL_FROM` apunta a él. **Verificado end-to-end por la aplicación**: el correo 6 salió `enviado` en la bitácora y Resend lo reporta `delivered`. Los envíos anteriores fallaban con "The compras.bia domain is not verified" |
 | **B3** | **Aceptación por escrito del riesgo del link público** | **Cliente** 🔴 | El enlace expone precios de proveedores a cualquiera que lo tenga. Aparece 4 veces en la documentación como *"debe quedar aceptado por escrito antes de producción"* y **no consta que se haya obtenido**. | `prd.md:244`, `brief.md:45`, `architecture.md:98` |
 | **B4** | Obtener confirmación escrita de las 6 decisiones D1/D2/D3/D7/D9/D10 | **Cliente** 🟠 | Sin esto el piloto arranca sobre base no aprobada. El documento mismo dice *"se requiere confirmación por escrito"*. | `propuesta-decisiones-piloto.md:5, 26-38` |
@@ -402,12 +402,12 @@ Lo primero, por gravedad:
 
 1. **Tasa ISV desde configuración (4.10.1)** y **que la alerta de inactividad pueda dispararse
    (4.10.2)**. El doc 16 lo pide; hoy está hardcodeada e inalcanzable.
-2. **Mostrar los campos respondidos al coordinador (4.10.11)**: `respuesta_campo` sigue sin
-   lectores para lo que se edita por re-cotización. Las respuestas del ciclo de preguntas ya se
-   ven; estos no.
-3. **Aislamiento de escrituras entre coordinadores (4.8.3)** — **bloqueado por decisión de
-   negocio** (Q2 del PRD, pendiente de Lady). El `PATCH` de cotizaciones que ignora el `id`
-   sí se puede cerrar ya.
+2. **Migrar los datos a Supabase Cloud** (`docs/references/migracion-supabase-cloud.md`):
+   falta el connection string del pooler y decidir si se migran los datos o se arranca con
+   esquema limpio (recomendado: limpio, los 168 registros locales son de desarrollo). Y hay
+   que decidir qué hacen los tests de integración, que **escriben de verdad en la base**.
+3. **OCR en serverless (2.2)**: `/api/convertir` necesita Python, que no existe en Vercel →
+   degrada a carga manual. Migrar la base no lo arregla.
 4. **Prueba manual del bloque de assessment (§2, `6dc64d5`)** y **del ciclo de 010**: 010 se
    verificó en navegador con sesión real, pero **los e2e no se corrieron** y no cubren el flujo.
 5. **Higiene de tests (4.10.13)**: la suite deja solicitudes con `informacion_pendiente` en la

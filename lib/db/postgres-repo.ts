@@ -1,7 +1,7 @@
 // Adaptador PostgreSQL del Repositorio — Portal de Compras BIA.
 // Persistencia sobre el esquema migrado 001–006. Transición de estado + evento en la misma transacción.
 import type { Pool } from "pg";
-import { esTerminal } from "@/lib/domain/state-machine";
+import { esTerminal, esTransicionValida } from "@/lib/domain/state-machine";
 import { pool as obtenerPool } from "./pool";
 import type {
   CampoCatalogo,
@@ -107,13 +107,22 @@ export class PostgresRepositorio implements Repositorio {
   ): Promise<Solicitud> {
     const idempotencyKey = opciones?.idempotencyKey?.trim() || null;
     const email = datos.solicitanteEmail.toLowerCase();
+    // El evento `creacion` viaja en el MISMO statement que el alta (data-modifying CTE):
+    // si la solicitud se crea pero el evento falla, se revierte todo; y si la clave de
+    // idempotencia choca, `nueva` queda vacía y no se inserta un evento espurio.
     const res = await this.pg.query(
-      `INSERT INTO solicitud (titulo, solicitante_email, solicitante_nombre, estado,
-         area_solicitante, descripcion, categoria, tipo, subtipo, fecha_requerida, idempotency_key)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,
-         $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11)
-       ON CONFLICT (solicitante_email, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
-       RETURNING *`,
+      `WITH nueva AS (
+         INSERT INTO solicitud (titulo, solicitante_email, solicitante_nombre, estado,
+           area_solicitante, descripcion, categoria, tipo, subtipo, fecha_requerida, idempotency_key)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,
+           $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11)
+         ON CONFLICT (solicitante_email, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
+         RETURNING *
+       ), evento AS (
+         INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, actor_identificador)
+         SELECT id, 'creacion', 'solicitante', solicitante_email FROM nueva
+       )
+       SELECT * FROM nueva`,
       [
         datos.titulo,
         email,
@@ -309,6 +318,15 @@ export class PostgresRepositorio implements Repositorio {
       );
       if (!sel.rows[0]) throw new Error("Solicitud no encontrada");
       const actual = filaSolicitud(sel.rows[0]);
+
+      // Guardián de la máquina de estados (4.10.5). La ruta HTTP ya valida, pero el repo es
+      // invocado por más de un endpoint; sin esto, un llamador nuevo podía saltar estados
+      // (p. ej. ENVIADA_A_COMPRAS → COMPARATIVA_LISTA) y dejar la solicitud incoherente.
+      // El chequeo va dentro de la transacción, tras el SELECT ... FOR UPDATE, para leer el
+      // estado real y no uno obsoleto bajo concurrencia.
+      if (!esTransicionValida(actual.estado, input.hacia)) {
+        throw new Error(`Transición inválida: ${actual.estado} → ${input.hacia}`);
+      }
 
       // Reglas de transición (cerebro) — se valida contra el estado actual.
       const esTerminal = ["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"].includes(
@@ -537,15 +555,23 @@ export class PostgresRepositorio implements Repositorio {
   }
 
   async guardarCotizacion(cotizacion: Omit<Cotizacion, "id">): Promise<Cotizacion> {
+    // La carga y su evento `carga_cotizacion` van juntos: la línea de tiempo necesita saber
+    // cuántas cotizaciones se cargaron (4.10.3) y no puede quedar un alta sin su hito.
     const res = await this.pg.query(
-      `INSERT INTO cotizacion
-         (solicitud_id, proveedor_nombre, proveedor_identificacion_fiscal, proveedor_contacto,
-          formato_original, valor_neto, moneda, impuestos_desglosados, monto_isv,
-          monto_otros_impuestos, valor_total, plazo_entrega, forma_pago, vigencia_oferta, garantia,
-          especificaciones_ofertadas, observaciones_fiscales, confianza_extraccion,
-          archivo_original_ruta, archivo_original_nombre, archivo_original_bytea)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
-       RETURNING *`,
+      `WITH nueva AS (
+         INSERT INTO cotizacion
+           (solicitud_id, proveedor_nombre, proveedor_identificacion_fiscal, proveedor_contacto,
+            formato_original, valor_neto, moneda, impuestos_desglosados, monto_isv,
+            monto_otros_impuestos, valor_total, plazo_entrega, forma_pago, vigencia_oferta, garantia,
+            especificaciones_ofertadas, observaciones_fiscales, confianza_extraccion,
+            archivo_original_ruta, archivo_original_nombre, archivo_original_bytea)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+         RETURNING *
+       ), evento AS (
+         INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo)
+         SELECT solicitud_id, 'carga_cotizacion', 'coordinador' FROM nueva
+       )
+       SELECT * FROM nueva`,
       [
         cotizacion.solicitudId,
         cotizacion.proveedorNombre,
@@ -875,16 +901,27 @@ export class PostgresRepositorio implements Repositorio {
   }
 
   async guardarComparativa(solicitudId: string, comparativa: Comparativa): Promise<Comparativa> {
+    // El hito `generacion_comparativa` (4.10.3) se registra SOLO en el alta, no en cada
+    // actualización. Este método hace upsert y lo llama también la descarga de Excel, que
+    // regenera y persiste la comparativa: sin este filtro, cada descarga escribiría un
+    // "Comparativa generada" falso. `xmax = 0` distingue la fila insertada de la actualizada
+    // en el mismo upsert; el hito queda para la generación real.
     const res = await this.pg.query(
-      `INSERT INTO comparativa
-         (solicitud_id, pros_contras, discrepancias_detectadas, sugerencia_ia, cotizacion_sugerida_id)
-       VALUES ($1,$2,$3,$4,$5)
-       ON CONFLICT (solicitud_id) DO UPDATE
-         SET pros_contras = EXCLUDED.pros_contras,
-             discrepancias_detectadas = EXCLUDED.discrepancias_detectadas,
-             sugerencia_ia = EXCLUDED.sugerencia_ia,
-             cotizacion_sugerida_id = EXCLUDED.cotizacion_sugerida_id
-       RETURNING *`,
+      `WITH guardada AS (
+         INSERT INTO comparativa
+           (solicitud_id, pros_contras, discrepancias_detectadas, sugerencia_ia, cotizacion_sugerida_id)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (solicitud_id) DO UPDATE
+           SET pros_contras = EXCLUDED.pros_contras,
+               discrepancias_detectadas = EXCLUDED.discrepancias_detectadas,
+               sugerencia_ia = EXCLUDED.sugerencia_ia,
+               cotizacion_sugerida_id = EXCLUDED.cotizacion_sugerida_id
+         RETURNING *, (xmax = 0) AS es_nueva
+       ), evento AS (
+         INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo)
+         SELECT solicitud_id, 'generacion_comparativa', 'coordinador' FROM guardada WHERE es_nueva
+       )
+       SELECT * FROM guardada`,
       [
         solicitudId,
         JSON.stringify(comparativa.prosContras),
@@ -1069,8 +1106,19 @@ export class PostgresRepositorio implements Repositorio {
   }
 
   async registrarAccesoLink(token: string): Promise<void> {
+    // Cuenta el acceso y deja el hito `acceso_link` en un solo statement (4.10.3). El token
+    // resuelve la solicitud vía `comparativa`, que es la única ruta de este método; si el
+    // token no existe, no se cuenta ni se inserta nada.
     await this.pg.query(
-      "UPDATE link_publico SET veces_accedido = veces_accedido + 1, ultimo_acceso = now() WHERE token = $1",
+      `WITH link AS (
+         UPDATE link_publico
+            SET veces_accedido = veces_accedido + 1, ultimo_acceso = now()
+          WHERE token = $1
+          RETURNING comparativa_id
+       )
+       INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo)
+       SELECT c.solicitud_id, 'acceso_link', 'solicitante'
+         FROM link l JOIN comparativa c ON c.id = l.comparativa_id`,
       [token]
     );
   }
@@ -1280,10 +1328,21 @@ export class PostgresRepositorio implements Repositorio {
     intentos?: number;
     errorDetalle?: string;
   }): Promise<CorreoEnviado> {
+    // El hito `envio_correo` se registra SOLO cuando el envío fue exitoso: un correo fallido
+    // no debe aparecer en la línea de tiempo como "correo enviado" (4.10.3). El fallo ya
+    // queda en `correo_enviado.estado_envio`, que es su lugar.
     const res = await this.pg.query(
-      `INSERT INTO correo_enviado (solicitud_id, tipo_correo, destinatario, asunto, estado_envio, intentos, error_detalle)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, solicitud_id, tipo_correo, destinatario, asunto, estado_envio, intentos, error_detalle, fecha_envio`,
+      `WITH nuevo AS (
+         INSERT INTO correo_enviado (solicitud_id, tipo_correo, destinatario, asunto, estado_envio, intentos, error_detalle)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id, solicitud_id, tipo_correo, destinatario, asunto, estado_envio, intentos, error_detalle, fecha_envio
+       ), evento AS (
+         INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, nota)
+         SELECT solicitud_id, 'envio_correo', 'sistema',
+                'Correo ' || tipo_correo || ' enviado a ' || destinatario
+           FROM nuevo WHERE estado_envio = 'enviado'
+       )
+       SELECT id, solicitud_id, tipo_correo, destinatario, asunto, estado_envio, intentos, error_detalle, fecha_envio FROM nuevo`,
       [
         input.solicitudId,
         input.tipoCorreo,

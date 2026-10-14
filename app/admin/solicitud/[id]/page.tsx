@@ -179,8 +179,16 @@ function descripcionEvento(
       return "Se cargó una cotización de proveedor.";
     case "generacion_comparativa":
       return "Se generó la comparativa con IA.";
+    case "reasignacion":
+      return "La solicitud se reasignó a otro comprador.";
+    case "cancelacion":
+      return "La solicitud fue cancelada.";
+    case "envio_correo":
+      return "Se envió un correo relacionado con la solicitud.";
+    case "acceso_link":
+      return "El solicitante accedió al enlace público de la comparativa.";
     default:
-      return "";
+      return "Evento sin descripción.";
   }
 }
 
@@ -194,7 +202,16 @@ function estadoLegible(e: string): string {
     CERRADA_SIN_DECISION: "Cerrada",
     CANCELADA: "Cancelada",
   };
-  return m[e] ?? e;
+  return m[e] ?? humanizarEstado(e);
+}
+
+// Un estado que no está en el mapa (p. ej. uno nuevo) no debe salir como código crudo
+// («FOO_BAR»). Se muestra legible: «Foo bar».
+function humanizarEstado(e: string): string {
+  const t = e.trim();
+  if (!t) return "";
+  const palabras = t.replace(/_/g, " ").toLowerCase();
+  return palabras.charAt(0).toUpperCase() + palabras.slice(1);
 }
 
 function toneDe(e: string): BadgeTone {

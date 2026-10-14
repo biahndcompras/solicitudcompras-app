@@ -267,7 +267,7 @@ El producto se considera entregado cuando (fuente 18 §14):
 | # | Tema | Responsable | Efecto |
 |---|---|---|---|
 | Q1 | Regla de asignación entre los 4 coordinadores | Lady | Configuración, no código |
-| Q2 | ¿Los coordinadores ven solicitudes de otros? | Lady | Define RLS |
+| Q2 | ¿Los coordinadores ven solicitudes de otros? | Lady | **RESUELTA 2026-10-14: sí, se ven entre ellos.** Por eso NO se implementa aislamiento por fila entre coordinadores |
 | Q3 | Umbral de días para alerta de inactividad | Lady | Activa/desactiva alerta 5 |
 | Q4 | Dominios de correo aceptados como institucionales | BIA/IT | Validación P1 |
 | Q5 | Formato del número de referencia | Lady/Intelia | Generación de referencia |

@@ -18,5 +18,7 @@ Bitácora de decisiones arquitectónicas y de producto (ADRs) en `docs/decisions
 | 0004 | Nomenclatura de correos: 4 del ciclo + 1 de alerta configurable |
 | 0005 | Sistema autocontenido: cero integraciones con el ERP del cliente |
 | 0006 | Catálogo de campos como única fuente de verdad |
+| 0007 | Riesgo asumido: el enlace público de decisión no tiene contraseña |
+| 0008 | Registro de la interfaz: "usted", nunca voseo |
 
 > El `user-flows.md` (docs/product) es la autoridad de comportamiento de roles/acciones/funcionalidades; los ADRs aquí registran *por qué* se decidió algo, no el detalle funcional.

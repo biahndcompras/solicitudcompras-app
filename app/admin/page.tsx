@@ -138,13 +138,13 @@ export default function AdminDashboardPage() {
     [coordinadores]
   );
 
-  const barrasVolumen = Object.entries(metricas.volumenPorCoordinador).map(([id, v]) => ({ id, label: nombreCoord(id), value: v }));
+  const barrasVolumen = Object.entries(metricas.volumenPorCoordinador ?? {}).map(([id, v]) => ({ id, label: nombreCoord(id), value: v }));
   const maxVolumen = Math.max(1, ...barrasVolumen.map((b) => b.value));
 
-  const distribucion = Object.entries(metricas.distribucionPorTipo);
+  const distribucion = Object.entries(metricas.distribucionPorTipo ?? {});
   const distribucionTotal = Math.max(1, distribucion.reduce((a, [, v]) => a + v, 0));
 
-  const distribucionSubtipo = Object.entries(metricas.distribucionPorSubtipo);
+  const distribucionSubtipo = Object.entries(metricas.distribucionPorSubtipo ?? {});
   const distribucionSubtipoTotal = Math.max(1, distribucionSubtipo.reduce((a, [, v]) => a + v, 0));
 
   const etapas = Object.entries(metricas.tiempoPorEtapa ?? {}).sort(

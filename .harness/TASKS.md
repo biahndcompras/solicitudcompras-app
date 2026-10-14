@@ -146,7 +146,7 @@ Esto sí es trabajo real. Ordenado por tema. Las referencias `RF-xx` son del PRD
 ### 4.1 RFQ / RFI / RFP — referencia y PDF
 | # | Tarea | Ref | Nota |
 |---|---|---|---|
-| 4.1.1 | **Generar `numero_referencia` real** (`{TIPO}-{AÑO}-{SECUENCIA}`) en backend | RF-20 | Hoy el panel usa un fallback `SOL-XXXXXXXX` derivado del id. El tipo ya se persiste, así que es viable. Deuda declarada dentro de la 008 cerrada. |
+| ~~4.1.1~~ | La referencia se leía distinto según el rol | ✅ **RESUELTO 2026-10-14** | El generador **funciona** (236 solicitudes la tienen; las 93 sin referencia son datos de agosto, anteriores al generador). El bug era de pantalla: el admin **fabricaba** `SOL-<8 del id>` mientras el coordinador decía "Sin referencia". Inventar una referencia es peor que no mostrarla: parece real y no existe. Ahora las 5 pantallas dicen lo mismo y ninguna inventa. Verificado en navegador |
 | 4.1.2 | **PDF con el diseño vertical oficial** | — | `plantilla-generica.ts` tiene membrete BIA pero no el formato exacto del RFQ de Ladi. Depende de insumos del cliente. |
 
 ### 4.2 Comparativa y ahorro
@@ -236,7 +236,7 @@ no estaban en ninguna lista.
 | # | Tarea | Estado real | Evidencia |
 |---|---|---|---|
 | ~~**4.10.1**~~ | ~~Tasa ISV desde configuración~~ | ✅ **RESUELTO 2026-10-14** | La clave `tasa_isv` **sí existía** en `configuracion` (0.15): el problema era que el código tenía `0.15` cableado y nunca la leía. Nuevo `repo.tasaIsv()`, que valida el rango (un `15` en vez de `0.15` es el error humano típico). 2 tests de integración |
-| **4.10.2** | **La alerta de inactividad puede dispararse alguna vez** | **FALTA** | `lib/domain/alertas.ts:37` → `!s.fechaEnvio`. Pero toda solicitud que llega al panel **ya fue enviada**, y la API del panel excluye borradores. **La alerta que el producto promete es inalcanzable**. Nota: las **otras** alertas del mismo botón sí funcionan, y desde 010 el recordatorio de preguntas también |
+| ~~4.10.2~~ | La alerta de inactividad no podía dispararse | ✅ **RESUELTO 2026-10-14** | La condición era `!s.fechaEnvio`, imposible porque toda solicitud del panel ya fue enviada. Ahora el "último movimiento" sale del evento de trazabilidad más reciente, tomando el máximo con los hitos derivables (creación, envío, última carga de cotización). 5 tests, 2 verificados fallando |
 | **4.10.13** | Los tests de integración dejan solicitudes con `informacion_pendiente` en la base de desarrollo | baja | Al correr la suite quedan filas vivas que el botón de alertas tomaría como reales y mandaría correos por ellas. Limpiar por patrón de correo (`%@bia.hn`) al final de la suite, o usar una base aparte |
 | ~~4.10.3~~ | Eventos que la UI mostraba y nadie insertaba | ✅ **RESUELTO 2026-10-14** | Ver 4.10/§4 (bloque de agentes en paralelo) |
 | ~~4.10.4~~ | Descripciones de evento que faltaban | ✅ **RESUELTO 2026-10-14** | Ver 4.10/§4 (bloque de agentes en paralelo) |
@@ -244,7 +244,7 @@ no estaban en ninguna lista.
 | ~~4.10.6~~ | El Excel de comparativa salía vacío | ✅ **RESUELTO 2026-10-14** | Ver 4.10/§4 (bloque de agentes en paralelo) |
 | ~~4.10.7~~ | La fusión descartaba los pros y contras deterministas | ✅ **RESUELTO 2026-10-14** | Ver 4.10/§4 (bloque de agentes en paralelo) |
 | 4.10.8 | Detección determinística de discrepancias | **A MEDIAS — inerte** | `comparativa/route.ts:33,100` pasa `especificacionesSolicitadas: {}` hardcodeado, y `comparativa.ts:28-47` itera ese objeto vacío. **Sin IA configurada → cero discrepancias siempre**. Y la UI solo muestra `[0]`, así que aunque la IA devuelva varias, se pierden |
-| 4.10.9 | **KPI "Sin decisión" debe leer el umbral configurado** | medio | `repo:835` lo fija en 5 y la UI nunca manda `umbralDias`; el valor de `/admin/configuracion` solo lo lee `alertas/ejecutar`. Además **incluye borradores** y la etiqueta "> 5 días" está cableada al literal |
+| ~~4.10.9~~ | El KPI "sin decisión" mentía por dos motivos | ✅ **RESUELTO 2026-10-14** | Contaba **borradores** y tenía el umbral cableado en 5, ignorando `/admin/configuracion`. Verificado contra la base: contaba 127 por 16 borradores viejos; ahora 111. La etiqueta sigue la config (probado: con 9 dice "> 9 días") |
 | 4.10.10 | Aviso de monedas distintas en la comparativa del coordinador | bajo | La conversión orientativa existe pero solo en la vista pública |
 | ~~**4.10.11**~~ | ~~`respuesta_campo` era de solo escritura~~ | ✅ **RESUELTO 2026-10-14** | Resuelto junto con 4.5.6: el coordinador ve todas las respuestas como campos. Se agregó `listarRespuestas` y `guardarRespuestasPorClave` (la lógica de resolver la etiqueta del catálogo estaba duplicada en dos métodos) |
 

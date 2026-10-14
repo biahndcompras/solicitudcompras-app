@@ -39,6 +39,10 @@ const METRICAS_VACIAS = {
   solicitudesSinDecision: 0,
   volumenPorCoordinador: {},
   distribucionPorTipo: {},
+  // La API los devuelve; el fixture tiene que parecerse al dato real o el test mide otra cosa.
+  distribucionPorSubtipo: {},
+  tiempoPorEtapa: {},
+  umbralDias: 5,
 };
 
 function sol(over: Partial<Solicitud> & { id: string }): Solicitud {

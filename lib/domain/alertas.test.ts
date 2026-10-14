@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { detectarAlertas } from "./alertas";
-import type { Cotizacion, Solicitud } from "./types";
+import type { Cotizacion, EventoTrazabilidad, Solicitud } from "./types";
 
 function sol(id: string, estado: Solicitud["estado"], dias: number): Solicitud {
   return {
@@ -69,5 +69,73 @@ describe("detectarAlertas", () => {
       discrepanciasPorSolicitud: { s1: true },
     });
     expect(alertas.some((a) => a.tipo === "discrepancia")).toBe(true);
+  });
+});
+
+describe("inactividad — último movimiento", () => {
+  const HOY = "2026-08-18T12:00:00.000Z";
+  const diasAtras = (n: number) => new Date(new Date(HOY).getTime() - n * 86400000).toISOString();
+
+  // Solicitud REAL: ya fue enviada a Compras (fechaEnvio presente), como todas las que
+  // llegan al panel. El borrador nunca está acá.
+  function real(over: Partial<Solicitud> = {}): Solicitud {
+    return {
+      id: "s1",
+      titulo: "Solicitud real",
+      estado: "EN_COTIZACION",
+      solicitanteEmail: "x@bia.hn",
+      solicitanteNombre: "X",
+      fechaCreacion: diasAtras(20),
+      fechaEnvio: diasAtras(20),
+      clasificacionCorregida: false,
+      notificacionFallida: false,
+      ...over,
+    };
+  }
+
+  function ev(tipo: EventoTrazabilidad["tipoEvento"], timestamp: string): EventoTrazabilidad {
+    return { id: `e-${tipo}-${timestamp}`, solicitudId: "s1", tipoEvento: tipo, actorTipo: "coordinador", timestamp };
+  }
+
+  it("alerta sobre una solicitud real enviada cuyo último movimiento fue hace 6 días (umbral 5)", () => {
+    const alertas = detectarAlertas({
+      solicitudes: [real()],
+      cotizacionesPorSolicitud: { s1: [] },
+      eventosPorSolicitud: { s1: [ev("creacion", diasAtras(20)), ev("cambio_estado", diasAtras(6))] },
+      umbralDias: 5,
+      hoy: HOY,
+    });
+    expect(alertas.some((a) => a.tipo === "inactividad")).toBe(true);
+  });
+
+  it("no alerta si hubo movimiento reciente (evento de trazabilidad de ayer)", () => {
+    const alertas = detectarAlertas({
+      solicitudes: [real()],
+      cotizacionesPorSolicitud: { s1: [] },
+      eventosPorSolicitud: { s1: [ev("creacion", diasAtras(20)), ev("envio_correo", diasAtras(1))] },
+      umbralDias: 5,
+      hoy: HOY,
+    });
+    expect(alertas.filter((a) => a.tipo === "inactividad")).toHaveLength(0);
+  });
+
+  it("sin eventos, usa hitos derivables: última carga de cotización hace 6 días alerta", () => {
+    const alertas = detectarAlertas({
+      solicitudes: [real()],
+      cotizacionesPorSolicitud: { s1: [{ ...cot("c1", "A", undefined, true), fechaCarga: diasAtras(6) }] },
+      umbralDias: 5,
+      hoy: HOY,
+    });
+    expect(alertas.some((a) => a.tipo === "inactividad")).toBe(true);
+  });
+
+  it("sin eventos, una carga de cotización reciente (ayer) no alerta", () => {
+    const alertas = detectarAlertas({
+      solicitudes: [real()],
+      cotizacionesPorSolicitud: { s1: [{ ...cot("c1", "A", undefined, true), fechaCarga: diasAtras(1) }] },
+      umbralDias: 5,
+      hoy: HOY,
+    });
+    expect(alertas.filter((a) => a.tipo === "inactividad")).toHaveLength(0);
   });
 });

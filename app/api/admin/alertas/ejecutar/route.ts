@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { detectarAlertas } from "@/lib/domain/alertas";
-import type { Cotizacion } from "@/lib/domain/types";
+import type { Cotizacion, EventoTrazabilidad } from "@/lib/domain/types";
 import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
@@ -15,9 +15,18 @@ export async function POST() {
 
     const solicitudes = await repo.listarTodas();
     const cotsMap: Record<string, Cotizacion[]> = {};
-    for (const s of solicitudes) cotsMap[s.id] = await repo.listarCotizaciones(s.id);
+    const eventosMap: Record<string, EventoTrazabilidad[]> = {};
+    for (const s of solicitudes) {
+      cotsMap[s.id] = await repo.listarCotizaciones(s.id);
+      eventosMap[s.id] = await repo.listarEventos(s.id);
+    }
 
-    const alertas = detectarAlertas({ solicitudes, cotizacionesPorSolicitud: cotsMap, umbralDias: umbral });
+    const alertas = detectarAlertas({
+      solicitudes,
+      cotizacionesPorSolicitud: cotsMap,
+      eventosPorSolicitud: eventosMap,
+      umbralDias: umbral,
+    });
 
     // Enviar correo tipo 5 (alerta de inactividad) al destinatario configurado, si existe.
     let enviadas = 0;

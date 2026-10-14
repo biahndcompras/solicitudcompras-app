@@ -15,17 +15,19 @@ el porqué, no el estado.
 
 ---
 
-## Grupo 1 — Privacidad y datos mal mostrados
+## Grupo 1 — Privacidad y datos mal mostrados ✅ CERRADO (2026-10-14)
+
+Los cinco, en una ronda de cinco agentes en paralelo. Ver el commit de merge.
 
 Lo que un usuario sufre hoy, con el sistema usado de verdad.
 
 | # | Qué | Por qué primero |
 |---|---|---|
-| **4.8.7** | `/mis-solicitudes/[id]` muestra los precios de los proveedores | **La pantalla se abre solo con el correo.** Cualquiera que sepa el correo de un compañero ve los precios de todos sus proveedores. El listado los oculta a propósito (`user-flows.md:181`) y el detalle no: es la misma información con dos criterios. El enlace de decisión al menos pide token; este no |
-| **4.10.6** | El Excel de comparativa sale siempre "—" en pros/contras | Bug con test que lo tapa: el fixture usa claves por nombre y el dato real se guarda por id. El coordinador descarga un análisis vacío y cree que no hay análisis |
-| **4.10.7** | La fusión de pros y contras descarta los deterministas | Cuando la IA responde, se pierden todos los contras y casi todos los pros que el motor había calculado. RN-06 queda apoyado solo en lo que diga el modelo |
-| **4.2.1** | El ahorro potencial en los pros | Revisar: la afirmación original estaba mal (el ahorro sí se reinyecta), pero la fusión es parcial. Se resuelve junto con 4.10.7 |
-| **4.7.8** | El enlace público no se revoca al decidir | Al recargarlo vuelve a mostrar las tarjetas. El servidor rechaza con 409, pero la pantalla miente hasta que la persona intenta |
+| ✅ **4.8.7** | `/mis-solicitudes/[id]` muestra los precios de los proveedores | **La pantalla se abre solo con el correo.** Cualquiera que sepa el correo de un compañero ve los precios de todos sus proveedores. El listado los oculta a propósito (`user-flows.md:181`) y el detalle no: es la misma información con dos criterios. El enlace de decisión al menos pide token; este no |
+| ✅ **4.10.6** | El Excel de comparativa sale siempre "—" en pros/contras | Bug con test que lo tapa: el fixture usa claves por nombre y el dato real se guarda por id. El coordinador descarga un análisis vacío y cree que no hay análisis |
+| ✅ **4.10.7** | La fusión de pros y contras descarta los deterministas | Cuando la IA responde, se pierden todos los contras y casi todos los pros que el motor había calculado. RN-06 queda apoyado solo en lo que diga el modelo |
+| ✅ **4.2.1** | El ahorro potencial en los pros | Revisar: la afirmación original estaba mal (el ahorro sí se reinyecta), pero la fusión es parcial. Se resuelve junto con 4.10.7 |
+| ✅ **4.7.8** | El enlace público no se revoca al decidir | Al recargarlo vuelve a mostrar las tarjetas. El servidor rechaza con 409, pero la pantalla miente hasta que la persona intenta |
 
 ## Grupo 2 — Requisitos aprobados que no están
 
@@ -33,12 +35,13 @@ Comprometido en el PRD y no entregado.
 
 | # | Qué | Nota |
 |---|---|---|
+| ✅ **4.10.3 + 4.10.4** | ~~La línea de tiempo renderizaba eventos que nadie insertaba~~ | Cerrado 2026-10-14 |
 | **4.1.1** | Número de referencia real (`{TIPO}-{AÑO}-{SECUENCIA}`) | Hoy el panel usa un `SOL-XXXXXXXX` derivado del id. **El admin y el coordinador muestran referencias distintas** para la misma solicitud |
 | **4.4.1 + 4.4.2** | Versionado de plantillas y CRUD de coordinadores (RF-54/55/56) | Es el Sprint 4 residual. El CRUD hoy es solo lectura |
 | **4.4.4 + 4.10.9** | Dashboard: distribución por subtipo, tiempo por etapa, rango, y el umbral de "sin decisión" que hoy está cableado en 5 e incluye borradores | RF-51/52 |
 | **4.3.1** | Re-cotización del solicitante | Hoy solo el coordinador puede. Decidir si se quiere |
 | **4.10.2** | La alerta de inactividad no puede dispararse nunca | La condición es imposible por diseño. La promesa no se cumple |
-| **4.5.2 + 4.5.3** | Fecha requerida sin `min` (se aceptan fechas pasadas) y descripción no obligatoria | La doc pide ambas |
+| ✅ **4.5.2 + 4.5.3** | ~~Fecha requerida sin `min` y descripción no obligatoria~~ | Cerrado 2026-10-14 |
 
 ## Grupo 3 — Calidad del dato y trazabilidad
 

@@ -31,9 +31,11 @@ type DetalleSolicitudProps = {
   proveedorElegido?: string;
   /** Campos del catálogo, para atar una pregunta a un campo (opcional al preguntar). */
   campos?: CampoParaPreguntar[];
+  /** Lo que el solicitante respondió, como valores de campo. */
+  respuestas?: { campoKey: string; campoLabel: string; valor?: string }[];
 };
 
-export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos = [] }: DetalleSolicitudProps) {
+export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos = [], respuestas = [] }: DetalleSolicitudProps) {
   const router = useRouter();
   const terminal = ESTADOS_TERMINALES.includes(solicitud.estado);
   const [etapa, setEtapa] = useState<Etapa>(7);
@@ -292,6 +294,24 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
               );
             })}
           </ul>
+        </div>
+      ) : null}
+
+      {/* Lo que el solicitante respondió, como campos. Antes esto solo existía dentro del PDF
+          que se manda a los proveedores: el coordinador tenía que abrirlo para verlo. */}
+      {respuestas.length > 0 ? (
+        <div className="mb-6 bg-white rounded-2xl border border-slate-200 p-5">
+          <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-3 font-semibold">
+            Respuestas del solicitante ({respuestas.length})
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+            {respuestas.map((r) => (
+              <div key={r.campoKey} className="min-w-0">
+                <span className="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">{r.campoLabel}</span>
+                <span className="text-xs text-slate-700 break-words">{r.valor || <em className="text-slate-400">no especificado</em>}</span>
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
 

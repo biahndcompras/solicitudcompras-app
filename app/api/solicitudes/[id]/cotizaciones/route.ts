@@ -188,7 +188,8 @@ async function validarCotizacion(cotizacionId: string, extraida: DatosExtraidos)
       montoOtrosImpuestos: extraida.montoOtrosImpuestos ?? null,
       valorTotal: extraida.valorTotal ?? null,
       impuestosDesglosados: extraida.impuestosDesglosados ?? null,
-      tasaIsv: 0.15,
+      // La tasa sale de `configuracion`, no del código (doc 16 §2.4).
+      tasaIsv: await repo.tasaIsv(),
     });
     if (ia) {
       // Preferir la coherencia de la IA, pero nunca inventar: si dice no_verificable usamos la determinística.

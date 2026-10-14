@@ -43,6 +43,7 @@ export interface Repositorio {
 
   guardarRespuestas(solicitudId: string, respuestas: RespuestaCampo[]): Promise<void>;
   listarRespuestas(solicitudId: string): Promise<RespuestaCampo[]>;
+  guardarRespuestasPorClave(solicitudId: string, respuestas: Record<string, string>): Promise<void>;
 
   transicionarEstado(input: {
     solicitudId: string;
@@ -69,6 +70,8 @@ export interface Repositorio {
    * reimplementa la búsqueda y empiezan a aparecer bandejas ajenas.
    */
   usuarioLocalPorEmail(email: string): Promise<Usuario | null>;
+  /** Tasa de ISV vigente desde `configuracion`; 0.15 solo si la clave falta o es inválida. */
+  tasaIsv(): Promise<number>;
 
   /** Ronda de preguntas abierta al solicitante (spec 010). */
   pedirInformacion(input: {

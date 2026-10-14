@@ -366,3 +366,75 @@ describeDb("el solicitante solo puede responder lo que le preguntaron", () => {
     expect(campos.find((c) => c.campoKey === "plazo_entrega")).toBeUndefined();
   }, 30000);
 });
+
+describeDb("tasa de ISV desde configuración (doc 16 §2.4)", () => {
+  it("lee la tasa vigente en vez de un 15% cableado", async () => {
+    const repo = new PostgresRepositorio();
+    const original = await repo.leerConfig("tasa_isv");
+    try {
+      await repo.guardarConfig("tasa_isv", 0.18);
+      expect(await repo.tasaIsv()).toBe(0.18);
+
+      await repo.guardarConfig("tasa_isv", 0.15);
+      expect(await repo.tasaIsv()).toBe(0.15);
+    } finally {
+      await repo.guardarConfig("tasa_isv", original ?? 0.15);
+    }
+  }, 30000);
+
+  it("una tasa inválida cae al respaldo, no rompe la validación fiscal", async () => {
+    const repo = new PostgresRepositorio();
+    const original = await repo.leerConfig("tasa_isv");
+    try {
+      await repo.guardarConfig("tasa_isv", 15); // 15 en vez de 0.15: error humano típico
+      expect(await repo.tasaIsv()).toBe(0.15);
+      await repo.guardarConfig("tasa_isv", "no-es-un-numero");
+      expect(await repo.tasaIsv()).toBe(0.15);
+    } finally {
+      await repo.guardarConfig("tasa_isv", original ?? 0.15);
+    }
+  }, 30000);
+});
+
+describeDb("las respuestas del wizard se persisten como campos (4.5.6)", () => {
+  it("guardarRespuestasPorClave resuelve la etiqueta del catálogo y omite claves inventadas", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `wizard.${Date.now()}@bia.hn`;
+    const s = await repo.crearSolicitud(
+      { titulo: "Wizard", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+
+    await repo.guardarRespuestasPorClave(s.id, {
+      cantidad: "45 galones",
+      plazo_entrega: "2026-11-15",
+      campo_que_no_existe: "x",
+    });
+
+    const campos = await repo.listarRespuestas(s.id);
+    const porClave = Object.fromEntries(campos.map((c) => [c.campoKey, c.valor]));
+    expect(porClave.cantidad).toBe("45 galones");
+    expect(porClave.plazo_entrega).toBe("2026-11-15");
+    // Una clave fuera del catálogo no crea una fila huérfana.
+    expect(porClave.campo_que_no_existe).toBeUndefined();
+
+    // La etiqueta viene del catálogo, no del campoKey crudo.
+    expect(campos.find((c) => c.campoKey === "cantidad")?.campoLabel).toBeTruthy();
+  }, 30000);
+
+  it("volver a guardar el mismo campo lo actualiza, no lo duplica", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `wizard2.${Date.now()}@bia.hn`;
+    const s = await repo.crearSolicitud(
+      { titulo: "Wizard2", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+
+    await repo.guardarRespuestasPorClave(s.id, { cantidad: "10" });
+    await repo.guardarRespuestasPorClave(s.id, { cantidad: "45 galones" });
+
+    const campos = (await repo.listarRespuestas(s.id)).filter((c) => c.campoKey === "cantidad");
+    expect(campos).toHaveLength(1);
+    expect(campos[0].valor).toBe("45 galones");
+  }, 30000);
+});

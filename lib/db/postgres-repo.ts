@@ -170,6 +170,38 @@ export class PostgresRepositorio implements Repositorio {
     }));
   }
 
+  /**
+   * Guarda respuestas dadas como `{campoKey: valor}` resolviendo la etiqueta del catálogo.
+   *
+   * Antes esto vivía duplicado dentro de `actualizarCamposSolicitud` y dentro de
+   * `responderInformacion`. Dos copias de la misma regla (qué columnas, cómo se deriva el
+   * numérico) es una que se va a desincronizar.
+   */
+  async guardarRespuestasPorClave(
+    solicitudId: string,
+    respuestas: Record<string, string>,
+    client?: { query: (sql: string, args?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }> }
+  ): Promise<void> {
+    const claves = Object.keys(respuestas);
+    if (claves.length === 0) return;
+    const q = client ?? this.pg;
+    const cat = await q.query(
+      "SELECT campo_key, label FROM campo_catalogo WHERE campo_key = ANY($1::text[])",
+      [claves]
+    );
+    for (const c of cat.rows) {
+      const valor = respuestas[String(c.campo_key)] ?? "";
+      const numerico = Number.isFinite(Number(valor)) && String(valor).trim() !== "" ? Number(valor) : null;
+      await q.query(
+        `INSERT INTO respuesta_campo (solicitud_id, campo_key, campo_label, valor, valor_numerico, origen)
+         VALUES ($1,$2,$3,$4,$5,'assessment')
+         ON CONFLICT (solicitud_id, campo_key) DO UPDATE
+           SET valor = EXCLUDED.valor, valor_numerico = EXCLUDED.valor_numerico`,
+        [solicitudId, String(c.campo_key), String(c.label), valor || null, numerico]
+      );
+    }
+  }
+
   async guardarRespuestas(solicitudId: string, respuestas: RespuestaCampo[]): Promise<void> {
     for (const r of respuestas) {
       await this.pg.query(
@@ -742,21 +774,7 @@ export class PostgresRepositorio implements Repositorio {
       // dato, sin forma de saber que se perdió.
       const claves = Object.keys(respuestasValidas);
       if (claves.length > 0) {
-        const cat = await client.query(
-          "SELECT campo_key, label FROM campo_catalogo WHERE campo_key = ANY($1::text[])",
-          [claves]
-        );
-        for (const c of cat.rows) {
-          const valor = respuestasValidas[String(c.campo_key)] ?? "";
-          const numerico = Number.isFinite(Number(valor)) && valor.trim() !== "" ? Number(valor) : null;
-          await client.query(
-            `INSERT INTO respuesta_campo (solicitud_id, campo_key, campo_label, valor, valor_numerico, origen)
-             VALUES ($1,$2,$3,$4,$5,'assessment')
-             ON CONFLICT (solicitud_id, campo_key) DO UPDATE
-               SET valor = EXCLUDED.valor, valor_numerico = EXCLUDED.valor_numerico`,
-            [input.solicitudId, String(c.campo_key), String(c.label), valor || null, numerico]
-          );
-        }
+        await this.guardarRespuestasPorClave(input.solicitudId, respuestasValidas, client);
       }
 
       await client.query(
@@ -1055,6 +1073,16 @@ export class PostgresRepositorio implements Repositorio {
       "UPDATE link_publico SET veces_accedido = veces_accedido + 1, ultimo_acceso = now() WHERE token = $1",
       [token]
     );
+  }
+
+  /**
+   * Tasa de ISV vigente (doc 16 §2.4: "de configuración, no del prompt"). El default es un
+   * respaldo para una base sin la clave, no el valor real — un 15% cableado miente el día que
+   * la tasa cambie.
+   */
+  async tasaIsv(): Promise<number> {
+    const cruda = Number(await this.leerConfig("tasa_isv"));
+    return Number.isFinite(cruda) && cruda >= 0 && cruda <= 1 ? cruda : 0.15;
   }
 
   async leerConfig(clave: string): Promise<unknown> {

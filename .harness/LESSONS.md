@@ -43,3 +43,14 @@ pasó dos turnos sin que nadie lo cuestionara.
 **Regla:** antes de comparar A contra B, verificá que el harness realmente cambia entre A y B.
 Imprimí el valor efectivo (`getModel()`) una vez, en la propia corrida, y verificalo en la
 salida. Si no podés demostrar que el paráetero surtió efecto, no tenés una comparación.
+
+## Verificar texto renderizado: comparar contra el texto REAL, no contra el del código
+
+2026-10-14 — Dos veces en la misma sesión di por roto un bloque que funcionaba, porque lo
+buscaba como `"Esperando respuesta"` y el CSS `uppercase` lo renderiza `"ESPERANDO RESPUESTA"`.
+La primera vez lo atribuí a un bug de la feature; la segunda, dos horas después, repetí el error.
+
+**Regla:** cuando una verificación de texto falla, antes de reportar un bug **imprimí el texto
+real** que renderizó la página (`body.innerText`), no el que uno escribió en el JSX. Comparar
+contra el código es comparar contra la intención; el CSS, los saltos de línea y los `<!-- -->`
+de React cambian lo que el usuario ve.

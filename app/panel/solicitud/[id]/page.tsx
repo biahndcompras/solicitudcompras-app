@@ -18,6 +18,9 @@ export default async function SolicitudDetallePage({
   if (!solicitud) notFound();
   // Catálogo vigente para atar una pregunta a un campo (spec 010). Solo los de assessment:
   // los de plantilla ya se responden en el wizard y no tiene sentido preguntarlos de nuevo.
+  // Campos que el solicitante respondió: durante el wizard y al contestar preguntas de
+  // Compras. Antes solo existían dentro del PDF.
+  const respuestas = await repo.listarRespuestas(id);
   const campos = (await repo.listarCampoCatalogo(true))
     .filter((c) => c.activo && c.origen === "assessment")
     .map((c) => ({ campoKey: c.campoKey, label: c.label }));
@@ -65,7 +68,7 @@ export default async function SolicitudDetallePage({
           </div>
         </div>
         <div className="px-6 md:px-10 pb-10">
-          <DetalleSolicitud solicitud={solicitud} decision={decision ?? undefined} proveedorElegido={proveedorElegido} campos={campos} />
+          <DetalleSolicitud solicitud={solicitud} decision={decision ?? undefined} proveedorElegido={proveedorElegido} campos={campos} respuestas={respuestas} />
         </div>
       </div>
     </main>

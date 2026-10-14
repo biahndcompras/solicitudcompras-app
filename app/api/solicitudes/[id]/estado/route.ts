@@ -150,6 +150,17 @@ export async function PATCH(
     let pipeline: { ok: boolean; error?: string; documentoId?: string } | undefined;
     if (body.hacia === "ENVIADA_A_COMPRAS") {
       const enviado = res.solicitud;
+      // Las respuestas del wizard (materiales, cantidad, medidas…) viajaban SOLO al PDF: el
+      // coordinador las veía abriendo el documento y en ningún lado del panel. Se persisten
+      // como campos para que sean consultables. Si falla, no se pierde el envío: el dato ya
+      // está en el PDF y el pipeline sigue.
+      if (body.respuestas && Object.keys(body.respuestas).length > 0) {
+        try {
+          await repo.guardarRespuestasPorClave(id, body.respuestas);
+        } catch (e) {
+          console.error(`[envio] no se pudieron persistir las respuestas del wizard de ${id}:`, e);
+        }
+      }
       pipeline = await pipelineEnvioACompras({
         repo,
         solicitud: enviado,

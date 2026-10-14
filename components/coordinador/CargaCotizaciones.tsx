@@ -108,7 +108,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
     if (!editandoId || !borradorEdit) return;
     setError(null);
     try {
-      await api.actualizarCotizacion(editandoId, {
+      await api.actualizarCotizacion(solicitudId, editandoId, {
         proveedorNombre: borradorEdit.proveedorNombre,
         moneda: borradorEdit.moneda,
         valorNeto: borradorEdit.valorNeto,
@@ -128,7 +128,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
     setBorrandoId(c.id);
     setError(null);
     try {
-      await api.eliminarCotizacion(c.id);
+      await api.eliminarCotizacion(solicitudId, c.id);
       setBorrandoId(null);
       onCotizacionCargada();
     } catch {

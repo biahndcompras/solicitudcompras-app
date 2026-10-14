@@ -196,7 +196,7 @@ export const api = {
     }).then((r) => json<Cotizacion>(r));
   },
 
-  actualizarCotizacion(cotizacionId: string, datos: {
+  actualizarCotizacion(solicitudId: string, cotizacionId: string, datos: {
     proveedorNombre?: string;
     valorNeto?: number | null;
     moneda?: string;
@@ -204,15 +204,15 @@ export const api = {
     valorTotal?: number | null;
     plazoEntrega?: string;
   }): Promise<void> {
-    return fetch(`/api/solicitudes/_/cotizaciones/${encodeURIComponent(cotizacionId)}`, {
+    return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}/cotizaciones/${encodeURIComponent(cotizacionId)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(datos),
     }).then(async (r) => { if (!r.ok) throw new Error("No se pudo guardar"); });
   },
 
-  eliminarCotizacion(cotizacionId: string): Promise<void> {
-    return fetch(`/api/solicitudes/_/cotizaciones/${encodeURIComponent(cotizacionId)}`, {
+  eliminarCotizacion(solicitudId: string, cotizacionId: string): Promise<void> {
+    return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}/cotizaciones/${encodeURIComponent(cotizacionId)}`, {
       method: "DELETE",
     }).then(async (r) => { if (!r.ok) throw new Error("No se pudo eliminar"); });
   },

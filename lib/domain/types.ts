@@ -121,6 +121,8 @@ export type PreguntaAlSolicitante = {
   pedidaEn: string;
   pedidaPor?: string;
   preguntas: { campoKey: string; pregunta: string }[];
+  /** Ronda para la que YA se mandó el recordatorio, para no repetirlo cada día. */
+  recordatorioRonda?: number;
 };
 
 export type RespuestaDelSolicitante = {

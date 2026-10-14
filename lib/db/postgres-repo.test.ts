@@ -272,3 +272,65 @@ describeDb("registro de respuestas del solicitante (spec 010, D4)", () => {
     expect(resp?.nota).toMatch(/Ronda 1/);
   }, 30000);
 });
+
+describeDb("recordatorio de información vencida (spec 010, RF-62)", () => {
+  // La antigüedad se simula con SQL directo en vez de con un método del repo: un método de
+  // producción que solo existe para los tests es superficie que nadie más va a usar y que
+  // hay que mantener.
+  async function retroceder(id: string, dias: number) {
+    const { Client } = await import("pg");
+    const c = new Client({ connectionString: DATABASE_URL });
+    await c.connect();
+    await c.query("UPDATE solicitud SET informacion_desde = now() - make_interval(days => $2) WHERE id = $1", [id, dias]);
+    await c.end();
+  }
+
+  async function conRonda(email: string, diasAtras: number) {
+    const repo = new PostgresRepositorio();
+    const s = await repo.crearSolicitud(
+      { titulo: "R", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+    await repo.transicionarEstado({ solicitudId: s.id, hacia: "ENVIADA_A_COMPRAS", actorTipo: "solicitante", actorIdentificador: email });
+    await repo.pedirInformacion({ solicitudId: s.id, preguntas: [{ campoKey: "materiales", pregunta: "¿Material?" }] });
+    // Se retrocede la fecha para simular antigüedad sin esperar 3 días reales.
+    await retroceder(s.id, diasAtras);
+    return { repo, id: s.id };
+  }
+
+  it("una ronda reciente NO aparece; una vieja sí", async () => {
+    const { repo, id } = await conRonda(`reciente.${Date.now()}@bia.hn`, 1);
+    expect((await repo.informacionVencida(3)).some((v) => v.solicitud.id === id)).toBe(false);
+
+    await retroceder(id, 4);
+    const vencidas = await repo.informacionVencida(3);
+    const mia = vencidas.find((v) => v.solicitud.id === id);
+    expect(mia).toBeTruthy();
+    expect(mia?.dias).toBeGreaterThanOrEqual(3);
+    expect(mia?.ronda).toBe(1);
+  }, 30000);
+
+  it("marcar el recordatorio la saca de la lista: no se repite todos los días", async () => {
+    const { repo, id } = await conRonda(`marcada.${Date.now()}@bia.hn`, 5);
+    const vencida = (await repo.informacionVencida(3)).find((v) => v.solicitud.id === id);
+    expect(vencida).toBeTruthy();
+
+    await repo.marcarRecordatorioInformacion(id, vencida!.ronda);
+
+    expect((await repo.informacionVencida(3)).some((v) => v.solicitud.id === id)).toBe(false);
+  }, 30000);
+
+  it("una ronda NUEVA vuelve a armar el recordatorio", async () => {
+    const { repo, id } = await conRonda(`rearma.${Date.now()}@bia.hn`, 5);
+    const primera = (await repo.informacionVencida(3)).find((v) => v.solicitud.id === id)!;
+    await repo.marcarRecordatorioInformacion(id, primera.ronda);
+    await repo.responderInformacion({ solicitudId: id, respuestas: { materiales: "Acero" } });
+
+    // Ronda 2: pedida y envejecida.
+    await repo.pedirInformacion({ solicitudId: id, preguntas: [{ campoKey: "materiales", pregunta: "¿Otra vez?" }] });
+    await retroceder(id, 5);
+
+    const segunda = (await repo.informacionVencida(3)).find((v) => v.solicitud.id === id);
+    expect(segunda?.ronda).toBe(2);
+  }, 30000);
+});

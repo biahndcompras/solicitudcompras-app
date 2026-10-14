@@ -81,10 +81,7 @@ export interface Repositorio {
     respuestas: Record<string, string>;
     respondidoPor?: string;
   }): Promise<{ yaRespondida: boolean; ronda?: number }>;
-  informacionVencida(
-    umbralDias: number,
-    excluirRonda?: number
-  ): Promise<{ solicitud: Solicitud; ronda: number; dias: number }[]>;
+  informacionVencida(umbralDias: number): Promise<{ solicitud: Solicitud; ronda: number; dias: number }[]>;
   marcarRecordatorioInformacion(solicitudId: string, ronda: number): Promise<void>;
 
   obtenerSolicitud(id: string): Promise<Solicitud | null>;

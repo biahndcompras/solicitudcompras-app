@@ -33,12 +33,12 @@ Estado: `- [ ]` pendiente · `- [x]` hecha con evidencia
 
 ## Bloque 5 — Recordatorio de 3 días
 
-- [ ] T018 Repo: pendientes cuya antigüedad supera el umbral
-- [ ] T019 Correo 8 al coordinador
-- [ ] T020 Atado al botón "Ejecutar alertas" del admin (funciona hoy)
-- [ ] T021 Ruta `GET /api/cron/recordatorios` protegida por secreto, lista para el cron
-- [ ] T022 `crons` en `vercel.json`
-- [ ] T023 No se marca como "recordado" para no reenviar cada día
+- [x] T018 Repo: pendientes cuya antigüedad supera el umbral
+- [x] T019 Correo 8 al coordinador
+- [x] T020 Atado al botón "Ejecutar alertas" del admin (funciona hoy)
+- [x] T021 Ruta `GET /api/cron/recordatorios` protegida por secreto, lista para el cron
+- [x] T022 `crons` en `vercel.json`
+- [x] T023 No se marca como "recordado" para no reenviar cada día
 
 ## Bloque 6 — Distintivo en el panel
 

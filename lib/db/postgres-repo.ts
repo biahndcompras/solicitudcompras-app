@@ -770,9 +770,13 @@ export class PostgresRepositorio implements Repositorio {
 
   /**
    * Rondas abiertas cuya antigüedad supera el umbral (spec 010, RF-62). Es lo que alimenta el
-   * recordatorio del correo 8. `excluirRonda` evita reenviar el mismo recordatorio cada día.
+   * recordatorio del correo 8.
+   *
+   * Excluye las que YA fueron recordadas en ESTA ronda: sin esa condición el correo saldría
+   * todos los días, y un aviso diario deja de leerse. Al abrirse una ronda nueva el valor no
+   * coincide y el recordatorio se re-arma solo.
    */
-  async informacionVencida(umbralDias: number, excluirRonda?: number): Promise<
+  async informacionVencida(umbralDias: number): Promise<
     { solicitud: Solicitud; ronda: number; dias: number }[]
   > {
     const res = await this.pg.query(
@@ -781,9 +785,10 @@ export class PostgresRepositorio implements Repositorio {
         WHERE s.informacion_pendiente = true
           AND s.informacion_desde IS NOT NULL
           AND now() - s.informacion_desde > make_interval(days => $1)
-          AND (s.informacion_preguntas->>'ronda')::int <> COALESCE($2::int, -1)
+          AND COALESCE((s.informacion_preguntas->>'recordatorioRonda')::int, -1)
+              <> COALESCE((s.informacion_preguntas->>'ronda')::int, -2)
         ORDER BY s.informacion_desde ASC`,
-      [umbralDias, excluirRonda ?? null]
+      [umbralDias]
     );
     return res.rows.map((f) => ({
       solicitud: filaSolicitud(f),

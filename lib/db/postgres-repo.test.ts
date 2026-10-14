@@ -99,6 +99,11 @@ describeDb("registrarDecisionYCerrar · 'ninguna me sirve' no cierra", () => {
       prosContras: {},
       discrepanciasDetectadas: [],
     });
+    // El paso por EN_COTIZACION no es decorativo: la máquina de estados NO permite saltar de
+    // ENVIADA_A_COMPRAS a COMPARATIVA_LISTA (esa es la transición que valida el repo, 4.10.5).
+    // Es el mismo camino que sigue la ruta HTTP de comparativa: primero EN_COTIZACION, luego
+    // COMPARATIVA_LISTA. Este helper lo saltaba y por eso quedaba probando una transición inválida.
+    await repo.transicionarEstado({ solicitudId: s.id, hacia: "EN_COTIZACION", actorTipo: "coordinador" });
     await repo.transicionarEstado({ solicitudId: s.id, hacia: "COMPARATIVA_LISTA", actorTipo: "coordinador" });
     await repo.transicionarEstado({ solicitudId: s.id, hacia: "ENVIADA_A_SOLICITANTE", actorTipo: "coordinador", nota: "Recomiendo la A." });
     return { id: s.id, comparativaId: comparativa.id };
@@ -436,5 +441,184 @@ describeDb("las respuestas del wizard se persisten como campos (4.5.6)", () => {
     const campos = (await repo.listarRespuestas(s.id)).filter((c) => c.campoKey === "cantidad");
     expect(campos).toHaveLength(1);
     expect(campos[0].valor).toBe("45 galones");
+  }, 30000);
+});
+
+/**
+ * 4.10.3 — La UI renderiza `creacion`, `carga_cotizacion`, `generacion_comparativa`,
+ * `envio_correo` y `acceso_link`, pero nadie los insertaba: la línea de tiempo salía vacía
+ * de los hitos que el usuario espera ver. Estos tests atan cada tipo de evento a su punto de
+ * inserción en el repo, para que ese hueco no vuelva.
+ */
+describeDb("trazabilidad: los eventos que la UI muestra se insertan (4.10.3)", () => {
+  async function nuevaSolicitud(repo: PostgresRepositorio, email: string) {
+    return repo.crearSolicitud(
+      { titulo: "Trazable", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+  }
+
+  it("crear la solicitud deja un evento 'creacion'", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await nuevaSolicitud(repo, `traza-creacion.${Date.now()}@bia.hn`);
+
+    const eventos = await repo.listarEventos(s.id);
+    expect(eventos.some((e) => e.tipoEvento === "creacion")).toBe(true);
+  }, 30000);
+
+  it("guardar una cotización deja un evento 'carga_cotizacion'", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await nuevaSolicitud(repo, `traza-cotizacion.${Date.now()}@bia.hn`);
+
+    await repo.guardarCotizacion({
+      solicitudId: s.id,
+      proveedorNombre: "Proveedor A",
+      formatoOriginal: "manual",
+      especificacionesOfertadas: {},
+      confianzaExtraccion: {},
+      editadaManualmente: false,
+      fechaCarga: new Date().toISOString(),
+    });
+
+    const eventos = await repo.listarEventos(s.id);
+    expect(eventos.some((e) => e.tipoEvento === "carga_cotizacion")).toBe(true);
+  }, 30000);
+
+  it("guardar la comparativa deja un evento 'generacion_comparativa'", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await nuevaSolicitud(repo, `traza-comparativa.${Date.now()}@bia.hn`);
+
+    await repo.guardarComparativa(s.id, {
+      id: "",
+      solicitudId: s.id,
+      fechaGeneracion: new Date().toISOString(),
+      prosContras: {},
+      discrepanciasDetectadas: [],
+    });
+
+    const eventos = await repo.listarEventos(s.id);
+    expect(eventos.some((e) => e.tipoEvento === "generacion_comparativa")).toBe(true);
+  }, 30000);
+
+  it("regenerar/actualizar la comparativa NO duplica el hito 'generacion_comparativa'", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await nuevaSolicitud(repo, `traza-comparativa-2.${Date.now()}@bia.hn`);
+    const base = {
+      id: "",
+      solicitudId: s.id,
+      fechaGeneracion: new Date().toISOString(),
+      prosContras: {},
+      discrepanciasDetectadas: [],
+    };
+
+    await repo.guardarComparativa(s.id, base);
+    // La descarga de Excel (ruta fuera de alcance) vuelve a llamar guardarComparativa: es un
+    // upsert, no una nueva generación, y no debe escribir otro hito.
+    await repo.guardarComparativa(s.id, { ...base, sugerenciaIA: "regenerada" });
+
+    const hitos = (await repo.listarEventos(s.id)).filter((e) => e.tipoEvento === "generacion_comparativa");
+    expect(hitos).toHaveLength(1);
+  }, 30000);
+
+  it("registrar un correo enviado deja un evento 'envio_correo'", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await nuevaSolicitud(repo, `traza-correo.${Date.now()}@bia.hn`);
+
+    await repo.registrarCorreo({
+      solicitudId: s.id,
+      tipoCorreo: "1",
+      destinatario: "compras@bia.hn",
+      estadoEnvio: "enviado",
+    });
+
+    const eventos = await repo.listarEventos(s.id);
+    expect(eventos.some((e) => e.tipoEvento === "envio_correo")).toBe(true);
+  }, 30000);
+
+  it("un correo fallido NO se muestra como 'envio_correo'", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await nuevaSolicitud(repo, `traza-correo-fallido.${Date.now()}@bia.hn`);
+
+    await repo.registrarCorreo({
+      solicitudId: s.id,
+      tipoCorreo: "1",
+      destinatario: "compras@bia.hn",
+      estadoEnvio: "fallido",
+      errorDetalle: "timeout del proveedor",
+    });
+
+    const eventos = await repo.listarEventos(s.id);
+    // Decir "correo enviado" cuando falló sería mentir en la trazabilidad; el fallo vive en correo_enviado.
+    expect(eventos.some((e) => e.tipoEvento === "envio_correo")).toBe(false);
+  }, 30000);
+
+  it("el alta idempotente no duplica la solicitud ni el evento 'creacion'", async () => {
+    const repo = new PostgresRepositorio();
+    const email = `traza-idem.${Date.now()}@bia.hn`;
+    const clave = "clave-idem-traza-1234";
+    const datos = { titulo: "Idem", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" as const };
+    const opciones = { descripcion: "d", categoria: "administrativa", idempotencyKey: clave };
+
+    const s1 = await repo.crearSolicitud(datos, opciones);
+    const s2 = await repo.crearSolicitud(datos, opciones);
+
+    expect(s2.id).toBe(s1.id);
+    const creaciones = (await repo.listarEventos(s1.id)).filter((e) => e.tipoEvento === "creacion");
+    expect(creaciones).toHaveLength(1);
+  }, 30000);
+
+  it("registrar un acceso al enlace deja un evento 'acceso_link'", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await nuevaSolicitud(repo, `traza-acceso.${Date.now()}@bia.hn`);
+    const comparativa = await repo.guardarComparativa(s.id, {
+      id: "",
+      solicitudId: s.id,
+      fechaGeneracion: new Date().toISOString(),
+      prosContras: {},
+      discrepanciasDetectadas: [],
+    });
+    const link = await repo.crearLinkPublico(comparativa.id, `tok-${Date.now()}`);
+
+    await repo.registrarAccesoLink(link.token);
+
+    const eventos = await repo.listarEventos(s.id);
+    expect(eventos.some((e) => e.tipoEvento === "acceso_link")).toBe(true);
+  }, 30000);
+});
+
+/**
+ * 4.10.5 — La máquina de estados se validaba SOLO en la ruta HTTP. El repo es el último
+ * guardián: cualquier endpoint que lo llame directo podía saltar estados. Aquí no se prueba
+ * "el happy path" — se prueba que una transición prohibida se rechaza y NO muta la solicitud.
+ */
+describeDb("transicionarEstado valida la máquina de estados (4.10.5)", () => {
+  it("rechaza saltar estados y no deja la solicitud a medio camino", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await repo.crearSolicitud(
+      { titulo: "No salta", solicitanteEmail: `salto.${Date.now()}@bia.hn`, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+
+    // BORRADOR → COMPARATIVA_LISTA no existe en la máquina.
+    await expect(
+      repo.transicionarEstado({ solicitudId: s.id, hacia: "COMPARATIVA_LISTA", actorTipo: "coordinador" })
+    ).rejects.toThrow(/Transición inválida/);
+
+    expect((await repo.obtenerSolicitud(s.id))?.estado).toBe("BORRADOR");
+  }, 30000);
+
+  it("una solicitud terminal (cancelada) no admite ninguna transición", async () => {
+    const repo = new PostgresRepositorio();
+    const s = await repo.crearSolicitud(
+      { titulo: "Terminal", solicitanteEmail: `terminal.${Date.now()}@bia.hn`, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+    await repo.transicionarEstado({ solicitudId: s.id, hacia: "CANCELADA", actorTipo: "admin" });
+
+    await expect(
+      repo.transicionarEstado({ solicitudId: s.id, hacia: "ENVIADA_A_COMPRAS", actorTipo: "admin" })
+    ).rejects.toThrow(/Transición inválida/);
+
+    expect((await repo.obtenerSolicitud(s.id))?.estado).toBe("CANCELADA");
   }, 30000);
 });

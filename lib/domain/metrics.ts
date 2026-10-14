@@ -10,6 +10,12 @@ export type MetricasDashboard = {
   solicitudesSinDecision: number;
   volumenPorCoordinador: Record<string, number>;
   distribucionPorTipo: Record<string, number>;
+  /** Distribución por subtipo (producto/servicio/mixto) — 4.4.4. */
+  distribucionPorSubtipo: Record<string, number>;
+  /** Días promedio por etapa del ciclo, desde `evento_trazabilidad` — RF-52. Vacío si no hay eventos. */
+  tiempoPorEtapa?: Record<string, number | null>;
+  /** Umbral en días realmente aplicado al KPI "sin decisión" — 4.10.9. */
+  umbralDias?: number;
 };
 
 function diasEntre(a?: string, b?: string): number | null {
@@ -20,9 +26,10 @@ function diasEntre(a?: string, b?: string): number | null {
 
 export function calcularMetricas(
   solicitudes: Solicitud[],
-  opts?: { hoy?: string }
+  opts?: { hoy?: string; umbralDias?: number }
 ): MetricasDashboard {
   const hoy = opts?.hoy ?? new Date().toISOString();
+  const umbralDias = opts?.umbralDias && opts.umbralDias > 0 ? Math.floor(opts.umbralDias) : 5;
 
   const enviadas = solicitudes.filter((s) => s.estado !== "BORRADOR");
   const cerradasConDecision = solicitudes.filter(
@@ -41,15 +48,18 @@ export function calcularMetricas(
     (s) => !["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA", "BORRADOR"].includes(s.estado)
   );
 
+  // Espejo de la consulta SQL del repo (4.10.9): sin BORRADOR (nunca se envió, no espera
+  // decisión) y con el umbral recibido, no un 5 cableado.
   const sinDecision = solicitudes.filter(
     (s) =>
-      !["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"].includes(s.estado) &&
+      !["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA", "BORRADOR"].includes(s.estado) &&
       diasEntre(s.fechaCreacion, hoy) !== null &&
-      (diasEntre(s.fechaCreacion, hoy) ?? 0) > 5
+      (diasEntre(s.fechaCreacion, hoy) ?? 0) > umbralDias
   );
 
   const volumenPorCoordinador: Record<string, number> = {};
   const distribucionPorTipo: Record<string, number> = {};
+  const distribucionPorSubtipo: Record<string, number> = {};
   for (const s of solicitudes) {
     if (s.coordinadorId) {
       volumenPorCoordinador[s.coordinadorId] =
@@ -57,6 +67,8 @@ export function calcularMetricas(
     }
     const tipo = s.tipo ?? "SIN_TIPO";
     distribucionPorTipo[tipo] = (distribucionPorTipo[tipo] ?? 0) + 1;
+    const subtipo = s.subtipo ?? "SIN_SUBTIPO";
+    distribucionPorSubtipo[subtipo] = (distribucionPorSubtipo[subtipo] ?? 0) + 1;
   }
 
   return {
@@ -66,6 +78,8 @@ export function calcularMetricas(
     solicitudesSinDecision: sinDecision.length,
     volumenPorCoordinador,
     distribucionPorTipo,
+    distribucionPorSubtipo,
+    umbralDias,
   };
 }
 

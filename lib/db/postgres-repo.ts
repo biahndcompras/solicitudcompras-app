@@ -1171,15 +1171,29 @@ export class PostgresRepositorio implements Repositorio {
     const n = (sql: string) =>
       this.pg.query(sql, vals).then((r) => Number(r.rows[0]?.n ?? 0));
 
+    // Umbral del KPI "sin decisión" (4.10.9): lo manda el filtro si viene; si no, sale de
+    // `configuracion` — la misma clave que usa el botón de alertas y /admin/configuracion.
+    // Sin configuración válida cae al respaldo de 5 días; jamás a 0, que contaría todo.
+    const delFiltro = filtros?.umbralDias;
+    const configUmbral = Number(await this.leerConfig("umbral_dias_sin_movimiento"));
+    const crudoUmbral = delFiltro ?? configUmbral;
+    const umbralDias = Number.isFinite(crudoUmbral) && crudoUmbral > 0 ? Math.floor(crudoUmbral) : 5;
+
     const enviadas = await n(`SELECT count(*) AS n FROM solicitud${where} AND estado <> 'BORRADOR'`);
     const cerradas = await n(`SELECT count(*) AS n FROM solicitud${where} AND estado = 'CERRADA_CON_DECISION'`);
     const activas = await n(
       `SELECT count(*) AS n FROM solicitud${where} AND estado NOT IN ('CERRADA_CON_DECISION','CERRADA_SIN_DECISION','CANCELADA','BORRADOR')`
     );
-    const sinDecision = await n(
-      `SELECT count(*) AS n FROM solicitud${where} AND estado NOT IN ('CERRADA_CON_DECISION','CERRADA_SIN_DECISION','CANCELADA')
-       AND fecha_creacion < now() - interval '${Number(filtros?.umbralDias ?? 5)} days'`
-    );
+    // Un BORRADOR nunca se envió: no está esperando decisión. Excluirlo del NOT IN (4.10.9).
+    // El umbral va como parámetro (`make_interval`), no interpolado en el SQL.
+    const sinDecision = await this.pg
+      .query(
+        `SELECT count(*) AS n FROM solicitud${where}
+          AND estado NOT IN ('CERRADA_CON_DECISION','CERRADA_SIN_DECISION','CANCELADA','BORRADOR')
+          AND fecha_creacion < now() - make_interval(days => $${i})`,
+        [...vals, umbralDias]
+      )
+      .then((r) => Number(r.rows[0]?.n ?? 0));
 
     const tCicloRes = await this.pg.query(
       `SELECT EXTRACT(EPOCH FROM AVG(fecha_cierre - fecha_envio)) / 86400.0 AS d
@@ -1204,6 +1218,36 @@ export class PostgresRepositorio implements Repositorio {
     const distribucionPorTipo: Record<string, number> = {};
     for (const r of tipoRes.rows) distribucionPorTipo[String(r.t)] = Number(r.k);
 
+    // Distribución por subtipo (4.4.4): mismo patrón que por tipo.
+    const subtipoRes = await this.pg.query(
+      `SELECT COALESCE(subtipo::text, 'SIN_SUBTIPO') AS st, count(*) AS k FROM solicitud${where} GROUP BY st`,
+      vals
+    );
+    const distribucionPorSubtipo: Record<string, number> = {};
+    for (const r of subtipoRes.rows) distribucionPorSubtipo[String(r.st)] = Number(r.k);
+
+    // Tiempo por etapa (RF-52): de los cambios de estado en `evento_trazabilidad`. Cada hito
+    // abre una etapa y el siguiente la cierra; se promedian los tramos ya cerrados. La última
+    // etapa abierta no entra (no tiene fin), así que una etapa sin tramos completos no aparece
+    // — mejor vacío que un 0 que parezca medido.
+    const etapaRes = await this.pg.query(
+      `WITH tramos AS (
+         SELECT e.estado_nuevo::text AS etapa,
+                e.timestamp AS inicio,
+                lead(e.timestamp) OVER (PARTITION BY e.solicitud_id ORDER BY e.timestamp, e.id) AS fin
+           FROM evento_trazabilidad e
+           JOIN solicitud s ON s.id = e.solicitud_id
+           ${where} AND e.estado_nuevo IS NOT NULL
+       )
+       SELECT etapa, AVG(EXTRACT(EPOCH FROM (fin - inicio)) / 86400.0) AS d
+         FROM tramos
+        WHERE fin IS NOT NULL
+        GROUP BY etapa`,
+      vals
+    );
+    const tiempoPorEtapa: Record<string, number | null> = {};
+    for (const r of etapaRes.rows) tiempoPorEtapa[String(r.etapa)] = r.d == null ? null : Number(r.d);
+
     return {
       tasaConversion: enviadas === 0 ? null : (cerradas / enviadas) * 100,
       tiempoCicloPromedioDias: tiempoCicloDias,
@@ -1211,6 +1255,9 @@ export class PostgresRepositorio implements Repositorio {
       solicitudesSinDecision: sinDecision,
       volumenPorCoordinador,
       distribucionPorTipo,
+      distribucionPorSubtipo,
+      tiempoPorEtapa,
+      umbralDias,
     };
   }
 

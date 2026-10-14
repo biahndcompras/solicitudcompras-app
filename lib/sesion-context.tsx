@@ -5,7 +5,7 @@ import { createContext, useContext, type ReactNode } from "react";
 export type UsuarioSesion = {
   nombre: string;
   email: string;
-  rol: "coordinador" | "admin";
+  rol: "coordinador" | "admin" | "solicitante";
   // id del usuario en la DB local `usuario` (u1..u5), usado para queries por coordinador.
   localId?: string;
 };

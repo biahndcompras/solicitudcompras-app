@@ -3,7 +3,9 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 
-export type ApiRol = "coordinador" | "admin";
+/** Roles que un guard puede exigir. Incluye `solicitante` para poder proteger una ruta suya
+ *  el día que exista; hoy todas las suyas son públicas con token o correo. */
+export type ApiRol = "coordinador" | "admin" | "solicitante";
 
 // Retorna la sesión si el usuario autenticado tiene un rol permitido; si no, una
 // respuesta 401 (sin sesión) o 403 (rol no autorizado). Si está autorizado, undefined.

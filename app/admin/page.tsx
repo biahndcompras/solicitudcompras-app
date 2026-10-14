@@ -436,7 +436,15 @@ export default function AdminDashboardPage() {
                   {visibles.map((s) => (
                     <tr key={s.id} className="hover:bg-slate-50">
                       <td className="px-4 py-2.5">
-                        <div className="font-mono font-semibold text-slate-900">{s.numeroReferencia ?? "—"}</div>
+                        {/* 4.1.1: sin numero_referencia se dice «Sin referencia», igual que
+                            el panel del coordinador; nunca se fabrica una. */}
+                        {s.numeroReferencia ? (
+                          <div className="font-mono font-semibold text-slate-900">{s.numeroReferencia}</div>
+                        ) : (
+                          <div className="text-[11px] italic text-slate-500" title={`Sin referencia asignada · id interno ${s.id}`}>
+                            Sin referencia
+                          </div>
+                        )}
                         {/* truncate: sin esto la categoría envuelve a 2 líneas y la fila
                             pasa de 56px a 74px. El texto completo queda en el title. */}
                         <div className="text-[11px] text-slate-500 mt-0.5 truncate max-w-[150px]" title={nombreCategoria(s.categoria)}>

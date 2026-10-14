@@ -15,10 +15,6 @@ const COLUMNAS: { tipo: string; titulo: string }[] = [
   { tipo: "SIN_TIPO", titulo: "Sin clasificar" },
 ];
 
-function referencia(s: { numeroReferencia?: string | null; id: string }) {
-  return s.numeroReferencia ?? `SOL-${s.id.slice(0, 8).toUpperCase()}`;
-}
-
 function haceCuanto(iso: string) {
   const dias = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   if (dias <= 0) return "Hoy";
@@ -51,7 +47,15 @@ export default async function AdminProcesosPage() {
                     className="block bg-white border border-slate-200/70 rounded-xl p-4 shadow-sm hover:border-sky-300 hover:shadow-md transition-all"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono text-[11px] font-semibold text-slate-700">{referencia(s)}</span>
+                      {/* 4.1.1: sin numero_referencia no se inventa `SOL-<id>`; se dice
+                          «Sin referencia» igual que el panel del coordinador. */}
+                      {s.numeroReferencia ? (
+                        <span className="font-mono text-[11px] font-semibold text-slate-700">{s.numeroReferencia}</span>
+                      ) : (
+                        <span className="text-[11px] italic text-slate-500" title={`Sin referencia asignada · id interno ${s.id}`}>
+                          Sin referencia
+                        </span>
+                      )}
                       <span className="text-[10px] text-slate-400">{haceCuanto(s.fechaCreacion)}</span>
                     </div>
                     <p className="text-xs font-medium text-slate-900 line-clamp-2">{s.titulo}</p>

@@ -40,13 +40,13 @@ CÓMO RAZONAR (obligatorio):
 1. Primero identificá QUÉ ES el producto/servicio en el mundo real a partir del título y la descripción (ej: "pelota de fútbol" = balón cosido, no "artículo deportivo"). Inferí lo mejor que puedas aunque la descripción sea corta.
 2. Pensá como un comprador experto de ESA categoría: ¿qué especificaciones hacen que dos cotizaciones sean comparables? (materiales reales del ítem, medidas estándar del rubro, cantidades, acabados, empaque, plazos).
 3. Las preguntas deben apuntar a esos datos concretos — no a campos genéricos del catálogo que no apliquen.
-4. Las "sugerencias" deben ser opciones REALES que un proveedor de ese rubro reconocería (ej: para una pelota de fútbol: "cuero sintético TPU", "32 paneles cosidos, tamaño 5", "cámara de látex"). PROHIBIDO sugerir materiales o datos genéricos sin relación con el ítem (nada de "PVC / poliuretano / goma" para una pelota si no son opciones del rubro). Máximo 60 caracteres por sugerencia. Si no tenés base real, devolvé sugerencias vacías [].
+4. Las "sugerencias" deben ser opciones REALES que un proveedor de ese rubro reconocería (ej: para una pelota de fútbol: "cuero sintético TPU", "32 paneles cosidos, tamaño 5", "cámara de látex"). PROHIBIDO sugerir materiales o datos genéricos sin relación con el ítem (nada de "PVC / poliuretano / goma" para una pelota si no son opciones del rubro). Máximo 60 caracteres por sugerencia. Si no hay base real, devolver sugerencias vacías [].
 5. CLARIFICACIÓN: si una pregunta puede referirse al PRODUCTO o al LOGO/MARCA, especificá a cuál aplica (ej: "Dimensiones del LOGO (alto x ancho)").
-6. CONTEXTO INSUFICIENTE: si la descripción es demasiado vaga para identificar el ítem o su rubro (no podés inferir materiales/medidas plausibles), NO adivines: devolvé contexto_insuficiente=true y preguntas_contexto con 2 a 4 preguntas CORTAS para el solicitante que aclaren qué necesita (qué es, para qué se usa, cantidades, medidas de referencia). Dejá preguntas=[] en ese caso.
+6. CONTEXTO INSUFICIENTE: si la descripción es demasiado vaga para identificar el ítem o su rubro (no se pueden inferir materiales/medidas plausibles), NO adivines: devolver contexto_insuficiente=true y preguntas_contexto con 2 a 4 preguntas CORTAS para el solicitante que aclaren qué necesita (qué es, para qué se usa, cantidades, medidas de referencia). Dejar preguntas=[] en ese caso.
 
 ${GUARDRAILS_COMUNES}
 REGLA 7: Todo campoKey devuelto DEBE existir en el catálogo provisto. Si no hay campoKey en el catálogo relevante, no inventes campos.
-REGLA 8: Para el logo (campoKey "archivo_logo" o similar): NO preguntes "¿podés subir el logo?" — el sistema ya tiene su componente de carga de logo/arte arriba. Pregunta solo aspectos que falten (formato vectorial / alta resolución). No dupliques la carga.
+REGLA 8: Para el logo (campoKey "archivo_logo" o similar): NO preguntes "¿puede subir el logo?" — el sistema ya tiene su componente de carga de logo/arte arriba. Preguntar solo aspectos que falten (formato vectorial / alta resolución). No duplicar la carga.
 REGLA 10: el catálogo puede incluir campos de otros rubros; solo debés preguntar los que apliquen a ESTA solicitud concreta.
 REGLA 11: PROHIBIDO devolver el label del catálogo tal cual como pregunta ("Dimensiones", "Materiales"). Redactá SIEMPRE la pregunta en lenguaje natural mencionando el producto.
 REGLA 12: si el producto/servicio es identificable a partir del título o la descripción, NUNCA devuelvas contexto_insuficiente=true; razoná sobre su rubro aunque la descripción sea corta.
@@ -54,10 +54,10 @@ REGLA 12: si el producto/servicio es identificable a partir del título o la des
 EJEMPLOS DEL NIVEL ESPERADO:
 
 Ejemplo A — Título: "Pintura de aceite para fachada de almacen" / Descripción: "Pintura de aceite para pintar la fachada del almacén que tenga protección contra agua y humedades":
-- campoKey: "materiales" → pregunta: "¿Qué tipo de pintura preferís para la fachada: esmalte sintético, oleo o línea acrílica con protección antimoho?" sugerencias: ["Esmalte sintético", "Óleo al aceite", "Acrílica antimoho"]
-- campoKey: "cantidad" → pregunta: "¿Cuántos galones de pintura necesitás y a cuántos m² por galón debe rendir?" sugerencias: ["5 galones", "10 galones", "Según m² de fachada"]
+- campoKey: "materiales" → pregunta: "¿Qué tipo de pintura prefiere para la fachada: esmalte sintético, óleo o línea acrílica con protección antimoho?" sugerencias: ["Esmalte sintético", "Óleo al aceite", "Acrílica antimoho"]
+- campoKey: "cantidad" → pregunta: "¿Cuántos galones de pintura necesita y a cuántos m² por galón debe rendir?" sugerencias: ["5 galones", "10 galones", "Según m² de fachada"]
 - campoKey: "color_acabado" → pregunta: "¿Qué color y acabado debe tener la pintura de fachada?" sugerencias: ["Blanco mate", "Beige satinado", "Color corporativo"]
-- campoKey: "calidad" → pregunta: "¿Qué nivel de durabilidad esperás para exterior (estándar 2 años o premium 5 años)?" sugerencias: ["Estándar", "Premium"]
+- campoKey: "calidad" → pregunta: "¿Qué nivel de durabilidad espera para exterior (estándar 2 años o premium 5 años)?" sugerencias: ["Estándar", "Premium"]
 
 Ejemplo B — Título: "Servicio de limpieza de oficinas" / Descripción: "Limpieza diaria de oficinas":
 - campoKey: "alcance_servicio" → pregunta: "¿Qué áreas incluye la limpieza diaria (pisos, baños, cocina, ventanas)?" sugerencias: ["Áreas comunes", "Oficinas + baños", "Integral incluye ventanas"]
@@ -78,7 +78,7 @@ Catálogo disponible: {{catalogo}}
 
 Identificá primero qué es el producto/servicio. Seguí el nivel de los EJEMPLOS: preguntas concretas del rubro con sugerencias reales seleccionables. Si la descripción no alcanza para identificar el rubro (nada del EJEMPLO A/B/C aplica), devolvé contexto_insuficiente=true y preguntas_contexto en vez de inventar. Si todo está cubierto, sin_preguntas_pendientes: true.
 
-contexto_investigado: dos o tres frases en segunda persona que le expliquen al solicitante QUÉ entendiste de su solicitud y POR QUÉ le preguntas eso. Tratá siempre de "vos" (necesitás, podés, contanos), nunca de "usted" ni en tercera persona. Ej.: "Entendí que necesitás pintar una fachada exterior de unos 800 m² con pintura epóxica. Las condiciones del clima y el rendimiento del material cambian cuánto vas a necesitar, así que te pregunto eso." Sin listas, sin repetir las preguntas, sin mencionar que eres una IA. Si no pudiste determinar el rubro, describe ahí la duda concreta. Entrega el JSON con claves en snake_case.`,
+contexto_investigado: dos o tres frases que le expliquen al solicitante QUÉ entendiste de su solicitud y POR QUÉ le preguntas eso. Dirigite SIEMPRE al solicitante de "usted" (necesita, puede, cuéntenos), nunca en voseo ni en tercera persona. Ej.: "Entendí que necesita pintar una fachada exterior de unos 800 m² con pintura epóxica. Las condiciones del clima y el rendimiento del material cambian cuánto va a necesitar, así que le pregunto eso." Sin listas, sin repetir las preguntas, sin mencionar que eres una IA. Si no pudiste determinar el rubro, describe ahí la duda concreta. Entrega el JSON con claves en snake_case.`,
 };
 
 export const EXTRAER_COTIZACION: z.infer<typeof FuncionPromptSchema> = {

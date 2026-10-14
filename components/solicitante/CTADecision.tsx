@@ -27,9 +27,9 @@ export function CTADecision({ solicitudId, estado }: { solicitudId: string; esta
     return (
       <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-slate-900">Tu decisión es el siguiente paso</div>
+          <div className="text-sm font-semibold text-slate-900">Su decisión es el siguiente paso</div>
           <div className="text-[11px] text-slate-500 mt-0.5">
-            Abriste este enlace en este navegador: podés decidir sin volver al correo.
+            Abrió este enlace en este navegador: puede decidir sin volver al correo.
           </div>
         </div>
         <Link

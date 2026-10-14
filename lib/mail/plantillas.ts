@@ -59,10 +59,10 @@ export const PLANTILLAS_CORREO = {
   },
   // 2 — Acuse de recibo (solicitante)
   "2": {
-    asunto: (d: DatosCorreo) => `Recibimos tu solicitud ${esc(d.numeroReferencia)}`,
+    asunto: (d: DatosCorreo) => `Recibimos su solicitud ${esc(d.numeroReferencia)}`,
     cuerpo: (d: DatosCorreo) => `
       <p>Hola ${esc(d.solicitanteNombre)},</p>
-      <p>Tu solicitud fue recibida y enviada al equipo de Compras.</p>
+      <p>Su solicitud fue recibida y enviada al equipo de Compras.</p>
       <table cellpadding="6" cellspacing="0" style="font-size:13px">
         <tr><td><b>Referencia</b></td><td>${esc(d.numeroReferencia)}</td></tr>
         <tr><td><b>Necesidad</b></td><td>${esc(d.titulo)}</td></tr>
@@ -73,18 +73,18 @@ export const PLANTILLAS_CORREO = {
   },
   // 3 — Comparativo listo (solicitante, enlace público)
   "3": {
-    asunto: (d: DatosCorreo) => `Tu comparativo está listo — ${esc(d.numeroReferencia)}`,
+    asunto: (d: DatosCorreo) => `Su comparativo está listo — ${esc(d.numeroReferencia)}`,
     cuerpo: (d: DatosCorreo) => `
       <p>Hola ${esc(d.solicitanteNombre)},</p>
-      <p>Ya tenemos las cotizaciones para tu solicitud y preparamos el comparativo.</p>
+      <p>Ya tenemos las cotizaciones para su solicitud y preparamos el comparativo.</p>
       <table cellpadding="6" cellspacing="0" style="font-size:13px">
         <tr><td><b>Referencia</b></td><td>${esc(d.numeroReferencia)}</td></tr>
         <tr><td><b>Cotizaciones</b></td><td>${d.cantidadCotizaciones ?? "—"}</td></tr>
       </table>
       ${d.recomendacion ? `<p><b>Recomendación de ${esc(d.coordinadorNombre)}:</b> ${esc(d.recomendacion)}</p>` : ""}
-      <p>Revisá el comparativo completo y seleccioná la opción que prefieras desde este enlace:</p>
+      <p>Revise el comparativo completo y seleccione la opción que prefiera desde este enlace:</p>
       <p><a href="${esc(d.urlComparativa)}">${esc(d.urlComparativa)}</a></p>
-      <p>Tu selección queda registrada y nos llega de vuelta para continuar con la orden.</p>
+      <p>Su selección queda registrada y nos llega de vuelta para continuar con la orden.</p>
       <p>Portal de Compras BIA</p>`,
   },
   // 4 — Decisión registrada (coordinador + admin)
@@ -103,8 +103,8 @@ export const PLANTILLAS_CORREO = {
       </table>
       <p>${
         d.ningunaOpcionAceptada
-          ? "La solicitud <b>vuelve a Compras</b>: no se cerró. Evaluá por qué ninguna opción le sirve y decidí si se re-cotiza o se necesitas información adicional del solicitante."
-          : "La solicitud queda cerrada en el portal. Podés continuar con la orden de compra."
+          ? "La solicitud <b>vuelve a Compras</b>: no se cerró. Evalúe por qué ninguna opción le sirve y decida si se re-cotiza o si necesita información adicional del solicitante."
+          : "La solicitud queda cerrada en el portal. Puede continuar con la orden de compra."
       }</p>
       <p>Portal de Compras BIA</p>`,
   },
@@ -134,7 +134,7 @@ export const PLANTILLAS_CORREO = {
         ${(d.preguntas ?? []).map((p) => `<li>${esc(p.pregunta)}</li>`).join("")}
       </ul>
       <p><a href="${esc(d.urlDetalle)}">Responder ahora</a></p>
-      <p>Tu respuesta vuelve directo al coordinador de Compras que está viendo tu solicitud.</p>
+      <p>Su respuesta vuelve directo al coordinador de Compras que está viendo su solicitud.</p>
       <p>Portal de Compras BIA</p>`,
   },
   // 7 — El solicitante respondió (spec 010, RF-60)

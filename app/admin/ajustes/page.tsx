@@ -41,7 +41,7 @@ export default function AdminAjustesPage() {
         </div>
 
         <p className="mt-4 text-[12px] text-slate-500">
-          Tu nombre, correo y contraseña se administran donde iniciaste sesión. El rol lo asigna BIA Compras.
+          Su nombre, correo y contraseña se administran donde iniciaste sesión. El rol lo asigna BIA Compras.
         </p>
       </div>
     </AdminShell>

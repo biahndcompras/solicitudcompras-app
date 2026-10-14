@@ -31,20 +31,20 @@ const PASOS = [
 /* El encabezado vive UNA vez, en el `<section>` (para poder hacerse sticky); cada paso
    declaraba el suyo y se iba con el scroll. Títulos y bajadas, por paso. */
 const TITULOS_PASO: Record<number, string> = {
-  1: "¿Qué necesitás?",
-  2: "¿Qué necesitás?",
-  3: "Clasificación de tu solicitud",
+  1: "¿Qué necesita?",
+  2: "¿Qué necesita?",
+  3: "Clasificación de su solicitud",
   4: "Detalles para cotizar",
-  5: "Tu solicitud está lista",
-  6: "Tu solicitud fue enviada",
+  5: "Su solicitud está lista",
+  6: "Su solicitud fue enviada",
 };
 const BAJADAS_PASO: Record<number, string> = {
-  1: "Describí brevemente tu solicitud.",
-  2: "Describí brevemente tu solicitud.",
-  3: "Revisá la sugerencia del asistente y ajustala si hace falta.",
-  4: "Completá la información técnica requerida para tu solicitud.",
-  5: "Revisá el resumen antes de enviar a Compras.",
-  6: "Compras ya tiene tu solicitud. Te avisaremos cuando haya una comparativa lista.",
+  1: "Describa brevemente su solicitud.",
+  2: "Describa brevemente su solicitud.",
+  3: "Revise la sugerencia del asistente y ajústela si hace falta.",
+  4: "Complete la información técnica requerida para su solicitud.",
+  5: "Revise el resumen antes de enviar a Compras.",
+  6: "Compras ya tiene su solicitud. Le avisaremos cuando haya una comparativa lista.",
 };
 
 export function SolicitanteWizard() {
@@ -275,7 +275,7 @@ export function SolicitanteWizard() {
             <PasoConfirmacion estado={estado} referencia={envio.estado === "ok" ? envio.referencia : undefined} />
           ) : (
             /* Cualquier paso fuera de rango (solo alcanzable con estado corrupto) vuelve a
-               la captura. Antes caía en la confirmación y decía "Tu solicitud fue enviada". */
+               la captura. Antes caía en la confirmación y decía "Su solicitud fue enviada". */
             <PasoCaptura estado={estado} set={set} siguiente={siguiente} pasoValido={pasoValido} faltantes={faltantes} clasificarIA={clasificarIA} clasificandoIA={clasificandoIA} />
           )}
         </section>
@@ -313,7 +313,7 @@ export function SolicitanteWizard() {
               : ""}
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-slate-500">
-            Podés retomarla o empezar de cero. Nada se borra hasta que lo elijas.
+            Puede retomarla o empezar de cero. Nada se borra hasta que lo elija.
           </p>
         </Modal>
       ) : null}
@@ -390,8 +390,8 @@ export function SolicitanteWizard() {
             <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50/70 p-3">
               <p className="text-[13px] leading-relaxed text-amber-900">
                 {assessmentIncompleto === "error"
-                  ? "El asistente no pudo preparar las preguntas. Si enviás ahora, tu solicitud llega a Compras solo con el título y la descripción: los proveedores cotizarían cosas distintas y la comparativa no serviría."
-                  : "Las preguntas del asistente todavía no están listas. Si enviás ahora, tu solicitud llega a Compras sin los detalles técnicos que hacen comparables las cotizaciones."}
+                  ? "El asistente no pudo preparar las preguntas. Si envía ahora, su solicitud llega a Compras solo con el título y la descripción: los proveedores cotizarían cosas distintas y la comparativa no serviría."
+                  : "Las preguntas del asistente todavía no están listas. Si envía ahora, su solicitud llega a Compras sin los detalles técnicos que hacen comparables las cotizaciones."}
               </p>
             </div>
           ) : null}
@@ -400,7 +400,7 @@ export function SolicitanteWizard() {
             <>
               <p className="text-[13px] leading-relaxed text-slate-500">
                 Compras necesita estos datos para que los proveedores coticen de forma comparable.
-                Podés enviarla igual, pero la solicitud llegará incompleta.
+                Puede enviarla igual, pero la solicitud llegará incompleta.
               </p>
               <ul className="mt-3 space-y-1.5" role="list">
                 {obligatoriosPendientes.slice(0, 8).map((p) => (
@@ -470,7 +470,7 @@ function EstadoActual({
             ? "Este navegador no nos deja guardar nada. No cierres la pestaña: si se pierde, no hay recuperación."
             : borradoAt
               ? `Guardado en este navegador a las ${new Date(borradoAt).toLocaleTimeString("es-HN", { hour: "2-digit", minute: "2-digit" })}.`
-              : "Se guarda solo mientras escribís en este navegador."}
+              : "Se guarda solo mientras escribe en este navegador."}
         </span>
       </div>
     </div>
@@ -604,13 +604,13 @@ function PasoCaptura({
       {faltaIdentidad ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 mb-5" role="region" aria-label="Datos de quien solicita">
           <p className="text-sm font-semibold text-amber-900 mb-3">
-            Nos faltan tus datos para registrar la solicitud
+            Nos faltan sus datos para registrar la solicitud
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {!estado.nombre.trim() ? (
               <div>
                 <label htmlFor="nombre-identidad" className="block text-xs font-medium text-amber-900 mb-1.5">
-                  Tu nombre completo
+                  Su nombre completo
                 </label>
                 <input
                   id="nombre-identidad"
@@ -676,7 +676,7 @@ function PasoCaptura({
             </div>
           </div>
           <div>
-            <label htmlFor="fecha-requerida" className="block text-xs font-medium text-slate-700 mb-1.5">¿Para cuándo lo necesitás?</label>
+            <label htmlFor="fecha-requerida" className="block text-xs font-medium text-slate-700 mb-1.5">¿Para cuándo lo necesita?</label>
             <input id="fecha-requerida" type="date" value={estado.fechaRequerida} onChange={(e) => set("fechaRequerida", e.target.value)} className="w-full min-h-[44px] bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:bg-white transition-all text-slate-600" />
             {estado.fechaRequerida && diasHasta(estado.fechaRequerida) < 5 ? (
               <p className="text-[11px] text-amber-600 mt-1.5 font-medium">Este plazo es muy corto para cotizar. ¿Es una urgencia real?</p>
@@ -759,10 +759,10 @@ function PasoClasificacion({
         </div>
         <h2 className="text-2xl md:text-3xl font-medium tracking-tight mb-3 text-slate-900 relative z-10">
           {clasificandoIA
-            ? "Analizando tu solicitud…"
+            ? "Analizando su solicitud…"
             : !sinSugerencia
               ? <>Esto parece una <span className={"font-semibold " + tipoTextoColor(estado.clasificacion)}>{estado.clasificacion}</span></>
-              : "Elegí el tipo que mejor describa tu necesidad"}
+              : "Elija el tipo que mejor describa su necesidad"}
         </h2>
         {!sinSugerencia ? (
           <>
@@ -775,10 +775,10 @@ function PasoClasificacion({
             </p>
             <p className="text-[13px] text-slate-500 relative z-10 max-w-md leading-relaxed mb-1">
               {estado.clasificacion === "RFQ"
-                ? "Ya sabés exactamente qué necesitás — solo nos falta cotizar el precio con los proveedores del mercado."
+                ? "Ya sabe exactamente qué necesita — solo nos falta cotizar el precio con los proveedores del mercado."
                 : estado.clasificacion === "RFI"
                   ? "Todavía estás explorando qué existe en el mercado antes de decidir."
-                  : "Tenés un problema o proyecto amplio y buscás que un proveedor proponga la solución."}
+                  : "Tiene un problema o proyecto amplio y busca que un proveedor proponga la solución."}
             </p>
             {estado.razonamientoBreve ? (
               <p className="text-[12px] text-slate-400 italic relative z-10">Razón: {estado.razonamientoBreve}</p>
@@ -789,8 +789,8 @@ function PasoClasificacion({
             {/* Nunca culpamos al solicitante: si fue la IA la que no respondió, se dice eso. */}
             <p className="text-[13px] text-slate-500 relative z-10 max-w-md leading-relaxed">
               {estado.clasificacionError
-                ? "El asistente automático no pudo responder ahora mismo. Podés seguir igual: elegí una opción y la solicitud continúa."
-                : "El asistente no está seguro de qué tipo encaja mejor. Elegí una opción y seguí — podés cambiarla después con el comprador."}
+                ? "El asistente automático no pudo responder ahora mismo. Puede seguir igual: elija una opción y la solicitud continúa."
+                : "El asistente no está seguro de qué tipo encaja mejor. Elija una opción y siga — puede cambiarla después con el coordinador."}
             </p>
             {estado.clasificacionError ? (
               <div className="mt-3 flex items-center gap-3">
@@ -802,14 +802,14 @@ function PasoClasificacion({
                 >
                   Reintentar clasificación
                 </button>
-                <span className="text-[11px] text-slate-400">También podés continuar manualmente.</span>
+                <span className="text-[11px] text-slate-400">También puede continuar manualmente.</span>
               </div>
             ) : null}
           </>
         )}
       </div>
 
-      <p className="text-sm text-slate-600 mb-3 font-medium">¿No te parece correcto? Podés cambiarlo con un clic:</p>
+      <p className="text-sm text-slate-600 mb-3 font-medium">¿No le parece correcto? Puede cambiarlo con un clic:</p>
       <div className="space-y-3 mb-6">
         {opts.map((o) => (
           <label key={o.v} className={"group flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-slate-300 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-sky-500 has-[:checked]:ring-1 transition-all shadow-sm " + (estado.clasificacion === o.v ? tipoCardChecked(o.v) : "")}>
@@ -875,7 +875,7 @@ function PasoDetalles({
             <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
           </svg>
           <div className="text-lg font-bold text-slate-900 text-center px-6">Preparando preguntas del asistente…</div>
-          <div className="text-sm text-slate-500 text-center px-6">Analizando tu solicitud para preguntar lo que los proveedores necesitan</div>
+          <div className="text-sm text-slate-500 text-center px-6">Analizando su solicitud para preguntar lo que los proveedores necesitan</div>
           <div className="w-56 h-1.5 rounded-full bg-slate-200 overflow-hidden">
             <div className="h-full w-1/3 rounded-full bg-sky-500 animate-pulse" />
           </div>
@@ -886,7 +886,7 @@ function PasoDetalles({
         <div className="mb-5 rounded-2xl border border-amber-300 bg-amber-50/80 p-5" role="alert" data-reintentar-ia>
           <div className="text-sm font-semibold text-amber-900 mb-1">No pudimos preparar las preguntas del asistente</div>
           <p className="text-[13px] text-amber-900 leading-relaxed mb-3">
-            {estado.assessmentError ?? "El asistente no respondió."} Podés reintentar o continuar sin ellas: Compras te va a pedir lo que falte.
+            {estado.assessmentError ?? "El asistente no respondió."} Puede reintentar o continuar sin ellas: Compras te va a pedir lo que falte.
           </p>
           <button
             type="button"
@@ -904,7 +904,7 @@ function PasoDetalles({
         <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
           <div className="text-sm font-semibold text-amber-900 mb-1">Necesitamos un poco más de contexto</div>
           <p className="text-xs text-amber-800 leading-relaxed mb-3">
-            Para hacer las preguntas correctas a los proveedores, contanos un poco más de lo que necesitás:
+            Para hacer las preguntas correctas a los proveedores, cuéntenos un poco más de lo que necesita:
           </p>
           {estado.preguntasContexto.length > 0 ? (
             <ul className="list-disc pl-5 mb-3 space-y-1">
@@ -937,7 +937,7 @@ function PasoDetalles({
 
       <div className="bg-white rounded-2xl border border-slate-200/60 p-5 md:p-6 mb-4 shadow-sm">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Información de tu solicitud</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Información de su solicitud</span>
         </div>
         <div className="mb-5 rounded-xl bg-slate-50 border border-slate-100 p-4">
           <div className="text-sm font-medium text-slate-900 mb-1 break-words">{estado.titulo || "Sin título"}</div>
@@ -1001,7 +1001,7 @@ function PasoDetalles({
       ) : null}
 
       {estado.contextoInvestigado?.trim() ? (
-        <div className="mb-5 rounded-2xl border border-sky-100 bg-sky-50/70 px-4 py-3" role="note" aria-label="Qué entendimos de tu solicitud">
+        <div className="mb-5 rounded-2xl border border-sky-100 bg-sky-50/70 px-4 py-3" role="note" aria-label="Qué entendimos de su solicitud">
           <div className="flex items-start gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-sky-600 mt-0.5 shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
             <p className="text-[13px] leading-relaxed text-sky-900">{estado.contextoInvestigado.trim()}</p>
@@ -1121,7 +1121,7 @@ function CampoRespuesta({
               </button>
             );
           })}
-          <span className="text-[11px] text-slate-400 italic">o escribí tu propia respuesta:</span>
+          <span className="text-[11px] text-slate-400 italic">o escriba su propia respuesta:</span>
         </div>
       ) : null}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -1313,9 +1313,9 @@ function PasoDocumento({
           {/* Solo se promete el respaldo si existe. Decirlo con el navegador en modo privado
               era una mentira que el solicitante pagaba al recargar y perderlo todo (A11.3). */}
           {persistenciaOk ? (
-            <p className="text-[11px] text-rose-600/80 mt-1">Tu solicitud no se perdió: quedó guardada como borrador en este navegador.</p>
+            <p className="text-[11px] text-rose-600/80 mt-1">Su solicitud no se perdió: quedó guardada como borrador en este navegador.</p>
           ) : (
-            <p className="text-[11px] text-rose-700 font-medium mt-1">Este navegador no nos dejó guardar copia: si cerrás la pestaña, se pierde. Copiá tus datos antes de salir.</p>
+            <p className="text-[11px] text-rose-700 font-medium mt-1">Este navegador no nos dejó guardar copia: si cierra la pestaña, se pierde. Copie sus datos antes de salir.</p>
           )}
         </div>
       ) : null}
@@ -1376,14 +1376,14 @@ function PasoConfirmacion({ estado, referencia }: { estado: WizardState; referen
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12l5 5L20 6"/></svg>
         </div>
       </div>
-      <h1 className="text-3xl font-medium tracking-tight mb-2 text-slate-900">Tu solicitud fue enviada</h1>
+      <h1 className="text-3xl font-medium tracking-tight mb-2 text-slate-900">Su solicitud fue enviada</h1>
       {referencia ? (
         <div className="mb-3 inline-flex items-center gap-2 bg-slate-900 text-white text-sm font-mono font-semibold px-4 py-2 rounded-full">
           Referencia: {referencia}
         </div>
       ) : null}
       <p className="text-sm text-slate-500 mb-6 max-w-sm leading-relaxed">
-        Todo listo. Te avisaremos a <span className="font-semibold text-slate-800 break-all">{estado.email || "tu correo"}</span> en cuanto haya una comparativa lista para que decidas.
+        Todo listo. Le avisaremos a <span className="font-semibold text-slate-800 break-all">{estado.email || "su correo"}</span> en cuanto haya una comparativa lista para que decida.
       </p>
 
       {docUrl ? (

@@ -80,16 +80,16 @@ describe("Panel del coordinador", () => {
     listarSolicitudes.mockRejectedValueOnce(new TypeError("Failed to fetch"));
     render(<PanelPage />);
 
-    expect(await screen.findByText("No pudimos traer tu bandeja")).toBeInTheDocument();
+    expect(await screen.findByText("No pudimos traer su bandeja")).toBeInTheDocument();
     expect(screen.getByText(/No se pudo conectar con el servidor/)).toBeInTheDocument();
-    expect(screen.queryByText("No tenés solicitudes asignadas")).toBeNull();
+    expect(screen.queryByText("No tiene solicitudes asignadas")).toBeNull();
 
     // Reintentar vuelve a pedir los datos y, si vuelven, muestra la tabla.
     const user = userEvent.setup();
     listarSolicitudes.mockResolvedValue(DOS);
     await user.click(screen.getByRole("button", { name: /Reintentar/ }));
     expect(await screen.findByText("2 resultados")).toBeInTheDocument();
-    expect(screen.queryByText("No pudimos traer tu bandeja")).toBeNull();
+    expect(screen.queryByText("No pudimos traer su bandeja")).toBeNull();
   });
 
   it("P1-5 · el mensaje de error del servidor se muestra tal cual", async () => {
@@ -106,7 +106,7 @@ describe("Panel del coordinador", () => {
     await user.type(screen.getByPlaceholderText(/Buscar/), "zzzz");
     expect(await screen.findByText("Sin resultados para «zzzz»")).toBeInTheDocument();
     // El estado vacío de "no tenés solicitudes" no aplica cuando hay una búsqueda activa.
-    expect(screen.queryByText("No tenés solicitudes asignadas")).toBeNull();
+    expect(screen.queryByText("No tiene solicitudes asignadas")).toBeNull();
     expect(screen.getByText("0 resultados")).toBeInTheDocument();
 
     await user.click(screen.getByText("Limpiar búsqueda", { selector: "button" }));
@@ -116,7 +116,7 @@ describe("Panel del coordinador", () => {
   it("P2-6 · sin búsqueda, una bandeja sin filas mantiene el estado vacío propio", async () => {
     listarSolicitudes.mockResolvedValue([]);
     render(<PanelPage />);
-    expect(await screen.findByText("No tenés solicitudes asignadas")).toBeInTheDocument();
+    expect(await screen.findByText("No tiene solicitudes asignadas")).toBeInTheDocument();
     expect(screen.queryByText(/Sin resultados para/)).toBeNull();
   });
 
@@ -127,7 +127,7 @@ describe("Panel del coordinador", () => {
 
     await user.click(screen.getByRole("button", { name: "Esperando decisión" }));
     expect(await screen.findByText("No hay solicitudes en «Esperando decisión»")).toBeInTheDocument();
-    expect(screen.queryByText("No tenés solicitudes asignadas")).toBeNull();
+    expect(screen.queryByText("No tiene solicitudes asignadas")).toBeNull();
 
     await user.click(screen.getByText("Ver todas", { selector: "button" }));
     expect(await screen.findByText("2 resultados")).toBeInTheDocument();

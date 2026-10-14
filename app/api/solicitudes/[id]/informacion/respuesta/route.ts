@@ -53,7 +53,7 @@ export async function POST(
       });
     } catch (e) {
       console.error(`[informacion] no se pudo registrar la respuesta de ${id}:`, e);
-      return NextResponse.json({ error: "No pudimos guardar tu respuesta" }, { status: 500 });
+      return NextResponse.json({ error: "No pudimos guardar su respuesta" }, { status: 500 });
     }
 
     // Reintento (doble clic, refresh, envío que perdió la respuesta): el hecho ya ocurrió.

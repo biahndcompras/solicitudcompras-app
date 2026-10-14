@@ -59,13 +59,13 @@ export function VistaPublica({
         setVuelveACompras(true);
         setMensaje({
           tipo: "ok",
-          texto: "Se notificó a Compras y tu solicitud vuelve a revisión. No se cerró: Compras la va a evaluar.",
+          texto: "Se notificó a Compras y su solicitud vuelve a revisión. No se cerró: Compras la va a evaluar.",
         });
         return true;
       }
       setMensaje({
         tipo: "ok",
-        texto: "Tu decisión fue registrada. Compras recibirá la notificación.",
+        texto: "Su decisión fue registrada. Compras recibirá la notificación.",
       });
       return true;
     } catch (e) {
@@ -73,7 +73,7 @@ export function VistaPublica({
         tipo: "error",
         texto:
           e instanceof Error && /failed to fetch|networkerror|load failed/i.test(e.message)
-            ? "No pudimos registrar tu decisión por un problema de conexión. Tu elección sigue aquí: intentá de nuevo."
+            ? "No pudimos registrar su decisión por un problema de conexión. Su elección sigue aquí: intente de nuevo."
             : e instanceof Error
               ? e.message
               : "Error al enviar",
@@ -93,7 +93,7 @@ export function VistaPublica({
             <span className="bg-white/80 border border-slate-200 rounded-full px-2 py-1">Enlace público · sin iniciar sesión</span>
           </div>
           <h1 className="text-2xl font-medium tracking-tight mb-1">Comparativa lista</h1>
-          <p className="text-sm text-slate-500">Revisá las opciones y decidí cuál querés.</p>
+          <p className="text-sm text-slate-500">Revise las opciones y decida cuál quiere.</p>
         </div>
 
         {vencimiento ? (
@@ -155,7 +155,7 @@ export function VistaPublica({
 
           {vuelveACompras ? (
             <p className="text-sm text-slate-600 text-center py-8 px-4">
-              Esta solicitud volvió a Compras para que evalúen tu pedido. Cuando haya una nueva
+              Esta solicitud volvió a Compras para que evalúen su pedido. Cuando haya una nueva
               comparativa te la vamos a mandar por correo.
             </p>
           ) : cotizaciones.length === 0 ? (

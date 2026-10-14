@@ -32,11 +32,11 @@ export function LoginForm({ titulo, descripcion, rol, tono }: LoginFormProps) {
         // Traducir errores comunes de Supabase a español.
         const msg =
           error.message.includes("Invalid login credentials")
-            ? "Correo o contraseña incorrectos. Verificá los datos e intentá de nuevo."
+            ? "Correo o contraseña incorrectos. Verifique los datos e intente de nuevo."
             : error.message.includes("Email not confirmed")
-              ? "El correo no está confirmado. Revisá tu bandeja de entrada."
+              ? "El correo no está confirmado. Revise su bandeja de entrada."
               : error.message.includes("rate_limit")
-                ? "Demasiados intentos. Esperá un momento y volvé a intentar."
+                ? "Demasiados intentos. Espere un momento y vuelva a intentar."
                 : `Error al iniciar sesión: ${error.message}`;
         setError(msg);
         setCargando(false);
@@ -46,7 +46,7 @@ export function LoginForm({ titulo, descripcion, rol, tono }: LoginFormProps) {
       router.push(rol === "admin" ? "/admin" : "/panel");
       router.refresh();
     } catch {
-      setError("No se pudo iniciar sesión. Revisá tu conexión e intentá de nuevo.");
+      setError("No se pudo iniciar sesión. Revise su conexión e intente de nuevo.");
       setCargando(false);
     }
   }

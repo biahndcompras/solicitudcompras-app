@@ -109,7 +109,7 @@ export default function PanelPage() {
         setError(
           e instanceof Error && !(e instanceof TypeError) && e.message
             ? e.message
-            : "No se pudo conectar con el servidor para traer tu bandeja. Revisá tu conexión e intentá de nuevo."
+            : "No se pudo conectar con el servidor para traer su bandeja. Revise su conexión e intente de nuevo."
         );
       })
       .finally(() => {
@@ -264,8 +264,8 @@ export default function PanelPage() {
                 <div className="mx-auto w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mb-3">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-rose-500"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
                 </div>
-                <div className="text-sm font-medium text-slate-900">No se pudo cargar tu bandeja</div>
-                <div className="text-xs text-slate-500 mt-1">Tu cuenta no está vinculada a un coordinador. Contactá a Compras.</div>
+                <div className="text-sm font-medium text-slate-900">No se pudo cargar su bandeja</div>
+                <div className="text-xs text-slate-500 mt-1">Su cuenta no está vinculada a un coordinador. Contacte a Compras.</div>
               </div>
             ) : error ? (
               /* Fallo de carga real: nunca se confunde con una bandeja vacía (P1-5). */
@@ -273,7 +273,7 @@ export default function PanelPage() {
                 <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mb-3">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-600"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
                 </div>
-                <div className="text-sm font-medium text-slate-900">No pudimos traer tu bandeja</div>
+                <div className="text-sm font-medium text-slate-900">No pudimos traer su bandeja</div>
                 <div className="text-xs text-slate-500 mt-1 max-w-md mx-auto">{error}</div>
                 <button
                   type="button"
@@ -296,7 +296,7 @@ export default function PanelPage() {
                       Sin resultados para «{busqueda.trim()}»
                     </div>
                     <div className="text-xs text-slate-500 mt-1">
-                      Revisá la referencia, el título o el nombre del solicitante.
+                      Revise la referencia, el título o el nombre del solicitante.
                     </div>
                     <button
                       type="button"
@@ -324,7 +324,7 @@ export default function PanelPage() {
                   </>
                 ) : (
                   <>
-                    <div className="text-sm font-medium text-slate-900">No tenés solicitudes asignadas</div>
+                    <div className="text-sm font-medium text-slate-900">No tiene solicitudes asignadas</div>
                     <div className="text-xs text-slate-500 mt-1">Cuando te asignen una categoría, aparecerán acá.</div>
                   </>
                 )}

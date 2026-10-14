@@ -59,15 +59,15 @@ const SOLO_PRODUCTO = new Set(["dimensiones", "materiales"]);
 const PLANTILLA_PREGUNTA: Record<string, (p: string) => string> = {
   dimensiones: (p) => `¿Qué dimensiones debe tener ${p} (alto x ancho x fondo o medidas estándar)?`,
   materiales: (p) => `¿De qué material o composición debe ser ${p}?`,
-  cantidad: (p) => `¿Cuántas unidades de ${p} necesitás?`,
+  cantidad: (p) => `¿Cuántas unidades de ${p} necesita?`,
   color_acabado: (p) => `¿Qué color o acabado debe tener ${p}?`,
-  calidad: (p) => `¿Qué nivel de calidad esperás de ${p} (estándar o premium)?`,
-  plazo_entrega: (p) => `¿Para cuándo necesitás recibir ${p}?`,
-  forma_pago: () => `¿Qué forma de pago preferís para esta compra?`,
+  calidad: (p) => `¿Qué nivel de calidad espera de ${p} (estándar o premium)?`,
+  plazo_entrega: (p) => `¿Para cuándo necesita recibir ${p}?`,
+  forma_pago: () => `¿Qué forma de pago prefiere para esta compra?`,
   garantias: (p) => `¿Qué garantía debe ofrecer el proveedor de ${p}?`,
-  precio_maximo: () => `¿Tenés un precio máximo o presupuesto tope?`,
-  credito_dias: () => `¿Cuántos días de crédito necesitás?`,
-  opciones_a_cotizar: (p) => `¿Querés que te coticen variantes u opciones de ${p}?`,
+  precio_maximo: () => `¿Tiene un precio máximo o presupuesto tope?`,
+  credito_dias: () => `¿Cuántos días de crédito necesita?`,
+  opciones_a_cotizar: (p) => `¿Quiere que le coticen variantes u opciones de ${p}?`,
   documentacion_solicitada: () => `¿Qué documentación debe adjuntar el proveedor (RTN, ficha técnica, referencias)?`,
   alcance_servicio: (p) => `¿Cuál es el alcance exacto del servicio de ${p} (qué incluye y qué no)?`,
   lugar_prestacion: () => `¿En qué lugar o dirección se debe prestar el servicio?`,
@@ -80,7 +80,7 @@ const PLANTILLA_PREGUNTA: Record<string, (p: string) => string> = {
 
 /** El producto/servicio en contexto: las preguntas se redactan sobre ÉL, no como labels. */
 function queEsDe(input: AssessmentInput): string {
-  return (input.titulo || input.descripcion || "").trim().split(/[.\n]/)[0]?.trim().slice(0, 60) || "lo que necesitás";
+  return (input.titulo || input.descripcion || "").trim().split(/[.\n]/)[0]?.trim().slice(0, 60) || "lo que necesita";
 }
 
 /** Campos del catálogo que le aplican a esta solicitud, según subtipo y cobertura de la UI. */
@@ -101,7 +101,7 @@ function sugerenciasDe(campo: CampoCatalogo): string[] {
 function preguntaDeCampo(campo: CampoCatalogo, queEs: string): PreguntaAssessment {
   return {
     campoKey: campo.campoKey,
-    pregunta: PLANTILLA_PREGUNTA[campo.campoKey]?.(queEs) ?? `¿Podrías detallar ${campo.label.toLowerCase()} para ${queEs}?`,
+    pregunta: PLANTILLA_PREGUNTA[campo.campoKey]?.(queEs) ?? `¿Podría detallar ${campo.label.toLowerCase()} para ${queEs}?`,
     por_que: campo.ayuda ?? "Determina que los proveedores coticen de forma comparable.",
     critica: campo.obligatorio,
     sugerencias: sugerenciasDe(campo).length > 0 ? sugerenciasDe(campo) : undefined,
@@ -227,7 +227,7 @@ export function assessmentFallback(input: AssessmentInput): ResultadoAssessment 
   const respondidos = new Set(camposCapturados.map((c) => c.campoKey));
   const preguntas: PreguntaAssessment[] = [];
 
-  const queEs = (titulo || descripcion || "").trim().split(/[.\n]/)[0]?.trim().slice(0, 60) || "lo que necesitás";
+  const queEs = (titulo || descripcion || "").trim().split(/[.\n]/)[0]?.trim().slice(0, 60) || "lo que necesita";
 
   const ordenados = [...camposAplicables(camposDisponiblesCatalogo, input.subtipo)].sort((a, b) => {
     const peso = (k: CampoCatalogo) =>

@@ -62,13 +62,13 @@ export default function Home() {
               </div>
               <div>
                 <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Nueva solicitud de cotización</h2>
-                <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">Ingresá tus datos básicos para comenzar. Sin contraseñas.</p>
+                <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">Ingrese sus datos básicos para comenzar. Sin contraseñas.</p>
               </div>
             </div>
 
             <form className="space-y-4" onSubmit={nuevaSolicitud}>
               <div>
-                <label htmlFor="email-institucional" className="block text-xs font-medium text-slate-700 mb-1.5">Tu correo institucional</label>
+                <label htmlFor="email-institucional" className="block text-xs font-medium text-slate-700 mb-1.5">Su correo institucional</label>
                 <div className="relative">
                   <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
                   <input
@@ -88,13 +88,13 @@ export default function Home() {
                 ) : null}
                 {emailWarning ? (
                   <p id="aviso-email" className="text-xs text-amber-600 mt-1.5 font-medium flex items-start gap-1">
-                    <span>Este correo no parece institucional. Podés continuar, pero Compras lo va a revisar.</span>
+                    <span>Este correo no parece institucional. Puede continuar, pero Compras lo va a revisar.</span>
                   </p>
                 ) : null}
               </div>
 
               <div>
-                <label htmlFor="nombre-completo" className="block text-xs font-medium text-slate-700 mb-1.5">Tu nombre completo</label>
+                <label htmlFor="nombre-completo" className="block text-xs font-medium text-slate-700 mb-1.5">Su nombre completo</label>
                 <div className="relative">
                   <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
                   <input

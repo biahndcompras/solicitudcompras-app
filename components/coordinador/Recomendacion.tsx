@@ -64,7 +64,7 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
     <div className="step-enter">
       <div className="mb-4">
         <h3 className="text-lg font-semibold tracking-tight text-slate-900">09 · Recomendación</h3>
-        <p className="text-xs text-slate-500 mt-1">Punto de control humano (RN-01). Podés contradecir la sugerencia de la IA sin fricción.</p>
+        <p className="text-xs text-slate-500 mt-1">Punto de control humano (RN-01). Puede contradecir la sugerencia de la IA sin fricción.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
@@ -110,13 +110,13 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
           value={recomendacion}
           onChange={(e) => setRecomendacion(e.target.value)}
           rows={4}
-          placeholder="Escribí tu criterio para el solicitante: qué conviene, riesgos, qué falta confirmar, etc."
+          placeholder="Escriba su criterio para el solicitante: qué conviene, riesgos, qué falta confirmar, etc."
           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:bg-white transition-all resize-none"
         />
         {bloqueado ? (
           <div className="mt-2 text-xs text-amber-800 flex items-start gap-2">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-[1px]"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-            Escribí tu recomendación antes de enviar. El solicitante decide, pero tu criterio es lo que más le sirve para decidir.
+            Escriba su recomendación antes de enviar. El solicitante decide, pero su criterio es lo que más le sirve para decidir.
           </div>
         ) : null}
         <div className="mt-4 flex items-center justify-end gap-2">
@@ -129,7 +129,7 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
               const ok = await onEnviar(recomendacion);
               setEnviando(false);
               if (ok) setEnviado(true);
-              else setErrorEnvio("No se pudo enviar. Revisá la conexión e intentá de nuevo.");
+              else setErrorEnvio("No se pudo enviar. Revise la conexión e intente de nuevo.");
             }}
             className="bg-sky-500 text-white text-xs px-7 py-3 rounded-full font-medium hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20"
           >

@@ -104,7 +104,7 @@ export async function GET(request: Request) {
       // caía al primer coordinador activo y le mostraba la bandeja de otro en silencio.
       // Ahora se dice: esta cuenta no está dada de alta.
       return NextResponse.json(
-        { error: "Tu cuenta no está dada de alta como coordinador." },
+        { error: "Su cuenta no está dada de alta como coordinador." },
         { status: 403 }
       );
     }

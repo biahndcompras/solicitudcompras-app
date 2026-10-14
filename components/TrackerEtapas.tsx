@@ -8,7 +8,7 @@ export const ETAPAS: { estado: EstadoSolicitud[]; label: string; icono: string }
   { estado: ["BORRADOR", "ENVIADA_A_COMPRAS"], label: "Creada", icono: "📝" },
   { estado: ["EN_COTIZACION"], label: "En cotización", icono: "🧾" },
   { estado: ["COMPARATIVA_LISTA"], label: "Comparativa", icono: "⚖️" },
-  { estado: ["ENVIADA_A_SOLICITANTE"], label: "Tu decisión", icono: "🗳️" },
+  { estado: ["ENVIADA_A_SOLICITANTE"], label: "Su decisión", icono: "🗳️" },
   { estado: ["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"], label: "Cerrada", icono: "✅" },
 ];
 

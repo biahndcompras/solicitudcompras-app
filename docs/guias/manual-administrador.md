@@ -1,43 +1,50 @@
 # Manual de uso — Administrador
 **Portal de Compras BIA · Guía breve para supervisión y trazabilidad**
 
-> Objetivo: dar visibilidad total del ciclo de compras, monitorear SLA y configurar la operación.
+> Objetivo: dar visibilidad total del ciclo de compras, monitorear tiempos y configurar la operación.
 
 ## 1. Ingreso
-- Entra a `/admin` con tu cuenta de administrador.
+- Entre a `/admin` con su cuenta de administrador.
 - El dashboard resume: tasa de conversión, tiempo promedio, procesos activos, alertas sin decisión,
-  **volumen por comprador** y **distribución por tipo** (RFQ/RFI/RFP).
+  **volumen por coordinador** y **distribución por tipo** (RFQ/RFI/RFP).
 
 ## 2. Seguimiento por fila
-- La tabla de procesos muestra por solicitud: referencia, solicitante, comprador, **estado + semáforo**,
-  **tiempo de atención** (SLA) y fecha de creación.
-- Filtra por **rango** (hoy/semana/mes/todo) y por **comprador**. El dashboard se recalcula.
+- La tabla de procesos muestra por solicitud: referencia, solicitante, coordinador, **estado + semáforo**,
+  **tiempo de atención** y fecha de creación.
+- Filtre por **rango** (hoy/semana/mes/todo) y por **coordinador**. El dashboard se recalcula.
 
 ## 3. Detalle de una solicitud
-- Entra a cualquier solicitud para ver la **línea de tiempo (trazabilidad)** completa: creación, cambios de
-  estado, cotizaciones, comparativa, envío, decisión.
-- El panel derecho muestra: solicitante, comprador, tipo/categoría, **semáforo** y **tiempo de atención**.
+- Entre a cualquier solicitud para ver la **línea de tiempo (trazabilidad)**: cambios de estado,
+  cotizaciones, comparativa, envío, decisión y las **preguntas al solicitante** con sus respuestas.
+- El panel derecho muestra: solicitante, coordinador, tipo/categoría, **semáforo** y **tiempo de atención**.
 
-### Reasignación (3.4)
-- Si un comprador está saturado (ej. Lester), elige otro en **"Reasignar comprador"** y pulsa **Reasignar**.
+### Reasignación
+- Si un coordinador está saturado, elija otro en **"Reasignar coordinador"** y confirme.
   El cambio queda registrado en la trazabilidad.
 
 ### Cancelación
-- Si corresponde, cancela una solicitud no cerrada con **"Cancelar solicitud"** (queda como CANCELADA).
+- Si corresponde, cancele una solicitud no cerrada con **"Cancelar solicitud"** (queda como CANCELADA).
+  Las cotizaciones ya cargadas se conservan.
 
 ## 4. Configuración
 - **Campos (`/admin/campos`)**: catálogo de campos del formulario (activo/inactivo).
-- **Configuración (`/admin/configuracion`)**: ISV, expiración de enlaces, formato de referencia,
-  umbral de inactividad, dominio institucional.
-- **Coordinadores (`/admin/coordinadores`)**: vista de carga por comprador (activas y promedio de días de cierre).
+- **Configuración (`/admin/configuracion`)**: expiración de enlaces, umbral de inactividad y
+  destinatario de alertas.
+- **Coordinadores (`/admin/coordinadores`)**: vista de carga por coordinador (activas y promedio de
+  días de cierre). **Es solo lectura**: el alta y la edición todavía no están en la interfaz.
 
 ## 5. Alertas
-- El botón **"Ejecutar alertas"** escanea solicitudes inactivas según el umbral configurado y envía recordatorios
-  al destinatario definido. (Requiere correos habilitados con dominio verificado.)
+- El botón **"Ejecutar alertas"** escanea solicitudes inactivas según el umbral configurado y envía
+  recordatorios; además envía el **recordatorio a los solicitantes que no respondieron una pregunta
+  en 3 días**.
+- También está disponible una ruta de cron (`/api/cron/recordatorios`) para que el recordatorio salga
+  solo, sin apretar el botón. Se activa configurando `CRON_SECRET`.
 
 ## 6. Exportar
 - **"Exportar"** genera el Excel con las métricas/procesos del rango y filtros actuales para análisis externo.
 
 ## Dudas frecuentes
-- **¿Qué es el SLA?** El tiempo entre la creación y el cierre (o el acumulado actual de una solicitud abierta).
-- **¿Puedo ver todo?** Sí: como administrador ves todas las solicitudes, de todos los compradores.
+- **¿Qué es el tiempo de atención?** El tiempo entre el envío y el cierre (o el acumulado actual de una
+  solicitud abierta).
+- **¿Puedo ver todo?** Sí: como administrador ve todas las solicitudes, de todos los coordinadores.
+- **¿Los coordinadores se ven entre ellos?** Sí.

@@ -12,7 +12,7 @@ type Fila = { campoKey: string; pregunta: string };
  * Compras pide información al solicitante (spec 010, RF-59).
  *
  * Cada pregunta puede atarse a un campo del catálogo o no. Atarla hace que la respuesta caiga
- * en el campo que el RFQ ya usa; no atarla permite preguntar cualquier cosa ("¿tenés una foto
+ * en el campo que el RFQ ya usa; no atarla permite preguntar cualquier cosa ("¿tiene una foto
  * de referencia?"), que es la mitad de los casos reales.
  *
  * El modal arranca con una fila y se pueden agregar más: pedir cinco preguntas de una vez es
@@ -130,7 +130,7 @@ export function PedirInformacion({
               type="text"
               value={fila.pregunta}
               onChange={(e) => setFila(i, { pregunta: e.target.value })}
-              placeholder="¿Qué necesitás saber?"
+              placeholder="¿Qué necesita saber?"
               className="w-full min-h-[44px] bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-sky-500 focus:bg-white transition-all"
             />
             <label className="block mt-2">

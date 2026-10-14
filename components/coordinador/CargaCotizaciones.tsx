@@ -479,7 +479,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
       {/* Confirmación de generar comparativa */}
       {confirmarGenerar ? (
         <Modal onCerrar={() => setConfirmarGenerar(false)} titulo="Generar comparativa?">
-          <p className="text-sm text-slate-500 mt-2">La IA analizará las {count} cotizaciones cargadas. Podés volver a esta vista y seguir editando después.</p>
+          <p className="text-sm text-slate-500 mt-2">La IA analizará las {count} cotizaciones cargadas. Puede volver a esta vista y seguir editando después.</p>
           <div className="mt-6 flex justify-end gap-3">
             <button type="button" onClick={() => setConfirmarGenerar(false)} className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
               Cancelar

@@ -50,7 +50,7 @@ export function ResponderPreguntas({
       });
       if (!res.ok) {
         const d = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(d.error ?? "No pudimos guardar tu respuesta");
+        throw new Error(d.error ?? "No pudimos guardar su respuesta");
       }
       setEnviado(true);
       // La bandera ya está apagada en el servidor; el refresco hace que el bloque desaparezca
@@ -62,7 +62,7 @@ export function ResponderPreguntas({
           ? "Se cortó la conexión y no sabemos si se guardó. Volvé a intentar: si ya había quedado, no se duplica."
           : e instanceof Error
             ? e.message
-            : "No pudimos guardar tu respuesta"
+            : "No pudimos guardar su respuesta"
       );
     } finally {
       setEnviando(false);
@@ -79,7 +79,7 @@ export function ResponderPreguntas({
           <div>
             <p className="text-sm font-semibold text-emerald-900">Listo, ya le llegó a Compras.</p>
             <p className="text-xs text-emerald-800 mt-0.5">
-              Tu respuesta fue al coordinador que está viendo tu solicitud. No tenés que hacer nada más.
+              Su respuesta fue al coordinador que está viendo su solicitud. No tiene que hacer nada más.
             </p>
           </div>
         </div>
@@ -104,7 +104,7 @@ export function ResponderPreguntas({
           HTML distinto en servidor y cliente. La urgencia la cubren el correo de recordatorio
           y el distintivo del panel del coordinador, que es donde hace falta. */}
       <p className="text-xs text-amber-900/80 leading-relaxed mb-4">
-        Contestá lo que puedas: con eso Compras puede seguir con tu solicitud.
+        Conteste lo que pueda: con eso Compras puede seguir con su solicitud.
       </p>
 
       <div className="space-y-4">
@@ -123,7 +123,7 @@ export function ResponderPreguntas({
                   value={valores[p.campoKey] ?? ""}
                   onChange={(e) => set(p.campoKey, e.target.value, false)}
                   disabled={esNoSe}
-                  placeholder="Escribí tu respuesta"
+                  placeholder="Escriba su respuesta"
                   className={
                     "w-full min-h-[44px] bg-white border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-1 transition-all " +
                     (esNoSe ? "opacity-50 border-slate-200" : "border-slate-200 focus:border-sky-500 focus:ring-sky-500")

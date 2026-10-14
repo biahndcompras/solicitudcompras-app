@@ -87,7 +87,7 @@ function MisSolicitudesInner() {
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">Mis solicitudes</h1>
-            <p className="text-xs text-slate-500 mt-1">Revisá el estado de tus pedidos y comparativas.</p>
+            <p className="text-xs text-slate-500 mt-1">Revise el estado de sus pedidos y comparativas.</p>
           </div>
           <Link href="/" className="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-sky-600 transition-colors flex items-center gap-1.5 bg-white px-3 min-h-[44px] rounded-full border border-slate-200 shadow-sm">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -97,7 +97,7 @@ function MisSolicitudesInner() {
 
         <form onSubmit={buscar} className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-end gap-3">
           <div className="flex-1 max-w-[480px]">
-            <label htmlFor="email-consulta" className="block text-xs font-medium text-slate-700 mb-1.5">Tu correo institucional</label>
+            <label htmlFor="email-consulta" className="block text-xs font-medium text-slate-700 mb-1.5">Su correo institucional</label>
             <div className="relative">
               <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="5" width="18" y2="19" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
               <input
@@ -195,7 +195,7 @@ function MisSolicitudesInner() {
                     </div>
                   ) : esperandoDecision(s.estado) ? (
                     <p className="relative z-10 mt-2 text-[11px] text-amber-700 bg-amber-50/70 border border-amber-200 rounded-lg px-3 py-2">
-                      Tu decisión es el siguiente paso: abrí el enlace que Compras te envió por correo.
+                      Su decisión es el siguiente paso: abra el enlace que Compras le envió por correo.
                     </p>
                   ) : null}
                 </article>

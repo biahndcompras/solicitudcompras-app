@@ -153,7 +153,7 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
         setErrorCotizaciones(
           e instanceof Error && !(e instanceof TypeError) && e.message
             ? e.message
-            : "No se pudo conectar con el servidor para traer las cotizaciones. Revisá tu conexión e intentá de nuevo."
+            : "No se pudo conectar con el servidor para traer las cotizaciones. Revise su conexión e intente de nuevo."
         );
       })
       .finally(() => {
@@ -500,7 +500,7 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
                   <div className="rounded-xl px-5 py-6 text-center border border-amber-200 bg-amber-50" role="alert">
                     <div className="text-sm font-semibold text-slate-900">No pudimos generar la comparativa</div>
                     <div className="text-xs text-slate-600 mt-1">{errorComparativa}</div>
-                    <div className="text-xs text-slate-500 mt-1">Las {cotizaciones.length} cotizaciones siguen cargadas: podés reintentar sin volver a subirlas.</div>
+                    <div className="text-xs text-slate-500 mt-1">Las {cotizaciones.length} cotizaciones siguen cargadas: puede reintentar sin volver a subirlas.</div>
                     <button
                       type="button"
                       onClick={() => setErrorComparativa(null)}
@@ -672,7 +672,7 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
             {solicitud.estado === "ENVIADA_A_SOLICITANTE" ? (
               <li className="flex gap-2">
                 <span aria-hidden="true" className="text-amber-600">•</span>
-                <span>El enlace público que ya se le envió al solicitante deja de permitir decidir: vas a tener que enviar la comparativa de nuevo cuando termines.</span>
+                <span>El enlace público que ya se le envió al solicitante deja de permitir decidir: va a tener que enviar la comparativa de nuevo cuando termine.</span>
               </li>
             ) : null}
           </ul>

@@ -57,7 +57,7 @@ export function validarArchivoAdjunto(
 ): ResultadoValidacionArchivo {
   const ext = extension(archivo.name);
   if (archivo.size === 0) {
-    return { ok: false, motivo: "vacio", mensaje: "El archivo está vacío. Elegí uno con contenido." };
+    return { ok: false, motivo: "vacio", mensaje: "El archivo está vacío. Elija uno con contenido." };
   }
   if (!(EXTENSIONES_ACEPTADAS as readonly string[]).includes(ext)) {
     return {

@@ -159,14 +159,14 @@ una ronda abierta a la vez.
 ## 1.5 P5 — Documento generado (paso 5)
 **Propósito:** mostrar el documento formal con número de referencia antes de enviar.
 
-**Elementos:** aviso "Tu documento está listo, con número de referencia único", bloque de documento con membrete, tipo de documento (RFI/RFQ/RFP), número de referencia, y datos clave (producto, solicitante). Acción: `Enviar solicitud` (en esta fase reemplaza al botón Continuar en este paso).
+**Elementos:** aviso "Su documento está listo, con número de referencia único", bloque de documento con membrete, tipo de documento (RFI/RFQ/RFP), número de referencia, y datos clave (producto, solicitante). Acción: `Enviar solicitud` (en esta fase reemplaza al botón Continuar en este paso).
 
 **Al enviar (en esta fase):** se persiste la solicitud vía API (crear en BORRADOR → transición a `ENVIADA_A_COMPRAS`), se asigna número de referencia, se disparan correos 1 y 2 → P6. Si falla, mensaje de error y no cambia de estado.
 
 ## 1.6 P6 — Confirmación (paso 6)
 **Propósito:** confirmar el envío y cerrar el ciclo del solicitante.
 
-**Elementos:** confirmación ("Tu solicitud fue enviada a Compras"), correo del solicitante, y datos del coordinador/compras asignado. Acción: volver al portal / ver mis solicitudes.
+**Elementos:** confirmación ("Su solicitud fue enviada a Compras"), correo del solicitante, y datos del coordinador/compras asignado. Acción: volver al portal / ver mis solicitudes.
 
 **Regla de estado:** la solicitud queda en `ENVIADA_A_COMPRAS`; el solicitante no interviene hasta la decisión (excepto consultar estado).
 

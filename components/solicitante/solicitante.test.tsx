@@ -25,7 +25,7 @@ Object.defineProperty(window, "matchMedia", {
 describe("SolicitanteWizard", () => {
   it("muestra el paso de captura inicial (P2) al inicio", () => {
     render(<SolicitanteWizard />);
-    expect(screen.getByText("¿Qué necesitás?")).toBeInTheDocument();
+    expect(screen.getByText("¿Qué necesita?")).toBeInTheDocument();
   });
 
   it("habilita Continuar solo cuando el paso es válido", async () => {

@@ -34,7 +34,10 @@ export default async function AdminSolicitudDetallePage({
     descripcion: descripcionEvento(ev, coordinador?.nombre ?? "Compras"),
   }));
 
-  const referencia = s.numeroReferencia ?? `SOL-${s.id.slice(0, 8).toUpperCase()}`;
+  // 4.1.1: la referencia la asigna el sistema al enviarse a Compras. Si no existe, se
+  // dice «Sin referencia» (igual que el panel del coordinador). Antes se fabricaba
+  // `SOL-<id>`: una cadena que no existe en ningún documento y que no se puede buscar.
+  const referencia = s.numeroReferencia ?? null;
   const tipoCategoria = [
     s.tipo ? TIPO_LEGIBLE[s.tipo] ?? s.tipo : null,
     s.categoria ? nombreCategoria(s.categoria) : null,
@@ -45,7 +48,13 @@ export default async function AdminSolicitudDetallePage({
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-semibold text-slate-700 bg-white/70 border border-white px-2.5 py-1 rounded-xl">{referencia}</span>
+            {referencia ? (
+              <span className="font-mono text-xs font-semibold text-slate-700 bg-white/70 border border-white px-2.5 py-1 rounded-xl">{referencia}</span>
+            ) : (
+              <span className="text-xs italic text-slate-500" title={`Sin referencia asignada · id interno ${s.id}`}>
+                Sin referencia
+              </span>
+            )}
             <Badge tone={toneDe(s.estado)} label={estadoLegible(s.estado)} />
           </div>
         </div>

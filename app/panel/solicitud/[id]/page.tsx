@@ -40,9 +40,15 @@ export default async function SolicitudDetallePage({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-semibold text-slate-700 bg-white/70 border border-white px-2.5 py-1 rounded-xl">
-                    {solicitud.numeroReferencia ?? "—"}
-                  </span>
+                  {solicitud.numeroReferencia ? (
+                    <span className="font-mono text-sm font-semibold text-slate-700 bg-white/70 border border-white px-2.5 py-1 rounded-xl">
+                      {solicitud.numeroReferencia}
+                    </span>
+                  ) : (
+                    <span className="text-xs italic text-slate-500" title={`Sin referencia asignada · id interno ${solicitud.id}`}>
+                      Sin referencia
+                    </span>
+                  )}
                   <Badge tone={toneDe(solicitud.estado)} label={estadoLegible(solicitud.estado)} />
                 </div>
                 <h2 className="text-2xl md:text-[2rem] font-semibold tracking-tight text-slate-900 mt-2">{solicitud.titulo}</h2>

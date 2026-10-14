@@ -198,6 +198,7 @@ no estaban en ninguna lista.
 | **4.7.2** | **Correo 4: decisión registrada → coordinador + admin** | **FALTA** | No existe. `grep 'tipoCorreo: "4"'` → 0 resultados. Solo se envían 1, 2, 3 y 5. `decision/route.ts:49-59` cierra la solicitud **sin notificar a nadie**: el coordinador se entera solo si mira la bandeja |
 | ~~**4.7.3**~~ | ~~"Ninguna me sirve" reabre en `EN_COTIZACION`~~ | ✅ **RESUELTO 2026-10-03** | "Ninguna opción" devuelve la solicitud a `EN_COTIZACION` en vez de cerrarla como `CERRADA_SIN_DECISION` (que es terminal). La transición ya estaba permitida en la máquina de estados; nadie la invocaba. **Segunda mitad del bug**: el UPDATE ponía `fecha_cierre = now()` siempre, así que una solicitud reabierta quedaba con fecha de cierre y el semáforo la contaba como cerrada → ahora es condicional. La UI usa el dato real de la respuesta y deja de ofrecer tarjetas y botones muertos. Verificado contra la base real: `ENVIADA_A_SOLICITANTE` → `EN_COTIZACION` con `fecha_cierre` NULL |
 | 4.7.6 | Limpiar la recomendación previa al regenerar la comparativa | bajo | `guardarComparativa` (`postgres-repo.ts:603-616`) hace upsert de precios/pros pero **no borra `recomendacion_comprador`**. **Riesgo contenido**: B3 fuerza una recomendación nueva en cada envío y el textarea arranca vacío, así que no puede llegar una vieja al solicitante. Es higiene, no bug vivo |
+| **4.7.8** | **Revocar el enlace público al decidir** | media | Tras decidir (o al devolver la solicitud a Compras), el enlace sigue vivo y al recargarlo vuelve a mostrar las tarjetas. El servidor rechaza con 409, pero la pantalla miente hasta que la persona lo intenta |
 | 4.7.7 | `clasificacion_corregida` se persiste (métrica de precisión del doc 16) | FALTA | El flag existe en estado y borrador pero **no viaja al servidor** y ningún INSERT/UPDATE lo escribe. La métrica de "precisión del clasificador" **no se puede calcular** |
 
 ### 4.8 Seguridad — fronteras entre roles ⚠️ CRÍTICO
@@ -324,13 +325,13 @@ Salieron de la verificación de §11 contra código:
 | # | Hallazgo | Gravedad |
 |---|---|---|
 | ~~4.7.1~~ | ~~B3 no validado en servidor~~ | ✅ **resuelto 2026-10-03** |
-| 4.7.2 | Correo 4 (decisión registrada) nunca se envía | **crítica** |
+| ~~4.7.2~~ | ~~Correo 4 nunca se envía~~ | ✅ **resuelto 2026-10-03** |
 | ~~4.7.3~~ | ~~"Ninguna me sirve" cerraba la solicitud~~ | ✅ **resuelto 2026-10-03** |
 | **4.7.4** | **`guardarComparativa` devolvía un id inexistente** | alta — resuelta sin querer | El INSERT no manda la columna `id` y el motor arma un id textual `cmp-<epoch>`; el método devolvía la entrada, así que quien lo llamaba recibía un id que no era de ninguna fila. Ahora devuelve la fila insertada. **Bug latente**: la API de comparativa respondía con ese id falso |
 | **4.7.5** | Los tests del assessment fallan si hay `OPENROUTER_API_KEY` en el entorno | media | La suite pasa sin `.env.local` y falla con él: los tests del assessment pegan contra la IA y el catálogo reales. Nadie lo descubre salvo que cargue el env a mano. Verificar siempre **sin** el env cargado |
 | ~~4.8.1~~ | ~~`GET /api/solicitudes/[id]` sin auth~~ | ✅ **resuelto 2026-10-03** |
 | 4.8.3 | Sin aislamiento horizontal entre coordinadores | **crítica** — sigue abierto |
-| 4.9.1 | Correo 1 cae al solicitante si falta `MAIL_COORDINADOR_DEFAULT` | **crítica** |
+| ~~4.9.1~~ | ~~Correo 1 cae al solicitante~~ | ✅ **resuelto 2026-10-03** |
 | 4.10.1 | Tasa ISV hardcodeada, no de configuración (contra doc 16) | alta |
 | 4.10.2 | La alerta de inactividad no puede dispararse nunca | alta |
 | 4.10.6 | Excel comparativo siempre "—" en pros/contras, y el test lo tapa | media |
@@ -388,20 +389,29 @@ Para que nadie lo re-propononga como si fuera un olvido. Todas tienen justificac
 
 ## 10. Próxima sesión — orden sugerido
 
-**El orden cambió.** La verificación de §11 encontró cosas más graves que todo lo que había en
-la lista. Primero lo que rompe la integridad del ciclo.
+**Cerrado desde la sesión anterior:** los 6 críticos de la auditoría (B3, la fuga de los 3
+endpoints, la bandeja del coordinador, los correos 1 y 4, y "Ninguna me sirve"). Los 8 pasos
+que estaban acá ya no aplican; este es el orden vigente.
 
-1. **B3 en el servidor (4.7.1)** y **corregir el texto de la UI que afirma lo contrario**. Es
-   RN-01: hoy el sistema puede enviar una comparativa sin decisión humana. Con test de servidor.
-2. **`GET /api/solicitudes/[id]` con `guardApi` (4.8.1)** + `/documento` y `/logo` (4.8.2).
-   Fuga abierta de precios y PII. Lo más rápido de cerrar y lo más grave por impacto.
-3. **Aislamiento entre coordinadores (4.8.3, 4.8.4)** — que el `coordinadorId` venga de la
-   sesión y que cada ruta verifique pertenencia.
-4. **Correo 4 (4.7.2)** y **corregir el fallback del correo 1 (4.9.1)**. El ciclo no notifica.
-5. **"Ninguna me sirve" reabre en `EN_COTIZACION` (4.7.3)** y avisa a Compras. La transición ya
-   existe en la máquina de estados, nadie la invoca.
-6. **Tasa ISV desde configuración (4.10.1)** y **que la alerta de inactividad pueda dispararse
+**En curso:** la feature **010** — preguntas al solicitante y ciclo de re-cotización. Bloques
+1–4 hechos. Falta:
+
+1. **Bloque 5** de 010: el recordatorio de 3 días. Va atado al botón "Ejecutar alertas" del
+   admin, porque el proyecto no tiene ningún programador automático: sin eso el recordatorio
+   no existe.
+2. **Bloque 6** de 010: el distintivo en el panel del coordinador **y mostrarle las respuestas**.
+   Sin esto, el hallazgo 4.10.11 (`respuesta_campo` es de solo escritura) sigue abierto para el
+   usuario final: el coordinador pide información y no ve lo que le respondieron.
+3. **Bloque 7** de 010: documentación y `verification.md`.
+
+Después, por gravedad:
+
+4. **Tasa ISV desde configuración (4.10.1)** y **que la alerta de inactividad pueda dispararse
    (4.10.2)**. El doc 16 lo pide; hoy está hardcodeada e inalcanzable.
+5. **`respuesta_campo` sin lectores (4.10.11)** — se resuelve junto con el bloque 6.
+6. **Aislamiento de escrituras entre coordinadores (4.8.3)** — **bloqueado por decisión de
+   negocio** (Q2 del PRD, pendiente de Lady). El `PATCH` de cotizaciones que ignora el `id`
+   sí se puede cerrar ya.
 7. Prueba manual del bloque de assessment (§2, `6dc64d5`) — lo único con evidencia solo de
    navegador automatizado.
 8. Lo demás de §4, por valor: 4.10.6, 4.10.7, 4.10.3, 4.4.2, 4.1.1.
@@ -465,11 +475,13 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | B1 (obligatorios de plantilla) | **No bloquea**: avisa y deja "Enviar de todos modos". Contradice la doc, pero es decisión deliberada y argumentada | — |
 | Máximo de preguntas | `MAX_PEGUNTAS = 10`, la doc pide 6. Y `consolidarPreguntas` puede exceder 10 porque los obligatorios nunca se recortan (deliberado) | 4.5.5 |
 | Respuestas del assessment persistidas | Viajan al PDF de Compras pero **nunca se guardan en `respuesta_campo`**. Como dato estructurado no existen: solo se persisten por la ruta de re-cotización | 4.5.6 |
-| PDF del paso 6 | Se regenera con `respuestas: {}` (sin las respuestas) y es un endpoint **público** que regenera por id | 4.8.2 |
+| PDF del paso 6 | Se regenera con `respuestas: {}`, o sea sin las respuestas del assessment (la parte de acceso público ya se cerró: ver 4.8.2 resuelto) | 4.5.6 |
 | Referencia en P5 antes de enviar | La doc la pide antes; el código muestra un placeholder `RFQ-2026-XXXX` y la asigna al transicionar | 4.1.1 |
 | Nombre del comprador en P6 | Muestra texto fijo "Equipo Compras BIA" aunque el solicitante **eligió** comprador y el servidor lo asignó. El nombre real está en `estado.coordinadorId` y no se usa | — |
 | CTA "Decidir ahora" | Solo funciona si el token se guardó en **ese** navegador. Si se decidió en otro dispositivo, solo queda "abrilo desde el correo". Decisión de privacidad explícita, pero no documentada | — |
 | Barra de progreso | El rail tiene **5** pasos, la doc dice "paso 2 de 4" | — |
+
+| **Responder preguntas de Compras** (010) | ✅ Hecho: la tarjeta va arriba de todo y muestra lo respondido | — |
 
 **FALTA**
 | Funcionalidad | Nota | Tarea |
@@ -477,8 +489,8 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | Autocompletar nombre/área desde el histórico del correo | No existe endpoint. Debería haber uno tipo `GET /api/solicitudes/ultima?email=` | — |
 | Botón "Atrás" en P2 | `<PasoAcciones>` sin prop `atras`. **No hay forma de volver a P1** | — |
 | Re-cotización del solicitante | No hay UI ni permiso (`guardApi` la excluye por diseño) | 4.3.1 |
-| Cerrar la solicitud tras decidir, en la vista pública | El enlace **no se revoca** y la vista sigue mostrando tarjetas y botones "Elegir esta opción". El 409 solo aparece **después** de intentar enviar | 4.7.3 |
-| Notificación al decidir | El correo 4 no existe | 4.7.2 |
+| Tras decidir, el enlace no se revoca | La solicitud ya vuelve bien a Compras (4.7.3 resuelto), pero el enlace sigue vivo: al recargarlo muestra las tarjetas otra vez. El 409 solo aparece **después** de intentar decidir de nuevo | 4.7.8 |
+| ~~Notificación al decidir~~ | ✅ **Resuelto**: el correo 4 se envía al coordinador | — |
 
 ### 11.2 COORDINADOR
 
@@ -507,8 +519,8 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 **A MEDIAS**
 | Funcionalidad | Qué falta | Tarea |
 |---|---|---|
-| **Ver solo solicitudes asignadas** | El `coordinadorId` lo manda el cliente y el server **no lo cruza con la sesión**: cualquier coordinador pide `?coordinadorId=<otro>` y ve la bandeja ajena. Y si su email no está en `usuario`, cae a `coordenadores[0]` y ve **la bandeja de otro en silencio** | 4.8.4 |
-| **Aislamiento por solicitud** | Todas las rutas exigen rol pero **ninguna comprueba pertenencia**. Cualquier coordinador transiciona, cotiza, edita o borra cualquier solicitud | 4.8.3 |
+| ~~Ver solo solicitudes asignadas~~ | ✅ **Resuelto 2026-10-03**: la bandeja sale de la sesión, y sin cuenta dada de alta se responde 403 en vez de mostrar la de otro | — |
+| **Aislamiento por solicitud (escrituras)** | Sigue abierto y **bloqueado por decisión de negocio**: es la pregunta Q2 del PRD (¿los coordinadores ven solicitudes de otros?), pendiente de Lady. Aparte: el `PATCH` de cotizaciones ignora el `id` de la ruta y usa el del body — eso sí es bug | 4.8.3 |
 | Navegación entre etapas | Solo el paso **08** se bloquea sin 2 cotizaciones. El **09 sigue accesible** con 0 → se llega a una pantalla vacía y se puede pulsar "Enviar" (el server responde 409, pero es un callejón sin salida) | — |
 | Panel lateral del detalle | **Falta `fecha de creación`** y **falta el tipo RFI/RFQ/RFP** (muestra la categoría en su lugar) | — |
 | Orden de la bandeja | La doc pide `fecha requerida ASC`; el código usa `fecha_creacion DESC` | — |
@@ -525,7 +537,7 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 **FALTA**
 | Funcionalidad | Nota | Tarea |
 |---|---|---|
-| **B3 en servidor** | El server no valida; la UI **afirma que sí**. Envío sin recomendación humana por API | 4.7.1 |
+| ~~B3 en servidor~~ | ✅ **Resuelto 2026-10-03**: sin recomendación, 409 y no envía | — |
 | Marcador "Nueva" para recién asignadas | El tone `nueva` existe en `Badge.tsx:21` pero está asignado a la categoría `capex_indirectos` | — |
 | Bloque "Registro de solicitud en proceso" | Está en la doc, **cero coincidencias** en el código | — |
 | **Correo 4** | El ciclo cierra sin notificar al coordinador | 4.7.2 |
@@ -581,9 +593,9 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 
 | Tema | Estado | Tarea |
 |---|---|---|
-| Correo 1 con PDF al coordinador | **FALTA** — cae al solicitante si falta `MAIL_COORDINADOR_DEFAULT`, que no está en `.env.example` | 4.9.1 |
+| ~~Correo 1 con PDF al coordinador~~ | ✅ **Resuelto**: va al coordinador asignado o al alias; nunca al solicitante | — |
 | Correos 2 y 3 | LISTO | — |
-| Correo 4 (decisión registrada) | **FALTA** | 4.7.2 |
+| ~~Correo 4 (decisión registrada)~~ | ✅ **Resuelto 2026-10-03** | — |
 | Correo 5 (alerta) | A MEDIAS — destinatario único, y la alerta no puede dispararse | 4.9.4, 4.10.2 |
 | Registro de correos en DB | LISTO — `enviado`/`fallido` + `intentos` + `errorDetalle` | — |
 | Trazabilidad de transiciones (RF-49) | LISTO — evento en la misma transacción | — |

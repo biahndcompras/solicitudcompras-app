@@ -161,6 +161,19 @@ export interface Repositorio {
   ): Promise<void>;
 
   guardarConfig(clave: string, valor: unknown): Promise<void>;
+
+  /**
+   * Marcador del correo 5 (plan 4.11.7): guarda hasta qué movimiento se avisó la inactividad,
+   * para que un segundo clic en "Ejecutar alertas" no vuelva a molestar por lo mismo. Un
+   * movimiento posterior al avisado re-arma la alerta.
+   */
+  marcarAlertaInactividad(solicitudId: string, movimientoAvisadoMs: number): Promise<void>;
+
+  /**
+   * Último movimiento por el que ya se avisó la inactividad, por solicitud, en ms. Una
+   * solicitud sin entrada nunca fue avisada.
+   */
+  alertasInactividadAvisadas(): Promise<Record<string, number>>;
 }
 
 export type FiltrosMetricas = {

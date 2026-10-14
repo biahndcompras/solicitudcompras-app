@@ -666,3 +666,41 @@ describeDb("crearSolicitud persiste la corrección de clasificación (4.7.7)", (
     expect(s2.clasificacionCorregida).toBe(true);
   }, 30000);
 });
+
+/**
+ * 4.11.7 — El marcador que impide reenviar el correo 5 en cada clic de "Ejecutar alertas".
+ * Se prueba contra la base real porque lo que importa es que el timestamp sobreviva el
+ * round-trip a Postgres (precisión) y que el upsert re-arme el aviso con un movimiento nuevo.
+ */
+describeDb("marcador de la alerta de inactividad (4.11.7)", () => {
+  async function nueva(email: string) {
+    const repo = new PostgresRepositorio();
+    const s = await repo.crearSolicitud(
+      { titulo: "Inactividad", solicitanteEmail: email, solicitanteNombre: "T", estado: "BORRADOR" },
+      { descripcion: "d", categoria: "administrativa" }
+    );
+    return { repo, id: s.id };
+  }
+
+  it("sin aviso previo no hay marca", async () => {
+    const { repo, id } = await nueva(`sin-aviso.${Date.now()}@bia.hn`);
+    expect((await repo.alertasInactividadAvisadas())[id]).toBeUndefined();
+  }, 30000);
+
+  it("guarda el movimiento avisado y lo relee igual", async () => {
+    const { repo, id } = await nueva(`marca.${Date.now()}@bia.hn`);
+    const movimiento = new Date("2026-09-01T10:00:00Z").getTime();
+
+    await repo.marcarAlertaInactividad(id, movimiento);
+
+    expect((await repo.alertasInactividadAvisadas())[id]).toBe(movimiento);
+  }, 30000);
+
+  it("un movimiento posterior actualiza la marca (re-arma el aviso)", async () => {
+    const { repo, id } = await nueva(`rearma.${Date.now()}@bia.hn`);
+    await repo.marcarAlertaInactividad(id, 1000);
+    await repo.marcarAlertaInactividad(id, 2000);
+
+    expect((await repo.alertasInactividadAvisadas())[id]).toBe(2000);
+  }, 30000);
+});

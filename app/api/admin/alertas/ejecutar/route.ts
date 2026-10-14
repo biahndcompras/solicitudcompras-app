@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { detectarAlertas } from "@/lib/domain/alertas";
-import type { Cotizacion, EventoTrazabilidad } from "@/lib/domain/types";
+import type { Cotizacion, EventoTrazabilidad, Solicitud } from "@/lib/domain/types";
 import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
@@ -11,7 +11,7 @@ export async function POST() {
   if (auth.negada) return auth.negada;
   try {
     const umbral = Number((await repo.leerConfig("umbral_dias_sin_movimiento")) ?? 5);
-    const dest = String((await repo.leerConfig("destinatario_alertas")) ?? "");
+    const destAdmin = String((await repo.leerConfig("destinatario_alertas")) ?? "").trim();
 
     const solicitudes = await repo.listarTodas();
     const cotsMap: Record<string, Cotizacion[]> = {};
@@ -28,25 +28,68 @@ export async function POST() {
       umbralDias: umbral,
     });
 
-    // Enviar correo tipo 5 (alerta de inactividad) al destinatario configurado, si existe.
+    // Correo 5 (alerta de inactividad). Va al coordinador ASIGNADO y a administración
+    // (`destinatario_alertas`), no solo al buzón global: el coordinador es quien tiene la
+    // solicitud detenida y el único que puede destrabarla; administración conserva la
+    // supervisión del flujo. Se deduplican los buzones.
+    //
+    // 4.11.7: un aviso por movimiento. Se guarda hasta qué movimiento se avisó y se salta la
+    // solicitud si no se movió desde entonces, para que un segundo clic en "Ejecutar alertas"
+    // no repita el correo. Si la solicitud se mueve y vuelve a quedar inactiva, su último
+    // movimiento es posterior al avisado y el correo se re-arma solo.
     let enviadas = 0;
-    if (dest) {
-      const { enviarCorreo } = await import("@/lib/mail/enviar");
-      for (const a of alertas.filter((x) => x.tipo === "inactividad")) {
-        await enviarCorreo({
-          repo,
-          tipoCorreo: "5",
-          solicitudId: a.solicitudId,
-          destinatario: dest,
-          datos: {
-            diasSinMovimiento: umbral,
-            estadoActual: a.titulo,
-            urlDetalle: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/panel/solicitud/${a.solicitudId}`,
-          },
-        })
-          .then(() => { enviadas += 1; })
-          .catch(() => undefined);
+    const avisos = await repo.alertasInactividadAvisadas();
+    const solicitudPorId = new Map(solicitudes.map((s) => [s.id, s]));
+    const { enviarCorreo } = await import("@/lib/mail/enviar");
+    for (const a of alertas.filter((x) => x.tipo === "inactividad")) {
+      const solicitud = solicitudPorId.get(a.solicitudId);
+      if (!solicitud) continue;
+
+      const movimientoMs = ultimoMovimientoMs(
+        solicitud,
+        cotsMap[a.solicitudId] ?? [],
+        eventosMap[a.solicitudId] ?? []
+      );
+      // Sin un movimiento válido no se puede comparar ni marcar: el detector tampoco alerta
+      // sin fechas de movimiento, así que este caso no debería llegar.
+      if (!Number.isFinite(movimientoMs)) continue;
+
+      const yaAvisadoMs = avisos[a.solicitudId];
+      if (yaAvisadoMs != null && movimientoMs <= yaAvisadoMs) continue;
+
+      const destinatarios = await destinatariosDeAlerta(solicitud.coordinadorId, destAdmin);
+      let algunoEnviado = false;
+      for (const destinatario of destinatarios) {
+        try {
+          const r = await enviarCorreo({
+            repo,
+            tipoCorreo: "5",
+            solicitudId: a.solicitudId,
+            destinatario,
+            datos: {
+              numeroReferencia: solicitud.numeroReferencia,
+              titulo: solicitud.titulo,
+              solicitanteNombre: solicitud.solicitanteNombre,
+              coordinadorNombre: "Compras",
+              diasSinMovimiento: umbral,
+              estadoActual: solicitud.estado,
+              fechaRequerida: solicitud.fechaRequerida,
+              urlDetalle: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/panel/solicitud/${a.solicitudId}`,
+            },
+          });
+          // `enviarCorreo` no lanza cuando Resend falla: devuelve "fallido". Contarlo como
+          // enviado (como hacía el `.then`) mentiría en la respuesta y apagaría la alerta.
+          if (r.estadoEnvio === "enviado") {
+            enviadas += 1;
+            algunoEnviado = true;
+          }
+        } catch {
+          // `enviarCorreo` ya registra el fallo en `correo_enviado`.
+        }
       }
+      // Se marca solo si algún correo salió de verdad: si fallaron todos, el próximo clic
+      // reintenta en vez de apagar la alerta sin haber avisado a nadie.
+      if (algunoEnviado) await repo.marcarAlertaInactividad(a.solicitudId, movimientoMs);
     }
 
     // Recordatorio 010 (RF-62): las rondas de preguntas que superaron el umbral sin
@@ -99,4 +142,39 @@ async function destinatarioDe(coordinadorId?: string): Promise<string | null> {
     if (asignado?.email) return asignado.email;
   }
   return process.env.MAIL_COORDINADOR_DEFAULT || null;
+}
+
+/**
+ * Buzones del correo 5: el coordinador asignado (o el alias si no hay) y administración
+ * (`destinatario_alertas`). Sin repetir, para no mandarle dos veces el mismo correo a quien
+ * figure en ambos.
+ */
+async function destinatariosDeAlerta(coordinadorId: string | undefined, admin: string): Promise<string[]> {
+  const destinatarios = new Set<string>();
+  const coordinador = await destinatarioDe(coordinadorId);
+  if (coordinador) destinatarios.add(coordinador);
+  if (admin) destinatarios.add(admin);
+  return [...destinatarios];
+}
+
+/**
+ * "Último movimiento" de una solicitud, con el mismo criterio que el detector
+ * (`lib/domain/alertas.ts`): el máximo entre el envío, los eventos de trazabilidad, la última
+ * carga de cotización y la creación. El dominio lo calcula en privado para decidir si alerta;
+ * el marcador de 4.11.7 necesita el mismo valor para saber si la solicitud se movió desde el
+ * último aviso. Si el dominio cambia su definición, esta copia debe seguirla.
+ */
+function ultimoMovimientoMs(
+  s: Solicitud,
+  cotizaciones: Cotizacion[],
+  eventos: EventoTrazabilidad[]
+): number {
+  let max = new Date(s.fechaCreacion).getTime();
+  const considerar = (ms: number) => {
+    if (Number.isFinite(ms) && (!Number.isFinite(max) || ms > max)) max = ms;
+  };
+  if (s.fechaEnvio) considerar(new Date(s.fechaEnvio).getTime());
+  for (const e of eventos) considerar(new Date(e.timestamp).getTime());
+  for (const c of cotizaciones) if (c.fechaCarga) considerar(new Date(c.fechaCarga).getTime());
+  return max;
 }

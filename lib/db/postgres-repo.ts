@@ -1417,4 +1417,31 @@ export class PostgresRepositorio implements Repositorio {
       fechaEnvio: String(f.fecha_envio),
     };
   }
+
+  /**
+   * Marcador del correo 5 (plan 4.11.7). Guarda hasta qué movimiento se avisó la inactividad.
+   * Es un upsert: si la solicitud se movió y volvió a frenar, el mismo registro se actualiza con
+   * el movimiento nuevo y el aviso queda re-armado.
+   */
+  async marcarAlertaInactividad(solicitudId: string, movimientoAvisadoMs: number): Promise<void> {
+    await this.pg.query(
+      `INSERT INTO alerta_inactividad (solicitud_id, movimiento_avisado)
+       VALUES ($1, to_timestamp($2::double precision / 1000.0))
+       ON CONFLICT (solicitud_id)
+       DO UPDATE SET movimiento_avisado = EXCLUDED.movimiento_avisado, avisado_en = now()`,
+      [solicitudId, movimientoAvisadoMs]
+    );
+  }
+
+  async alertasInactividadAvisadas(): Promise<Record<string, number>> {
+    const res = await this.pg.query(
+      `SELECT solicitud_id, EXTRACT(EPOCH FROM movimiento_avisado) * 1000 AS ms
+         FROM alerta_inactividad`
+    );
+    const mapa: Record<string, number> = {};
+    for (const f of res.rows) {
+      mapa[String(f.solicitud_id)] = Math.round(Number(f.ms));
+    }
+    return mapa;
+  }
 }

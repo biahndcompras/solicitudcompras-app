@@ -195,6 +195,38 @@ describe("pipeline · no decide si la solicitud se envió", () => {
   });
 });
 
+describe("envío · no se manda una solicitud vencida o sin descripción (4.5.2 / 4.5.3)", () => {
+  it("una fecha requerida ya pasada se explica y no llega al servidor", async () => {
+    const { result } = renderHook(() => useSolicitudWizard(false, IDENTIDAD));
+    await act(async () => {
+      result.current.set("titulo", "Sombrillas");
+      result.current.set("descripcion", "500 sombrillas con logo");
+      result.current.set("fechaRequerida", "2020-01-01");
+    });
+    await act(async () => {
+      await result.current.enviarSolicitud();
+    });
+    expect(crearSolicitud).not.toHaveBeenCalled();
+    expect(result.current.envio.estado).toBe("error");
+    expect(JSON.stringify(result.current.envio)).toMatch(/fecha/i);
+    expect(JSON.stringify(result.current.envio)).toMatch(/hoy|futur/i);
+  });
+
+  it("sin descripción se explica y no llega al servidor", async () => {
+    const { result } = renderHook(() => useSolicitudWizard(false, IDENTIDAD));
+    await act(async () => {
+      result.current.set("titulo", "Sombrillas");
+      result.current.set("fechaRequerida", "2999-01-01");
+    });
+    await act(async () => {
+      await result.current.enviarSolicitud();
+    });
+    expect(crearSolicitud).not.toHaveBeenCalled();
+    expect(result.current.envio.estado).toBe("error");
+    expect(JSON.stringify(result.current.envio)).toMatch(/descripci/i);
+  });
+});
+
 // El import está arriba para que el mock de `api-client` aplique a este módulo; se re-limpia
 // al final para no arrastrar el mock de `generador` a otros archivos del suite.
 afterEach(async () => {

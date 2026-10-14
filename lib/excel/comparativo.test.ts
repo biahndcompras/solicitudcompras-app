@@ -38,7 +38,8 @@ function cot(id: string, nombre: string, precios: { moneda?: string; neto?: numb
 const comparativa: Comparativa = {
   id: "cmp-1",
   solicitudId: "s1",
-  prosContras: { CostaPrint: { pros: ["Lona impermeable"], contras: ["Más caro"] }, PlayaPromo: { pros: ["Menor precio"], contras: [] } },
+  // Se persiste indexado por cotizacion.id, no por nombre (ver postgres-repo.guardarComparativa).
+  prosContras: { c1: { pros: ["Lona impermeable"], contras: ["Más caro"] }, c2: { pros: ["Menor precio"], contras: [] } },
   discrepanciasDetectadas: [],
   sugerenciaIA: "Generada por el sistema: PlayaPromo ofrece el menor total.",
   cotizacionSugeridaId: "PlayaPromo",
@@ -76,5 +77,25 @@ describe("generarExcelComparativo", () => {
     const filaIsv = hoja.find((f) => String(f[0]).includes("ISV"));
     expect(filaIsv).toBeDefined();
     expect(filaIsv!.slice(1).every((v) => String(v).toLowerCase().includes("no especificado"))).toBe(true);
+  });
+
+  it("muestra pros y contras reales en G. Análisis (indexados por cotizacion.id)", () => {
+    const buffer = generarExcelComparativo({
+      solicitud,
+      comparativa,
+      cotizaciones: [
+        cot("c1", "CostaPrint", { neto: 86000, isv: 12900, total: 98900, desglosado: true }),
+        cot("c2", "PlayaPromo", { moneda: "USD", neto: 3000, total: 3000, desglosado: false }),
+      ],
+      especificacionesSolicitadas: { material: "lona impermeable 600d" },
+    });
+    const libro = XLSX.read(buffer, { type: "buffer" });
+    const hoja = XLSX.utils.sheet_to_json(libro.Sheets["Comparativo"], { header: 1 }) as unknown[][];
+    const filaPros = hoja.find((f) => String(f[0]) === "Pros — CostaPrint");
+    const filaContras = hoja.find((f) => String(f[0]) === "Contras — CostaPrint");
+    expect(filaPros).toBeDefined();
+    expect(filaContras).toBeDefined();
+    expect(filaPros!.slice(1)).toContain("Lona impermeable");
+    expect(filaContras!.slice(1)).toContain("Más caro");
   });
 });

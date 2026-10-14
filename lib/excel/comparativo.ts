@@ -77,7 +77,7 @@ function hojaComparativo(d: DatosExcel): (string | number)[][] {
   // G. Análisis
   seccion("G. Análisis");
   for (const c of d.cotizaciones) {
-    const pc = d.comparativa.prosContras?.[c.proveedorNombre];
+    const pc = d.comparativa.prosContras?.[c.id];
     filas.push([`Pros — ${c.proveedorNombre}`, ...(pc?.pros ?? ["—"])]);
     filas.push([`Contras — ${c.proveedorNombre}`, ...(pc?.contras ?? ["—"])]);
   }

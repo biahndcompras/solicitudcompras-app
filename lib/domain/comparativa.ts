@@ -162,17 +162,18 @@ export function formato(n: number | undefined): string {
   return typeof n === "number" ? n.toLocaleString("es-HN") : "—";
 }
 
-// 2.1/3.2: los pros deterministas (p. ej. «Ahorro potencial de …») acompañan siempre a los
-// pros de la IA — nunca se pierden si el modelo responde (antes se reemplazaban).
+// 2.1/3.2: los pros y contras deterministas acompañan siempre a los de la IA — nunca se
+// pierden si el modelo responde (antes se descartaban todos los contras y los pros que no
+// empezaran con «Ahorro»). Se suman ambas fuentes sin duplicar.
 export function fusionarProsContras(
   iaPC: ProsContras | undefined,
   detPC: ProsContras | undefined
 ): ProsContras {
-  if (!iaPC) return detPC ?? { pros: [], contras: [] };
-  const ahorros = (detPC?.pros ?? []).filter((p) => p.startsWith("Ahorro"));
+  const det = detPC ?? { pros: [], contras: [] };
+  if (!iaPC) return det;
   return {
-    pros: [...iaPC.pros, ...ahorros.filter((a) => !iaPC.pros.includes(a))],
-    contras: iaPC.contras,
+    pros: [...new Set([...det.pros, ...iaPC.pros])],
+    contras: [...new Set([...det.contras, ...iaPC.contras])],
   };
 }
 

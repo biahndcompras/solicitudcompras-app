@@ -113,6 +113,35 @@ describe("fusionarProsContras (2.1/3.2 — H7)", () => {
     expect(fusion.pros.filter((p) => p === linea)).toHaveLength(1);
   });
 
+  it("conserva TODOS los pros y contras deterministas junto a los de la IA (4.10.7/RN-06)", () => {
+    const fusion = fusionarProsContras(
+      { pros: ["Impresión con mejor resolución"], contras: ["Más caro"] },
+      {
+        pros: ["Total con impuestos claro", "Ahorro potencial de 20 HNL frente a la opción más cara"],
+        contras: ["No confirma el tratamiento de impuestos"],
+      }
+    );
+    expect(fusion.pros).toEqual(
+      expect.arrayContaining([
+        "Impresión con mejor resolución",
+        "Total con impuestos claro",
+        "Ahorro potencial de 20 HNL frente a la opción más cara",
+      ])
+    );
+    expect(fusion.contras).toEqual(
+      expect.arrayContaining(["Más caro", "No confirma el tratamiento de impuestos"])
+    );
+  });
+
+  it("mantiene el ahorro potencial determinista aunque la IA responda (4.2.1)", () => {
+    const linea = "Ahorro potencial de 20 HNL frente a la opción más cara";
+    const fusion = fusionarProsContras(
+      { pros: ["Mejor acabado"], contras: ["Sin garantía extendida"] },
+      { pros: [linea], contras: [] }
+    );
+    expect(fusion.pros).toContain(linea);
+  });
+
   it("usa deterministas si la IA no responde, y vacío si no hay nada", () => {
     expect(fusionarProsContras(undefined, { pros: ["A"], contras: ["B"] })).toEqual({ pros: ["A"], contras: ["B"] });
     expect(fusionarProsContras(undefined, undefined)).toEqual({ pros: [], contras: [] });

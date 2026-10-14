@@ -8,7 +8,6 @@ import { CTADecision } from "@/components/solicitante/CTADecision";
 import { ResponderPreguntas } from "@/components/solicitante/ResponderPreguntas";
 import { duracionAtencion, formatoFechaLegible } from "@/lib/domain/semaforo";
 import { nombreCategoria } from "@/lib/domain/categorias";
-import { formatoMoneda } from "@/lib/domain/moneda";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import type { EstadoSolicitud } from "@/lib/domain/types";
 
@@ -119,24 +118,27 @@ export default async function DetalleSolicitudSolicitantePage({
           <TrackerEtapas estado={solicitud.estado as EstadoSolicitud} />
         </div>
 
+        {/* Cuántas cotizaciones hay, sin nombres ni montos.
+            Esta pantalla se abre **solo con el correo** (`?email=`): cualquiera que sepa el
+            correo de un compañero entra. Mostrar acá los importes filtraba los precios de todos
+            los proveedores por un dato que no es secreto. El listado ya los ocultaba a
+            propósito (`user-flows.md:181`); el detalle era la misma información con otro
+            criterio. Los importes se ven donde corresponde: en el enlace de decisión, que pide
+            token. */}
         <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5">
-          <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-3 font-semibold">
-            Cotizaciones ({cotizaciones.length})
+          <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">
+            Cotizaciones recibidas
           </span>
           {cotizaciones.length === 0 ? (
-            <p className="text-xs text-slate-500">Aún no hay cotizaciones cargadas.</p>
+            <p className="text-xs text-slate-500">Todavía no hay cotizaciones cargadas.</p>
           ) : (
-            <div className="space-y-2">
-              {cotizaciones.map((c) => (
-                <div key={c.id} className="flex items-center justify-between gap-3 bg-slate-50 rounded-lg border border-slate-100 px-3 py-2">
-                  <span className="text-xs font-medium text-slate-900 min-w-0 break-words">{c.proveedorNombre}</span>
-                  {/* Separador de miles: "L 100000" no es un monto que se pueda comparar. */}
-                  <span className="text-xs font-mono text-slate-600 shrink-0 text-right">
-                    {c.valorTotal !== undefined ? formatoMoneda(c.moneda ?? "HNL", c.valorTotal) : "—"}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <>
+              <p className="text-2xl font-semibold tracking-tight text-slate-900">{cotizaciones.length}</p>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Cuando Compras tenga la comparativa lista, va a recibir un correo con el enlace
+                para verlas y decidir.
+              </p>
+            </>
           )}
         </div>
 

@@ -220,7 +220,7 @@ no estaban en ninguna lista.
 | 4.8.5 | `guardApi` en todas las rutas `/api/admin` | **A MEDIAS** | `alertas/ejecutar`, `campos`, `campos/[id]`, `coordinadores`, `metricas`, `metricas/excel` dependen **solo del middleware**. Las que sí lo tienen: `reasignar`, `comparativa`, `estado`, `cotizaciones/*`. Inconsistente |
 | 4.8.6 | Validación de tipo/MIME del logo en servidor | **A MEDIAS** | `logo/route.ts` POST solo valida tamaño. El cliente sí valida magic bytes (`archivos.ts`), el servidor no |
 | **4.8.11** | **`POST /api/solicitudes/[id]/logo` sin autorización** | media | Subir el archivo sigue abierto: cualquiera con el UUID sube el logo de cualquier solicitud. **No se resuelve con un guard más**: en una solicitud recién creada el solicitante no tiene sesión, y "el UUID es el token" es la misma debilidad que se acaba de cerrar en el GET. Necesita un token de un solo uso emitido al crear la solicitud |
-| **4.8.7** | **`/mis-solicitudes/[id]` no debe exponer montos** | **crítica** | El listado respeta RN-06, pero el **detalle lista proveedores con su monto total** (`[id]/page.tsx:92-111`). El propio repo afirma lo contrario en `postgres-repo.ts:425` ("sin montos") |
+| ~~**4.8.7**~~ | ~~La consulta del solicitante no expone montos~~ | ✅ **RESUELTO 2026-10-14** | El detalle listaba cada proveedor **con su total**, y esa pantalla se abre **solo con el correo**. El listado ya los ocultaba a propósito (`user-flows.md:181`): era la misma información con dos criterios. Ahora muestra el conteo ("Cotizaciones recibidas: 2") y los importes se ven solo por el enlace con token. 4 tests que fijan que el HTML no contenga ningún monto, verificados fallando contra el código anterior. Nota: el hallazgo citaba **RN-06** como razón, pero RN-06 es "nunca se inventan cifras" — el porqué real es privacidad, y está en `user-flows.md:181` |
 
 ### 4.9 Correos — el ciclo tiene huecos
 
@@ -615,7 +615,7 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | Registro de correos en DB | LISTO — `enviado`/`fallido` + `intentos` + `errorDetalle` | — |
 | Trazabilidad de transiciones (RF-49) | LISTO — evento en la misma transacción | — |
 | Eventos de creación/cotización/comparativa/correo/acceso | **FALTA** — se renderizan pero no se insertan | 4.10.3 |
-| Exposición de montos al solicitante en `/mis-solicitudes/[id]` | **VIOLACIÓN de RN-06** — el listado no expone montos pero el **detalle lista proveedores con su total** (`[id]/page.tsx:92-111`). El propio repo advierte lo contrario (`postgres-repo.ts:425`) | 4.8.7 |
+| ~~Exposición de montos al solicitante en `/mis-solicitudes/[id]`~~ | ✅ **Resuelto 2026-10-14** — el detalle muestra el conteo, no los importes. Ver 4.8.7 | — |
 | OCR serverless | **A MEDIAS** — degrada a carga manual en Vercel | 4.5.1 |
 | Referencia real | **FALTA** — fallback `SOL-XXXX` inventado desde el id | 4.1.1 |
 | PDF con el diseño oficial | **FALTA** — hay membrete BIA, no el formato de Ladi | 4.1.2 |

@@ -17,9 +17,15 @@ commit_verificado: b28c5cd
 > Si algo no está acá, no existe como tarea. Si algo está acá y ya se hizo, se borra (no se
 > tacha: queda en git).
 >
-> **Regla de actualización:** al cerrar un bloque de trabajo, se mueve la fila de
-> "Por hacer" a "Listo" con la evidencia concreta (commit, test, captura). Sin evidencia, no
-> se marca. Los `specs/*/tasks.md` y `specs/009/assessment.md` son **históricos**, no fuentes.
+> **Regla de actualización:** al cerrar un bloque de trabajo, se actualiza la fila **en el
+> mismo commit que el código**. Sin evidencia (commit, test, captura), no se marca.
+>
+> **Una tarea se describe UNA sola vez. §4 es el único lugar donde vive su estado.** §7.1
+> referencia por número. §11 es la vista por rol: dice si una FUNCIÓN está lista, y para eso
+> referencia el número de §4 — si al cerrar una tarea de §4 una fila de §11 la menciona, hay
+> que revisar esa fila en el mismo commit. Esto no es estilo: tener el mismo ítem en
+> tres tablas hizo que se contradijeran entre sí tres veces (§4 decía RESUELTO y §7.1 decía
+> FALTA), y cada contradicción se descubre tarde. Los `specs/*/tasks.md` son **históricos**.
 >
 > **Regla de honestidad:** distingo siempre entre *verificado hoy* (lo corrí), *reportado por
 > documentación* (puede estar viejo) y *inferido*. No marco nada como listo sin haberlo visto.
@@ -177,7 +183,7 @@ Esto sí es trabajo real. Ordenado por tema. Las referencias `RF-xx` son del PRD
 | 4.5.3 | **Descripción breve obligatoria** | medio | La doc la marca obligatoria. No está en `pasoValido` ni en `faltantes`; la API la acepta como optional |
 | 4.5.4 | **Retomar borrador desde P1** | medio | `app/page.tsx:22` borra el borrador antes de navegar con `?nuevo=1`, dejando el modal inalcanzable por ese camino |
 | 4.5.5 | **Alinear el tope de preguntas con la norma** | bajo | `MAX_PEGUNTAS = 10`, la doc pide 6. Y puede exceder 10 cuando hay obligatorios (deliberado: preferimos exceder que truncar un obligatorio) |
-| 4.5.6 | **Persistir las respuestas del assessment** | medio | Viajan al PDF de Compras pero nunca se guardan en `respuesta_campo`. Como dato estructurado no existen. Relacionado: 4.10.11 |
+| ~~4.5.6~~ | ~~Persistir las respuestas del assessment~~ | ✅ **RESUELTO 2026-10-14** | Se persisten al enviar y el coordinador las ve en "Respuestas del solicitante". Antes viajaban solo al PDF: la única forma de verlas era abrir el documento. Ver 4.10.11 |
 
 ### 4.6 Otros
 | # | Tarea | Ref | Nota |
@@ -195,7 +201,7 @@ no estaban en ninguna lista.
 | # | Tarea | Estado real | Evidencia |
 |---|---|---|---|
 | ~~**4.7.1**~~ | ~~B3 validado en el servidor~~ | ✅ **RESUELTO 2026-10-03** | `estado/route.ts:118-126`: sin recomendación (`trim()` vacío) devuelve **409** y **no transiciona, no guarda, no genera enlace**. 5 tests nuevos en `estado/route.test.ts`, 2 de ellos verificados **fallando** contra el código anterior. Reproducido en navegador con sesión real de coordinador: PATCH directo sin `nota` → 409; solo espacios → 409; con recomendación → 200 + enlace. Confirmado que la recomendación **llega al solicitante** por `/comparativa/[token]` |
-| **4.7.2** | **Correo 4: decisión registrada → coordinador + admin** | **FALTA** | No existe. `grep 'tipoCorreo: "4"'` → 0 resultados. Solo se envían 1, 2, 3 y 5. `decision/route.ts:49-59` cierra la solicitud **sin notificar a nadie**: el coordinador se entera solo si mira la bandeja |
+| ~~**4.7.2**~~ | ~~Correo 4: decisión registrada~~ | ✅ **RESUELTO 2026-10-03** | Ver 4.9.2, que ya lo documentaba. Esta fila quedó sin actualizar y contradecía a la otra |
 | ~~**4.7.3**~~ | ~~"Ninguna me sirve" reabre en `EN_COTIZACION`~~ | ✅ **RESUELTO 2026-10-03** | "Ninguna opción" devuelve la solicitud a `EN_COTIZACION` en vez de cerrarla como `CERRADA_SIN_DECISION` (que es terminal). La transición ya estaba permitida en la máquina de estados; nadie la invocaba. **Segunda mitad del bug**: el UPDATE ponía `fecha_cierre = now()` siempre, así que una solicitud reabierta quedaba con fecha de cierre y el semáforo la contaba como cerrada → ahora es condicional. La UI usa el dato real de la respuesta y deja de ofrecer tarjetas y botones muertos. Verificado contra la base real: `ENVIADA_A_SOLICITANTE` → `EN_COTIZACION` con `fecha_cierre` NULL |
 | 4.7.6 | Limpiar la recomendación previa al regenerar la comparativa | bajo | `guardarComparativa` (`postgres-repo.ts:603-616`) hace upsert de precios/pros pero **no borra `recomendacion_comprador`**. **Riesgo contenido**: B3 fuerza una recomendación nueva en cada envío y el textarea arranca vacío, así que no puede llegar una vieja al solicitante. Es higiene, no bug vivo |
 | **4.7.8** | **Revocar el enlace público al decidir** | media | Tras decidir (o al devolver la solicitud a Compras), el enlace sigue vivo y al recargarlo vuelve a mostrar las tarjetas. El servidor rechaza con 409, pero la pantalla miente hasta que la persona lo intenta |
@@ -209,7 +215,7 @@ no estaban en ninguna lista.
 |---|---|---|---|
 | ~~**4.8.1**~~ | ~~`GET /api/solicitudes/[id]` con autenticación~~ | ✅ **RESUELTO 2026-10-03** | `guardApi(["coordinador","admin"])`. El endpoint **no tenía consumidores** (el panel usa el repo desde el servidor), así que cerrarlo fue riesgo cero. Verificado: sin sesión → 401 y **no** devuelve los precios; con correo ajeno → 401; 4 tests verificados fallando contra el código anterior |
 | ~~**4.8.2**~~ | ~~`/documento` y `/logo` verifican pertenencia~~ | ✅ **RESUELTO 2026-10-03** | Nuevo `guardRecursoDeSolicitud` en `lib/api-guard.ts`: acepta **rol de Compras o el correo dueño**, porque el solicitante ve su PDF y su logo **sin sesión** (el flujo no tiene login). El correo es la misma identidad de `/mis-solicitudes?email=`, no un mecanismo inventado. Los dos `<a href>` del solicitante ya lo envían |
-| **4.8.3** | **Aislamiento horizontal en las escrituras** | **ABIERTA — bloqueada por decisión de negocio** | `estado`, `comparativa`, `cotizaciones`, `[cotizacionId]` y el `PATCH` exigen rol `coordinador` pero **ninguno comprueba que la solicitud sea suya**. Además el `PATCH` de cotizaciones **ignora el `id`** de la ruta y usa el del body. **No se implementa todavía**: es la pregunta **Q2 del PRD** (¿los coordinadores ven solicitudes de otros?) y está pendiente de Lady (§5.2). Bloquear escrituras es defendible, pero es una política, no un bug. El `PATCH` de cotizaciones que ignora el `id` **sí** es un bug y se puede cerrar ya |
+| ~~**4.8.3**~~ | ~~Aislamiento horizontal en las escrituras~~ | ✅ **RESUELTO 2026-10-14** | **Q2 quedó resuelta: los coordinadores SÍ se ven entre ellos**, así que no se implementa aislamiento por fila — era una política, no un bug. Lo que **sí** era bug y se cerró: el `PATCH`/`DELETE` de cotizaciones operaba sobre cualquier cotización por su id sin comprobar que fuera de la solicitud de la URL, y el cliente mandaba un `_` literal en lugar del id real. Ahora verifica pertenencia (404) y manda el id real. 6 tests, 3 verificados fallando |
 | ~~**4.8.4**~~ | ~~Bandeja: el `coordinadorId` viene de la sesión~~ | ✅ **RESUELTO 2026-10-03** | Para un coordinador el id sale de su sesión, nunca del query string: `?coordinadorId=<otro>` ya no abre la bandeja de un compañero. El admin conserva el parámetro (su vista de proceso es transversal). Nuevo `usuarioLocalPorEmail(email)` en el repo, usado por la ruta **y** por el panel, para que la lógica de identidad no se repita. **Además** se eliminó el fallback silencioso a `coordenadores[0]`: si la cuenta no está dada de alta, se responde 403 con el motivo en vez de mostrar la bandeja del primero. 4 tests, 2 verificados fallando contra el código anterior |
 | 4.8.5 | `guardApi` en todas las rutas `/api/admin` | **A MEDIAS** | `alertas/ejecutar`, `campos`, `campos/[id]`, `coordinadores`, `metricas`, `metricas/excel` dependen **solo del middleware**. Las que sí lo tienen: `reasignar`, `comparativa`, `estado`, `cotizaciones/*`. Inconsistente |
 | 4.8.6 | Validación de tipo/MIME del logo en servidor | **A MEDIAS** | `logo/route.ts` POST solo valida tamaño. El cliente sí valida magic bytes (`archivos.ts`), el servidor no |
@@ -229,7 +235,7 @@ no estaban en ninguna lista.
 
 | # | Tarea | Estado real | Evidencia |
 |---|---|---|---|
-| **4.10.1** | **Tasa ISV desde `configuracion`, no hardcodeada** | **FALTA** | `cotizaciones/route.ts:191` → `0.15` fijo. La clave `tasa_isv` **no existe** en `configuracion` (solo hay 3: umbral, expiración, destinatario). El doc 16 §2.4 exige explícitamente *"tasa de configuración, no del prompt"*. Además `rules.ts:63-114` valida `neto+isv+otros≈total` pero **ignora la tasa** |
+| ~~**4.10.1**~~ | ~~Tasa ISV desde configuración~~ | ✅ **RESUELTO 2026-10-14** | La clave `tasa_isv` **sí existía** en `configuracion` (0.15): el problema era que el código tenía `0.15` cableado y nunca la leía. Nuevo `repo.tasaIsv()`, que valida el rango (un `15` en vez de `0.15` es el error humano típico). 2 tests de integración |
 | **4.10.2** | **La alerta de inactividad puede dispararse alguna vez** | **FALTA** | `lib/domain/alertas.ts:37` → `!s.fechaEnvio`. Pero toda solicitud que llega al panel **ya fue enviada**, y la API del panel excluye borradores. **La alerta que el producto promete es inalcanzable**. Nota: las **otras** alertas del mismo botón sí funcionan, y desde 010 el recordatorio de preguntas también |
 | **4.10.13** | Los tests de integración dejan solicitudes con `informacion_pendiente` en la base de desarrollo | baja | Al correr la suite quedan filas vivas que el botón de alertas tomaría como reales y mandaría correos por ellas. Limpiar por patrón de correo (`%@bia.hn`) al final de la suite, o usar una base aparte |
 | 4.10.3 | Eventos de trazabilidad que faltan | **A MEDIAS** | La UI **renderiza** `creacion`, `carga_cotizacion`, `generacion_comparativa`, `envio_correo` y `acceso_link`, pero **nunca se insertan**. La timeline no muestra la creación, ni cuántas cotizaciones se cargaron, ni cuándo se generó la comparativa. Es un esqueleto |
@@ -240,7 +246,7 @@ no estaban en ninguna lista.
 | 4.10.8 | Detección determinística de discrepancias | **A MEDIAS — inerte** | `comparativa/route.ts:33,100` pasa `especificacionesSolicitadas: {}` hardcodeado, y `comparativa.ts:28-47` itera ese objeto vacío. **Sin IA configurada → cero discrepancias siempre**. Y la UI solo muestra `[0]`, así que aunque la IA devuelva varias, se pierden |
 | 4.10.9 | **KPI "Sin decisión" debe leer el umbral configurado** | medio | `repo:835` lo fija en 5 y la UI nunca manda `umbralDias`; el valor de `/admin/configuracion` solo lo lee `alertas/ejecutar`. Además **incluye borradores** y la etiqueta "> 5 días" está cableada al literal |
 | 4.10.10 | Aviso de monedas distintas en la comparativa del coordinador | bajo | La conversión orientativa existe pero solo en la vista pública |
-| **4.10.11** | **`respuesta_campo` era una tabla de solo escritura** | **A MEDIAS** | Resuelto para las respuestas del ciclo de preguntas (010): el coordinador ya ve lo que le contestaron, en el bloque "Preguntas al solicitante". **Sigue abierto para los campos editados** por "Editar datos" de la re-cotización: se escriben en `respuesta_campo` y ninguna pantalla los lee. `listarRespuestas` existe y no se usa todavía |
+| ~~**4.10.11**~~ | ~~`respuesta_campo` era de solo escritura~~ | ✅ **RESUELTO 2026-10-14** | Resuelto junto con 4.5.6: el coordinador ve todas las respuestas como campos. Se agregó `listarRespuestas` y `guardarRespuestasPorClave` (la lógica de resolver la etiqueta del catálogo estaba duplicada en dos métodos) |
 
 ## 5. Decisiones pendientes del cliente — NO son trabajo mío hasta que respondan
 
@@ -319,27 +325,35 @@ documentación**. Cuatro estaban mal. La columna de la derecha es la nueva fuent
 `qa/checklist-piloto-3-roles.md` del 2026-09-22, **sin re-correr**. Ese archivo quedó **sin
 trackear** por las credenciales (ver 6.12): leelo de disco.
 
-### 7.1 Hallazgos NUEVOS que no estaban en ningún checklist
+### 7.1 Hallazgos nuevos de la auditoría — **estado en §4**
 
-Salieron de la verificación de §11 contra código:
+La auditoría de §11 contra código encontró doce ítems que ninguna lista tenía. **Su estado
+vive en §4 y en ningún otro lado.** Antes esta tabla lo repetía, y las tres copias (§4, acá y
+§11) se desincronizaron hasta contradecirse: esta decía que el correo 4 faltaba mientras §4.9.2
+lo daba por resuelto.
+
+Los ítems, para no perder el rastro de dónde salieron:
 
 | # | Hallazgo | Gravedad |
 |---|---|---|
-| ~~4.7.1~~ | ~~B3 no validado en servidor~~ | ✅ **resuelto 2026-10-03** |
-| ~~4.7.2~~ | ~~Correo 4 nunca se envía~~ | ✅ **resuelto 2026-10-03** |
-| ~~4.7.3~~ | ~~"Ninguna me sirve" cerraba la solicitud~~ | ✅ **resuelto 2026-10-03** |
-| **4.7.4** | **`guardarComparativa` devolvía un id inexistente** | alta — resuelta sin querer | El INSERT no manda la columna `id` y el motor arma un id textual `cmp-<epoch>`; el método devolvía la entrada, así que quien lo llamaba recibía un id que no era de ninguna fila. Ahora devuelve la fila insertada. **Bug latente**: la API de comparativa respondía con ese id falso |
-| **4.7.5** | Los tests del assessment fallan si hay `OPENROUTER_API_KEY` en el entorno | media | La suite pasa sin `.env.local` y falla con él: los tests del assessment pegan contra la IA y el catálogo reales. Nadie lo descubre salvo que cargue el env a mano. Verificar siempre **sin** el env cargado |
-| ~~4.8.1~~ | ~~`GET /api/solicitudes/[id]` sin auth~~ | ✅ **resuelto 2026-10-03** |
-| 4.8.3 | Sin aislamiento horizontal entre coordinadores | **crítica** — sigue abierto |
-| ~~4.9.1~~ | ~~Correo 1 cae al solicitante~~ | ✅ **resuelto 2026-10-03** |
-| 4.10.1 | Tasa ISV hardcodeada, no de configuración (contra doc 16) | alta |
-| 4.10.2 | La alerta de inactividad no puede dispararse nunca | alta |
-| 4.10.6 | Excel comparativo siempre "—" en pros/contras, y el test lo tapa | media |
-| 4.10.7 | `fusionarProsContras` descarta pros y contras deterministas | media |
+| 4.7.1 | B3 no validado en servidor | crítica |
+| 4.7.2 | Correo 4 nunca se envía | crítica |
+| 4.7.3 | "Ninguna me sirve" cerraba la solicitud | crítica |
+| 4.7.4 | `guardarComparativa` devolvía un id inexistente | alta |
+| 4.7.5 | Los tests del assessment fallan con `OPENROUTER_API_KEY` en el entorno | media |
+| 4.8.1 | `GET /api/solicitudes/[id]` sin auth | crítica |
+| 4.8.2 | `/documento` y `/logo` sin chequeo de pertenencia | crítica |
+| 4.8.3 | Aislamiento horizontal entre coordinadores | crítica |
+| 4.9.1 | Correo 1 cae al solicitante | crítica |
+| 4.10.1 | Tasa ISV hardcodeada | alta |
+| 4.10.2 | La alerta de inactividad no puede dispararse | alta |
 | 4.10.5 | `transicionarEstado` del repo no valida la máquina de estados | media |
-| — | `GET /api/solicitudes/[id]/documento` y `/logo` sin chequeo de pertenencia | alta |
+| 4.10.6 | Excel comparativo siempre "—" en pros/contras | media |
+| 4.10.7 | `fusionarProsContras` descarta pros y contras deterministas | media |
 
+**Para saber si alguna sigue abierta, buscar su número en §4.** Acá no se repite el estado.
+
+---
 
 ## 8. `.harness/` ya unificado — RESUELTO
 

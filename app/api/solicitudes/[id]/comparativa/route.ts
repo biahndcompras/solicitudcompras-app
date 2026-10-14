@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
-import { generarComparativaConIA } from "@/lib/domain/comparativa";
+import {
+  especificacionesSolicitadasDesdeRespuestas,
+  generarComparativaConIA,
+} from "@/lib/domain/comparativa";
 import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
@@ -26,11 +29,16 @@ export async function POST(
       );
     }
 
+    // 4.10.8 — "lo que se pidió" son las respuestas del solicitante. Sin esto el motor
+    // determinístico recibía `{}` y nunca podía detectar una discrepancia sin IA.
+    const respuestas = await repo.listarRespuestas(id);
+    const especificacionesSolicitadas = especificacionesSolicitadasDesdeRespuestas(respuestas);
+
     // IA server-side (la clave OPENROUTER siempre está en el servidor).
     // Fallback determinístico interno: si la IA no responde o expira, no bloquea.
     const comparativa = await generarComparativaConIA({
       solicitudId: id,
-      especificacionesSolicitadas: {},
+      especificacionesSolicitadas,
       requerimiento: solicitud.titulo,
       cotizaciones,
       now: new Date().toISOString(),

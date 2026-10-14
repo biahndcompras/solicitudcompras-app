@@ -16,10 +16,19 @@ export default function AdminCamposPage() {
   const [form, setForm] = useState(VACIO);
   const [guardando, setGuardando] = useState(false);
   const [pendiente, setPendiente] = useState<CampoCatalogo | null>(null);
+  const [porEliminar, setPorEliminar] = useState<CampoCatalogo | null>(null);
+  const [editando, setEditando] = useState<CampoCatalogo | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
 
   // Guarda de cambios sin guardar: avisa antes de perder la configuración.
-  const sucio = form.campoKey.trim() !== "" || form.label.trim() !== "";
+  // Al editar, solo cuenta como sucio si algo cambió respecto del campo original.
+  const sucio = editando
+    ? form.label.trim() !== editando.label ||
+      form.tipoDato !== editando.tipoDato ||
+      form.origen !== editando.origen ||
+      form.obligatorio !== editando.obligatorio ||
+      Number(form.orden) !== editando.orden
+    : form.campoKey.trim() !== "" || form.label.trim() !== "";
   const avisoRef = useRef(false);
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -76,7 +85,72 @@ export default function AdminCamposPage() {
       if (!ok) return;
     }
     setMostrandoForm(false);
+    setEditando(null);
     setForm(VACIO);
+  }
+
+  function abrirNuevo() {
+    setEditando(null);
+    setForm(VACIO);
+    setMensaje(null);
+    setMostrandoForm(true);
+  }
+
+  function abrirEditar(c: CampoCatalogo) {
+    setEditando(c);
+    setForm({
+      campoKey: c.campoKey,
+      label: c.label,
+      tipoDato: c.tipoDato,
+      origen: c.origen,
+      obligatorio: c.obligatorio,
+      orden: c.orden,
+    });
+    setMensaje(null);
+    setMostrandoForm(true);
+  }
+
+  // Solo viaja lo que cambió: una edición parcial no puede pisar atributos que el
+  // formulario no expone (ayuda, sección del PDF, validación…).
+  function diffEdicion(): Record<string, unknown> {
+    if (!editando) return {};
+    const body: Record<string, unknown> = {};
+    if (form.label.trim() !== editando.label) body.label = form.label.trim();
+    if (form.tipoDato !== editando.tipoDato) body.tipoDato = form.tipoDato;
+    if (form.origen !== editando.origen) body.origen = form.origen;
+    if (form.obligatorio !== editando.obligatorio) body.obligatorio = form.obligatorio;
+    if (Number(form.orden) !== editando.orden) body.orden = Number(form.orden);
+    return body;
+  }
+
+  async function guardarEdicion() {
+    if (!editando || guardando) return;
+    const body = diffEdicion();
+    if (Object.keys(body).length === 0) {
+      setMensaje({ tipo: "ok", texto: "No hay cambios que guardar." });
+      return;
+    }
+    setGuardando(true);
+    setMensaje(null);
+    try {
+      const res = await fetch(`/api/admin/campos/${encodeURIComponent(editando.campoKey)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setMensaje({ tipo: "ok", texto: `Campo «${form.label.trim()}» actualizado.` });
+        cerrarForm(true);
+        await recargar();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setMensaje({ tipo: "error", texto: d.error ?? "No se pudo actualizar el campo." });
+      }
+    } catch {
+      setMensaje({ tipo: "error", texto: "No se pudo actualizar el campo: error de red." });
+    } finally {
+      setGuardando(false);
+    }
   }
 
   async function crearCampo() {
@@ -139,6 +213,35 @@ export default function AdminCamposPage() {
     }
   }
 
+  // Eliminar no borra la fila: la desactiva. Las respuestas guardadas referencian el campo
+  // por su clave, así que un borrado físico las dejaría huérfanas. Se confirma igual.
+  function pedirEliminar(c: CampoCatalogo) {
+    if (ocupado) return;
+    setPorEliminar(c);
+  }
+
+  async function confirmarEliminar() {
+    const c = porEliminar;
+    if (!c || ocupado) return;
+    setOcupado(c.campoKey);
+    setMensaje(null);
+    try {
+      const res = await fetch(`/api/admin/campos/${encodeURIComponent(c.campoKey)}`, { method: "DELETE" });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setMensaje({ tipo: "error", texto: d.error ?? `No se pudo eliminar "${c.label}".` });
+      } else {
+        setMensaje({ tipo: "ok", texto: `El campo «${c.label}» fue desactivado y ya no se pedirá en solicitudes nuevas.` });
+        await recargar();
+      }
+    } catch {
+      setMensaje({ tipo: "error", texto: `No se pudo eliminar "${c.label}": error de red.` });
+    } finally {
+      setOcupado(null);
+      setPorEliminar(null);
+    }
+  }
+
   return (
     <AdminShell title="Catálogo de campos" subtitle="Gestión de campos que el sistema pide y que la IA usa para completar cotizaciones.">
       {mensaje && (
@@ -162,7 +265,7 @@ export default function AdminCamposPage() {
         </div>
         <button
           type="button"
-          onClick={() => (mostrandoForm ? cerrarForm() : setMostrandoForm(true))}
+          onClick={() => (mostrandoForm ? cerrarForm() : abrirNuevo())}
           className="bg-sky-600 text-white text-[12px] font-semibold px-3 py-2 rounded-lg hover:bg-sky-700 transition-colors"
         >
           {mostrandoForm ? "Cancelar" : "Nuevo campo"}
@@ -171,7 +274,9 @@ export default function AdminCamposPage() {
 
       {mostrandoForm && (
         <div className="bg-white rounded-lg border border-slate-200 p-5 mb-5">
-          <div className="text-[14px] font-semibold text-slate-900 mb-4">Nuevo campo del catálogo</div>
+          <div className="text-[14px] font-semibold text-slate-900 mb-4">
+            {editando ? `Editar campo «${editando.label}»` : "Nuevo campo del catálogo"}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <label className="block">
               <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Clave interna</span>
@@ -179,8 +284,12 @@ export default function AdminCamposPage() {
                 value={form.campoKey}
                 onChange={(e) => setForm({ ...form, campoKey: e.target.value })}
                 placeholder="ej. dimensiones"
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
+                disabled={editando !== null}
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-50 disabled:text-slate-500"
               />
+              {editando && (
+                <span className="block text-[11px] text-slate-500 mt-1">La clave no se puede cambiar: identifica el campo.</span>
+              )}
             </label>
             <label className="block">
               <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Etiqueta (visible al usuario)</span>
@@ -198,7 +307,7 @@ export default function AdminCamposPage() {
                 onChange={(e) => setForm({ ...form, tipoDato: e.target.value })}
                 className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
               >
-                {["texto", "texto_largo", "numero", "fecha", "seleccion", "booleano", "archivo", "moneda"].map((t) => (
+                {["texto", "texto_largo", "numero", "fecha", "seleccion", "seleccion_multiple", "booleano", "archivo", "moneda"].map((t) => (
                   <option key={t}>{t}</option>
                 ))}
               </select>
@@ -234,11 +343,11 @@ export default function AdminCamposPage() {
             </button>
             <button
               type="button"
-              onClick={crearCampo}
-              disabled={!form.campoKey.trim() || !form.label.trim() || guardando}
+              onClick={editando ? guardarEdicion : crearCampo}
+              disabled={!form.label.trim() || (!editando && !form.campoKey.trim()) || guardando}
               className="bg-slate-900 text-white text-[13px] px-4 py-2 rounded-lg font-semibold hover:bg-slate-800 disabled:opacity-40 transition-colors"
             >
-              {guardando ? "Guardando…" : "Guardar campo"}
+              {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Guardar campo"}
             </button>
           </div>
         </div>
@@ -271,7 +380,7 @@ export default function AdminCamposPage() {
                   <th scope="col" className="px-4 py-2.5 font-semibold">Origen</th>
                   <th scope="col" className="px-4 py-2.5 font-semibold">Orden</th>
                   <th scope="col" className="px-4 py-2.5 font-semibold">Estado</th>
-                  <th scope="col" className="px-4 py-2.5 font-semibold text-right">Acción</th>
+                  <th scope="col" className="px-4 py-2.5 font-semibold text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-[12.5px]">
@@ -303,14 +412,32 @@ export default function AdminCamposPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => pedirToggle(c)}
-                        disabled={ocupado === c.campoKey}
-                        className="text-[12px] font-semibold text-slate-600 hover:text-sky-700 disabled:opacity-50 transition-colors"
-                      >
-                        {ocupado === c.campoKey ? "…" : c.activo ? "Desactivar" : "Activar"}
-                      </button>
+                      <span className="inline-flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => abrirEditar(c)}
+                          disabled={ocupado === c.campoKey}
+                          className="text-[12px] font-semibold text-slate-600 hover:text-sky-700 disabled:opacity-50 transition-colors"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => pedirToggle(c)}
+                          disabled={ocupado === c.campoKey}
+                          className="text-[12px] font-semibold text-slate-600 hover:text-sky-700 disabled:opacity-50 transition-colors"
+                        >
+                          {ocupado === c.campoKey ? "…" : c.activo ? "Desactivar" : "Activar"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => pedirEliminar(c)}
+                          disabled={ocupado === c.campoKey}
+                          className="text-[12px] font-semibold text-rose-600 hover:text-rose-800 disabled:opacity-50 transition-colors"
+                        >
+                          Eliminar
+                        </button>
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -350,6 +477,38 @@ export default function AdminCamposPage() {
                 )}
               >
                 {ocupado ? "Aplicando…" : pendiente.activo ? "Desactivar campo" : "Activar campo"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {porEliminar && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40">
+          <div role="dialog" aria-modal="true" aria-labelledby="del-titulo" className="w-full max-w-md bg-white rounded-lg border border-slate-200 p-5 shadow-xl">
+            <h2 id="del-titulo" className="text-[15px] font-semibold text-slate-900">
+              ¿Eliminar «{porEliminar.label}»?
+            </h2>
+            <p className="text-[13px] text-slate-600 mt-2">
+              El campo se desactivará y dejará de pedirse en las solicitudes nuevas. No se borra por
+              completo para no dejar sin referencia las respuestas que ya se guardaron con él.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPorEliminar(null)}
+                disabled={ocupado !== null}
+                className="text-[13px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmarEliminar}
+                disabled={ocupado !== null}
+                className="text-[13px] px-4 py-2 rounded-lg font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-60 transition-colors"
+              >
+                {ocupado ? "Eliminando…" : "Eliminar campo"}
               </button>
             </div>
           </div>

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import type { FiltrosMetricas } from "@/lib/db/repositorio";
+import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
 
 export async function GET(request: Request) {
+  const auth = await guardApi(["admin"]);
+  if (auth.negada) return auth.negada;
   try {
     const url = new URL(request.url);
     const q = url.searchParams;

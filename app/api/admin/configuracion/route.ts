@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
+import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
 const CLAVES = ["umbral_dias_sin_movimiento", "expiracion_link_dias", "destinatario_alertas"] as const;
 
 export async function GET() {
+  const auth = await guardApi(["admin"]);
+  if (auth.negada) return auth.negada;
   try {
     const out: Record<string, unknown> = {};
     for (const k of CLAVES) out[k] = await repo.leerConfig(k);
@@ -15,6 +18,8 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await guardApi(["admin"]);
+  if (auth.negada) return auth.negada;
   try {
     const body = (await request.json()) as Record<string, unknown>;
     for (const k of CLAVES) {

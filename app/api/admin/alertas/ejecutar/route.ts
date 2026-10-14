@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { detectarAlertas } from "@/lib/domain/alertas";
 import type { Cotizacion } from "@/lib/domain/types";
+import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
 
 export async function POST() {
+  const auth = await guardApi(["admin"]);
+  if (auth.negada) return auth.negada;
   try {
     const umbral = Number((await repo.leerConfig("umbral_dias_sin_movimiento")) ?? 5);
     const dest = String((await repo.leerConfig("destinatario_alertas")) ?? "");

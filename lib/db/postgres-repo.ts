@@ -87,6 +87,17 @@ function mapeoCotizacion(f: Record<string, unknown>): Cotizacion {
   };
 }
 
+function filaUsuario(f: Record<string, unknown>): Usuario {
+  return {
+    id: String(f.id),
+    nombre: String(f.nombre),
+    email: String(f.email),
+    rol: f.rol as Usuario["rol"],
+    categoriasAsignadas: (f.categorias_asignadas as string[]) ?? [],
+    activo: Boolean(f.activo),
+  };
+}
+
 export class PostgresRepositorio implements Repositorio {
   private _pg?: Pool;
 
@@ -454,35 +465,91 @@ export class PostgresRepositorio implements Repositorio {
     }
   }
 
-  async listarCoordinadores(): Promise<Usuario[]> {
+  async listarCoordinadores(opciones?: { incluirInactivos?: boolean }): Promise<Usuario[]> {
+    // Por defecto solo activos: la asignación, las alertas y los filtros no deben elegir a
+    // alguien dado de baja. La administración pide incluirInactivos para poder reactivar.
     const res = await this.pg.query(
-      "SELECT id, nombre, email, rol, categorias_asignadas, activo FROM usuario WHERE rol = 'coordinador' AND activo = true"
+      opciones?.incluirInactivos
+        ? "SELECT id, nombre, email, rol, categorias_asignadas, activo FROM usuario WHERE rol = 'coordinador' ORDER BY nombre"
+        : "SELECT id, nombre, email, rol, categorias_asignadas, activo FROM usuario WHERE rol = 'coordinador' AND activo = true ORDER BY nombre"
     );
-    return res.rows.map((f) => ({
-      id: String(f.id),
-      nombre: String(f.nombre),
-      email: String(f.email),
-      rol: f.rol,
-      categoriasAsignadas: f.categorias_asignadas ?? [],
-      activo: Boolean(f.activo),
-    }));
+    return res.rows.map(filaUsuario);
   }
 
   async usuarioLocalPorEmail(email: string): Promise<Usuario | null> {
+    // `activo = true` es parte del contrato: desactivar un coordinador debe hacer que su
+    // correo deje de resolver su bandeja (si no, seguiría entrando por API/panel). Para
+    // administración (alta, duplicados, reactivar) está `buscarUsuarioPorEmail`.
+    const res = await this.pg.query(
+      "SELECT id, nombre, email, rol, categorias_asignadas, activo FROM usuario WHERE lower(email) = lower($1) AND activo = true LIMIT 1",
+      [email.trim()]
+    );
+    const f = res.rows[0];
+    return f ? filaUsuario(f) : null;
+  }
+
+  async usuarioPorId(id: string): Promise<Usuario | null> {
+    const res = await this.pg.query(
+      "SELECT id, nombre, email, rol, categorias_asignadas, activo FROM usuario WHERE id = $1",
+      [id]
+    );
+    const f = res.rows[0];
+    return f ? filaUsuario(f) : null;
+  }
+
+  async buscarUsuarioPorEmail(email: string): Promise<Usuario | null> {
     const res = await this.pg.query(
       "SELECT id, nombre, email, rol, categorias_asignadas, activo FROM usuario WHERE lower(email) = lower($1) LIMIT 1",
       [email.trim()]
     );
     const f = res.rows[0];
-    if (!f) return null;
-    return {
-      id: String(f.id),
-      nombre: String(f.nombre),
-      email: String(f.email),
-      rol: f.rol,
-      categoriasAsignadas: f.categorias_asignadas ?? [],
-      activo: Boolean(f.activo),
-    };
+    return f ? filaUsuario(f) : null;
+  }
+
+  async crearUsuario(datos: {
+    nombre: string;
+    email: string;
+    rol: Usuario["rol"];
+    categoriasAsignadas: string[];
+  }): Promise<Usuario> {
+    const res = await this.pg.query(
+      `INSERT INTO usuario (nombre, email, rol, categorias_asignadas, activo)
+       VALUES ($1, lower($2), $3, $4, true)
+       RETURNING id, nombre, email, rol, categorias_asignadas, activo`,
+      [datos.nombre.trim(), datos.email.trim(), datos.rol, datos.categoriasAsignadas]
+    );
+    return filaUsuario(res.rows[0]);
+  }
+
+  async actualizarUsuario(
+    id: string,
+    cambios: { nombre?: string; categoriasAsignadas?: string[]; activo?: boolean }
+  ): Promise<Usuario | null> {
+    const sets: string[] = [];
+    const vals: unknown[] = [];
+    let i = 1;
+    if (cambios.nombre !== undefined) {
+      sets.push(`nombre = $${i++}`);
+      vals.push(cambios.nombre.trim());
+    }
+    if (cambios.categoriasAsignadas !== undefined) {
+      sets.push(`categorias_asignadas = $${i++}`);
+      vals.push(cambios.categoriasAsignadas);
+    }
+    if (cambios.activo !== undefined) {
+      sets.push(`activo = $${i++}`);
+      vals.push(cambios.activo);
+    }
+    if (sets.length === 0) return this.usuarioPorId(id);
+    sets.push("updated_at = now()");
+    vals.push(id);
+    const res = await this.pg.query(
+      `UPDATE usuario SET ${sets.join(", ")} WHERE id = $${i}
+       RETURNING id, nombre, email, rol, categorias_asignadas, activo`,
+      vals
+    );
+    const f = res.rows[0];
+    return f ? filaUsuario(f) : null;
   }
 
   async listarTodas(): Promise<Solicitud[]> {

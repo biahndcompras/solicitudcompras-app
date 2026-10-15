@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/ui-ext/AdminShell";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
+import { CoordinadoresManager } from "./CoordinadoresManager";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +17,17 @@ const COLORES_AVATAR = [
 const DOTS = ["bg-emerald-400", "bg-sky-400", "bg-amber-400"];
 
 export default async function AdminCoordinadoresPage() {
-  const [coordinadores, solicitudes] = await Promise.all([repo.listarCoordinadores(), repo.listarTodas()]);
+  // Se traen también los inactivos: la pantalla de gestión necesita poder reactivarlos.
+  const [coordinadores, solicitudes] = await Promise.all([
+    repo.listarCoordinadores({ incluirInactivos: true }),
+    repo.listarTodas(),
+  ]);
 
-  const stats = coordinadores.map((c, i) => {
+  const activos = coordinadores.filter((c) => c.activo);
+
+  const stats = activos.map((c, i) => {
     const propias = solicitudes.filter((s) => s.coordinadorId === c.id);
-    const activos = propias.filter((s) => !ESTADOS_TERMINALES.has(s.estado)).length;
+    const activosCount = propias.filter((s) => !ESTADOS_TERMINALES.has(s.estado)).length;
     const cerradas = propias.filter((s) => s.fechaCierre);
     const promedio = cerradas.length
       ? cerradas.reduce(
@@ -36,7 +43,7 @@ export default async function AdminCoordinadoresPage() {
       iniciales: c.nombre.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase(),
       color: COLORES_AVATAR[i % COLORES_AVATAR.length],
       dot: DOTS[i % DOTS.length],
-      activos,
+      activos: activosCount,
       promedio,
     };
   });
@@ -44,7 +51,10 @@ export default async function AdminCoordinadoresPage() {
   return (
     <AdminShell title="Equipo de Coordinadores" subtitle="Rendimiento, carga de trabajo y asignación del equipo.">
       <div className="mb-6 flex items-center justify-between">
-        <div className="text-[11px] text-slate-500">{coordinadores.length} coordinadores activos</div>
+        <div className="text-[11px] text-slate-500">
+          {activos.length} coordinadores activos
+          {coordinadores.length > activos.length ? ` · ${coordinadores.length - activos.length} inactivos` : ""}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -75,6 +85,9 @@ export default async function AdminCoordinadoresPage() {
           </div>
         ))}
       </div>
+
+      <CoordinadoresManager inicial={coordinadores} />
     </AdminShell>
   );
 }
+

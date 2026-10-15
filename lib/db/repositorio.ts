@@ -53,7 +53,12 @@ export interface Repositorio {
     nota?: string;
   }): Promise<TransicionResultado>;
 
-  listarCoordinadores(): Promise<Usuario[]>;
+  /**
+   * Coordinadores para asignación, alertas y filtros. Por defecto solo activos: un
+   * coordinador desactivado no debe recibir nuevas asignaciones. La pantalla de
+   * administración pide `{ incluirInactivos: true }` para poder reactivarlos.
+   */
+  listarCoordinadores(opciones?: { incluirInactivos?: boolean }): Promise<Usuario[]>;
 
   listarPorCoordinador(coordinadorId: string): Promise<Solicitud[]>;
 
@@ -65,11 +70,35 @@ export interface Repositorio {
 
   listarPorEmail(email: string): Promise<Solicitud[]>;
   /**
-   * Usuario local por correo de la sesión de Supabase. La sesión trae el email pero las
-   * solicitudes se asignan por id local: sin esta traducción, cada lugar que necesite el id
-   * reimplementa la búsqueda y empiezan a aparecer bandejas ajenas.
+   * Usuario local ACTIVO por correo de la sesión de Supabase. La sesión trae el email pero
+   * las solicitudes se asignan por id local: sin esta traducción, cada lugar que necesite el
+   * id reimplementa la búsqueda y empiezan a aparecer bandejas ajenas.
+   *
+   * Filtra `activo = true`: un coordinador dado de baja no debe resolver su bandeja. Para
+   * administración (alta, verificar duplicados, reactivar) usar `buscarUsuarioPorEmail`.
    */
   usuarioLocalPorEmail(email: string): Promise<Usuario | null>;
+
+  /** Usuario por id, ACTIVO o INACTIVO. Para la gestión de administración. */
+  usuarioPorId(id: string): Promise<Usuario | null>;
+
+  /** Cualquier usuario por correo, ACTIVO o INACTIVO (alta y detección de duplicados). */
+  buscarUsuarioPorEmail(email: string): Promise<Usuario | null>;
+
+  /** Alta de un usuario local (la fila en `usuario`; el Auth se crea aparte). */
+  crearUsuario(datos: {
+    nombre: string;
+    email: string;
+    rol: Usuario["rol"];
+    categoriasAsignadas: string[];
+  }): Promise<Usuario>;
+
+  /** Edición parcial: solo se pisa lo que llega. null si el id no existe. */
+  actualizarUsuario(
+    id: string,
+    cambios: { nombre?: string; categoriasAsignadas?: string[]; activo?: boolean }
+  ): Promise<Usuario | null>;
+
   /** Tasa de ISV vigente desde `configuracion`; 0.15 solo si la clave falta o es inválida. */
   tasaIsv(): Promise<number>;
 

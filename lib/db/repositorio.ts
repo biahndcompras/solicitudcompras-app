@@ -32,7 +32,7 @@ export interface Repositorio {
       Solicitud,
       "titulo" | "solicitanteEmail" | "solicitanteNombre" | "estado"
     >,
-    opciones?: { areaSolicitante?: string; descripcion?: string; tipo?: string; subtipo?: string; categoria?: string; fechaRequerida?: string; clasificacionCorregida?: boolean; idempotencyKey?: string }
+    opciones?: { areaSolicitante?: string; descripcion?: string; tipo?: string; subtipo?: string; categoria?: string; fechaRequerida?: string; clasificacionCorregida?: boolean; idempotencyKey?: string; plantillaId?: string }
   ): Promise<Solicitud>;
 
   /**
@@ -182,6 +182,8 @@ export interface Repositorio {
   leerConfig(clave: string): Promise<unknown>;
 
   listarCamposDePlantilla(tipo: "RFI" | "RFQ" | "RFP", subtipo?: string, categoria?: string): Promise<CampoCatalogo[]>;
+  /** La plantilla que aplica a (tipo, subtipo, categoría), con su versión (RF-55). */
+  obtenerPlantillaPara(tipo: "RFI" | "RFQ" | "RFP", subtipo?: string, categoria?: string): Promise<{ id: string; version: number } | null>;
 
   actualizarCamposSolicitud(
     solicitudId: string,

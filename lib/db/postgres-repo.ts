@@ -50,6 +50,9 @@ function filaSolicitud(f: Record<string, unknown>): Solicitud {
     fechaCierre: aISO(f.fecha_cierre),
     clasificacionConfianza: f.clasificacion_confianza != null ? Number(f.clasificacion_confianza) : undefined,
     clasificacionCorregida: Boolean(f.clasificacion_corregida),
+    // RF-55 (4.4.1): la plantilla de origen. El tipo y la columna ya existían; faltaba
+    // persistirla y leerla. Sin esto la solicitud no podría "conservar su versión de origen".
+    plantillaId: (f.plantilla_id as string) ?? undefined,
     notificacionFallida: Boolean(f.notificacion_fallida),
     informacionPendiente: Boolean(f.informacion_pendiente),
     informacionPreguntas: (f.informacion_preguntas as PreguntaAlSolicitante | null) ?? undefined,
@@ -125,9 +128,9 @@ export class PostgresRepositorio implements Repositorio {
       `WITH nueva AS (
          INSERT INTO solicitud (titulo, solicitante_email, solicitante_nombre, estado,
            area_solicitante, descripcion, categoria, tipo, subtipo, fecha_requerida, idempotency_key,
-           clasificacion_corregida)
+           clasificacion_corregida, plantilla_id)
          VALUES ($1,$2,$3,$4,$5,$6,$7,
-           $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11, $12)
+           $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11, $12, $13::uuid)
          ON CONFLICT (solicitante_email, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
          RETURNING *
        ), evento AS (
@@ -152,6 +155,10 @@ export class PostgresRepositorio implements Repositorio {
         // RN-04 / 4.7.7: la corrección humana del tipo sugerido por la IA. La columna es
         // NOT NULL DEFAULT false; se normaliza a boolean para nunca mandar null.
         Boolean(opciones?.clasificacionCorregida),
+        // RF-55 (4.4.1): la plantilla con la que se creó la solicitud. Se guarda su id, y
+        // como la fila de `plantilla` lleva `version`, queda registrada la versión de origen.
+        // Nullable: si no hay plantilla para (tipo, subtipo, categoría), queda NULL.
+        opciones?.plantillaId ?? null,
       ]
     );
     if (res.rows[0]) return filaSolicitud(res.rows[0]);
@@ -1349,6 +1356,39 @@ export class PostgresRepositorio implements Repositorio {
       validacion: f.validacion ?? undefined,
       activo: Boolean(f.activo),
     }));
+  }
+
+  /**
+   * La plantilla que le corresponde a un (tipo, subtipo, categoría), con su versión.
+   *
+   * RF-55 pide que "las solicitudes conserven su versión de origen". El esquema ya tenía
+   * `solicitud.plantilla_id` y `plantilla.version`, pero **la referencia nunca se escribía**:
+   * 0 de 1053 solicitudes la tenían. No se puede conservar lo que nunca se registró.
+   *
+   * La resolución vive acá y no en el cliente a propósito: el POST ya recibe tipo, subtipo y
+   * categoría, así que resolverlo en el servidor evita arrastrar el id por el wizard —que
+   * además podría mentir.
+   *
+   * Mismo criterio de búsqueda que `listarCamposDePlantilla`, para que nunca apunten a
+   * plantillas distintas.
+   */
+  async obtenerPlantillaPara(
+    tipo: "RFI" | "RFQ" | "RFP",
+    subtipo?: string,
+    categoria?: string
+  ): Promise<{ id: string; version: number } | null> {
+    const res = await this.pg.query(
+      `SELECT p.id, p.version
+         FROM plantilla p
+        WHERE p.activa = true
+          AND p.tipo = $1
+          AND ($2::text IS NULL OR p.subtipo::text = $2)
+          AND ($3::text IS NULL OR p.categoria::text = $3 OR p.categoria IS NULL)
+        ORDER BY p.version DESC
+        LIMIT 1`
+      , [tipo, subtipo, categoria]);
+    const f = res.rows[0];
+    return f ? { id: String(f.id), version: Number(f.version) } : null;
   }
 
   listarCamposDePlantilla(

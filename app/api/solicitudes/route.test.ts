@@ -8,6 +8,7 @@ const listarTodas = vi.fn();
 const usuarioLocalPorEmail = vi.fn();
 const guardApi = vi.fn();
 const crearSolicitud = vi.fn();
+const obtenerPlantillaPara = vi.fn();
 
 vi.mock("@/lib/db/postgres-repo", () => ({
   PostgresRepositorio: class {
@@ -15,6 +16,7 @@ vi.mock("@/lib/db/postgres-repo", () => ({
     listarTodas = (...a: unknown[]) => listarTodas(...a);
     usuarioLocalPorEmail = (...a: unknown[]) => usuarioLocalPorEmail(...a);
     crearSolicitud = (...a: unknown[]) => crearSolicitud(...a);
+    obtenerPlantillaPara = (...a: unknown[]) => obtenerPlantillaPara(...a);
   },
 }));
 
@@ -47,6 +49,7 @@ beforeEach(() => {
   listarTodas.mockReset();
   usuarioLocalPorEmail.mockReset().mockResolvedValue({ id: "local-mio", email: "mio@biafoods.co" });
   guardApi.mockReset().mockResolvedValue({ sesion: { rol: "coordinador", email: "mio@biafoods.co" } });
+  obtenerPlantillaPara.mockReset().mockResolvedValue(null);
 });
 
 describe("GET /api/solicitudes (bandeja del coordinador)", () => {
@@ -239,5 +242,42 @@ describe("POST /api/solicitudes · persiste la corrección de clasificación (4.
     const res = await pedirPost({ ...base, tipo: "RFQ", clasificacionCorregida: false });
     expect(res.status).toBe(201);
     expect(crearSolicitud.mock.calls[0][1]).toMatchObject({ clasificacionCorregida: false });
+  });
+});
+
+/**
+ * RF-55 / 4.4.1 — la solicitud debe conservar la plantilla con la que se creó (y, con ella,
+ * su versión). El id NO se recibe del cliente: se resuelve en el servidor a partir de
+ * (tipo, subtipo, categoría), porque el wizard podría mentir. Lo que se fija aquí es que el
+ * POST lo resuelva y lo reenvíe al repositorio; y que su ausencia no rompa el alta.
+ */
+describe("POST /api/solicitudes · plantilla de origen (4.4.1)", () => {
+  const base: Record<string, unknown> = {
+    titulo: "Sombrillas",
+    solicitanteEmail: "maria@bia.hn",
+    solicitanteNombre: "Maria",
+    areaSolicitante: "Marketing",
+    descripcion: "500 sombrillas con logo de la marca",
+    fechaRequerida: isoEnDias(10),
+  };
+
+  beforeEach(() => {
+    crearSolicitud.mockReset().mockResolvedValue({ id: "s-1" });
+  });
+
+  it("resuelve la plantilla por (tipo, subtipo, categoría) y reenvía su id", async () => {
+    obtenerPlantillaPara.mockResolvedValue({ id: "pl-1", version: 3 });
+    const res = await pedirPost({ ...base, tipo: "RFQ", subtipo: "servicio", categoria: "Marketing" });
+    expect(res.status).toBe(201);
+    expect(obtenerPlantillaPara).toHaveBeenCalledWith("RFQ", "servicio", "Marketing");
+    expect(crearSolicitud.mock.calls[0][1]).toMatchObject({ plantillaId: "pl-1" });
+  });
+
+  it("si no hay plantilla para la combinación, el alta sigue siendo válida (plantillaId sin definir)", async () => {
+    obtenerPlantillaPara.mockResolvedValue(null);
+    const res = await pedirPost({ ...base, tipo: "RFQ", subtipo: "servicio" });
+    expect(res.status).toBe(201);
+    expect(crearSolicitud).toHaveBeenCalledTimes(1);
+    expect(crearSolicitud.mock.calls[0][1].plantillaId).toBeUndefined();
   });
 });

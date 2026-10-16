@@ -93,6 +93,18 @@ export async function POST(request: Request) {
   try {
     const body = crearSchema.parse(await request.json());
     const clave = body.idempotencyKey ?? "";
+    // RF-55 (4.4.1): se registra la plantilla de origen (y con ella su versión). Se resuelve
+    // acá, en el servidor, y no viaja desde el cliente: el wizard podría mentir sobre qué
+    // plantilla usó, y el POST ya tiene los tres datos que la determinan. Si no hay plantilla
+    // para esa combinación, `plantillaId` queda NULL — la solicitud es válida igual.
+    const plantilla =
+      body.tipo && body.subtipo
+        ? await repo.obtenerPlantillaPara(
+            body.tipo,
+            body.subtipo,
+            body.categoria || undefined
+          )
+        : null;
     const solicitud = await repo.crearSolicitud(
       {
         titulo: body.titulo,
@@ -109,6 +121,7 @@ export async function POST(request: Request) {
         fechaRequerida: body.fechaRequerida,
         clasificacionCorregida: body.clasificacionCorregida,
         idempotencyKey: CLAVE_IDEMPOTENCIA_RE.test(clave) ? clave : undefined,
+        plantillaId: plantilla?.id,
       }
     );
     return NextResponse.json(solicitud, { status: 201 });

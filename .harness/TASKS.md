@@ -159,13 +159,14 @@ Esto sí es trabajo real. Ordenado por tema. Las referencias `RF-xx` son del PRD
 ### 4.3 Flujo de re-cotización
 | # | Tarea | Ref | Nota |
 |---|---|---|---|
-| 4.3.1 | **UI de re-cotización del solicitante** | 2.3 | ❌ **Hallazgo abierto**: los endpoints y las transiciones `COMPARATIVA_LISTA↔EN_COTIZACION` existen, pero **ningún botón los invoca**. Registrado como `A8 ❌`. |
+| ~~4.3.1~~ | ~~Re-cotización del solicitante~~ | **DECIDIDO: no implementar por ahora** (2026-10-14) | **Su necesidad ya está cubierta**: el botón "Ninguna me sirve" devuelve la solicitud a Compras con el motivo, y *eso es* el pedido de re-cotización del solicitante. Agregar además un botón que reabra cotizaciones le daría poder de mover el proceso de Compras, y el flujo todavía **no tiene login**: cualquiera con su correo podría dispararlas. Reconsiderar cuando exista el login del solicitante (`docs/references/login-solicitante.md`) |
 
 ### 4.4 Administración (Sprint 4 residual)
 | # | Tarea | Ref | Nota |
 |---|---|---|---|
-| 4.4.1 | **RF-54/RF-55 — versionado de plantillas y campos**; la solicitud debe conservar su versión de origen | RF-54, RF-55 | Explicitamente "queda para otra feature" en el spec de la 008. |
-| 4.4.2 | **RF-56 — CRUD de coordinadores/categorías/reglas** desde la UI de admin | RF-56 | Parcial: las reglas por categoría existen; el CRUD no. |
+| ~~4.4.1a~~ | ~~La solicitud conserva su versión de origen~~ | **HECHO** (2026-10-15) | El esquema ya tenía `solicitud.plantilla_id` y `plantilla.version`, pero la referencia **nunca se escribía: 0 de 1053 solicitudes**. Ahora el POST la resuelve por `(tipo, subtipo, categoría)` en el servidor (no desde el cliente, que podría mentir) y `obtenerPlantillaPara` devuelve también la versión. **Falta 4.4.1b** |
+| 4.4.1b | **RF-54 — versionado al EDITAR una plantilla** | RF-54 | **Bloqueada**: no existe UI para editar plantillas (solo campos sueltos en `/admin/campos`), así que no hay ediciones que versionar. Al crear esa UI hay que subir `plantilla.version` en vez de reescribir la fila, o las solicitudes viejas dejarían de conservar su origen |
+| ~~4.4.2~~ | ~~**RF-56 — CRUD de coordinadores** desde la UI de admin~~ | **HECHO** (2026-10-15, `62ddc04`) | Alta/edición/baja con `guardApi(["admin"])`. **Desactivar quita el rol en Auth además de marcar `activo=false`**: verifiqué contra el Supabase real que `updateUserById({rol:null})` borra la clave (y que `app_metadata` se mergea). Sin eso, desactivar **no bloqueaba nada** (el guard solo miraba el rol de la sesión). Límite: la sesión viva sigue hasta el refresh del token. `usuarioLocalPorEmail` ahora filtra `activo`. Las categorías ya eran CRUD en `/admin/campos` |
 | 4.4.3 | **H4.5 — RLS, seguridad por fila** | H4.5 | Pospuesto. **Además depende de una decisión abierta de Lady** (Q2: ¿los coordinadores ven solicitudes ajenas?). |
 | 4.4.4 | Dashboard: distribución por subtipo, tiempo por etapa, rango personalizado | RF-51, RF-52 | "H4.1 menor". |
 | 4.4.5 | Indicador de inactividad en la bandeja del coordinador | — | `user-flows.md:170` lo marca "(pendiente)". |
@@ -503,7 +504,7 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 |---|---|---|
 | Autocompletar nombre/área desde el histórico del correo | No existe endpoint. Debería haber uno tipo `GET /api/solicitudes/ultima?email=` | — |
 | Botón "Atrás" en P2 | `<PasoAcciones>` sin prop `atras`. **No hay forma de volver a P1** | — |
-| Re-cotización del solicitante | No hay UI ni permiso (`guardApi` la excluye por diseño) | 4.3.1 |
+| Re-cotización del solicitante | No hay UI ni permiso (`guardApi` la excluye por diseño) | ~~4.3.1~~ **DECIDIDO no implementar** |
 | Tras decidir, el enlace no se revoca | La solicitud ya vuelve bien a Compras (4.7.3 resuelto), pero el enlace sigue vivo: al recargarlo muestra las tarjetas otra vez. El 409 solo aparece **después** de intentar decidir de nuevo | 4.7.8 |
 | ~~Notificación al decidir~~ | ✅ **Resuelto**: el correo 4 se envía al coordinador | — |
 
@@ -556,7 +557,7 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | Marcador "Nueva" para recién asignadas | El tone `nueva` existe en `Badge.tsx:21` pero está asignado a la categoría `capex_indirectos` | — |
 | Bloque "Registro de solicitud en proceso" | Está en la doc, **cero coincidencias** en el código | — |
 | **Correo 4** | El ciclo cierra sin notificar al coordinador | 4.7.2 |
-| Re-cotización por el **solicitante** | El backend tiene `PATCH`; el solicitante no tiene UI ni permiso | 4.3.1 |
+| Re-cotización por el **solicitante** | El backend tiene `PATCH`; el solicitante no tiene UI ni permiso | ~~4.3.1~~ **DECIDIDO no implementar** |
 
 ### 11.3 ADMINISTRADOR
 
@@ -573,6 +574,7 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | Exportar métricas a Excel (respeta rango y coordinador) | `metricas/excel/route.ts` → `excel/dashboard.ts` |
 | **Reasignación de coordinador de punta a punta** | `ReasignarCoordinador.tsx` → `admin/solicitudes/[id]/reasignar` → `repo:399-422`, con doble auth y evento `reasignacion` |
 | Campos de catálogo: listar, crear, activar/desactivar (persiste de verdad) | `admin/campos/page.tsx:82-140` → `repo:922-950` |
+| Coordinadores: listar, alta, editar (nombre + categorías), activar/desactivar | `admin/coordinadores` → `api/admin/coordinadores` (+`[id]`) → `lib/supabase/admin.ts`. La baja **quita el rol en Auth** (verificado) y la bandeja responde 403 por el filtro `activo` |
 | Configuración: umbral, expiración de enlace, destinatario (upsert real) | `admin/configuracion/page.tsx:49-86` |
 | Perfil admin: **read-only y lo declara** | `admin/ajustes/page.tsx:15-48` — correcto, honesto |
 | `/admin/procesos` kanban por tipo | `admin/procesos/page.tsx:29-74` |
@@ -597,7 +599,6 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 **FALTA**
 | Funcionalidad | Nota | Tarea |
 |---|---|---|
-| **CRUD de coordinadores** | `/api/admin/coordinadores` **solo exporta `GET`**. Alta, edición, baja y cambio de categorías **no existen**. Los datos no son mock (leen `usuario`) pero es **solo lectura** | 4.4.2 |
 | **Borrar un campo de catálogo** | No hay `DELETE` en ninguna de las dos rutas | 4.4.9 |
 | **Selección de alertas por tipo** | Un solo botón que lo dispara todo. 4 tipos detectados, **solo `inactividad` se notifica**; `sin_desglose_fiscal`, `una_sola_cotizacion` y `discrepancia` se devuelven y nadie los muestra. Y `discrepancia` **nunca se emite**: la llamada no pasa `discrepanciasPorSolicitud` | 4.4.10 |
 | **Que la alerta de inactividad pueda dispararse** | La condición `!s.fechaEnvio` es imposible: toda solicitud en el panel ya fue enviada | 4.10.2 |

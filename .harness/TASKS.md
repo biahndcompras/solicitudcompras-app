@@ -34,20 +34,19 @@ commit_verificado: b28c5cd
 
 ## 0. Estado real en una línea
 
-El producto **funciona de punta a punta** y está verificado. Pero una verificación de cada
-función contra el código (§11) encontró **6 problemas críticos** que ninguna lista tenía:
+El producto **funciona de punta a punta** y está verificado. Los **6 problemas críticos** que
+encontró la verificación contra código (§11) **están cerrados**:
 
-- **B3 no se valida en el servidor** y la UI afirma que sí → se puede enviar la comparativa al
-  solicitante sin recomendación humana. Rompe RN-01.
-- **`GET /api/solicitudes/[id]` sin autenticación** → fuga precios, ISV y PII a cualquiera con
-  el UUID.
-- **Sin aislamiento entre coordinadores** → cualquier coordinador toca cualquier solicitud.
-- **Correo 4 nunca se envía** → el ciclo cierra sin notificar a Compras.
-- **"Ninguna me sirve" cierra la solicitud** en vez de reabrirla, y la UI promete lo contrario.
-- **El correo 1 cae al propio solicitante** si falta `MAIL_COORDINADOR_DEFAULT`.
+- ~~B3 no se valida en el servidor~~ → ✅ sin recomendación, la ruta devuelve **409** y no transiciona (4.7.1).
+- ~~`GET /api/solicitudes/[id]` sin autenticación~~ → ✅ `guardApi(["coordinador","admin"])` (4.8.1).
+- ~~Sin aislamiento entre coordinadores~~ → ✅ **Q2 resuelta** (se ven entre ellos, no era bug) + pertenencia en las escrituras de cotizaciones (4.8.3).
+- ~~Correo 4 nunca se envía~~ → ✅ al coordinador asignado, tras cerrar la solicitud (4.9.2).
+- ~~"Ninguna me sirve" cierra la solicitud~~ → ✅ reabre en `EN_COTIZACION` (4.7.3).
+- ~~El correo 1 cae al propio solicitante~~ → ✅ al coordinador asignado o al alias (4.9.1).
 
-Los tres últimos son bugs de integridad del ciclo, los tres primeros son de seguridad/RN-01.
-Detalle y evidencia en §4.7, §4.8, §4.9 y §11.
+Lo que queda **no son bugs conocidos**, sino tres cosas distintas: **bloqueantes del cliente**
+(§1), **trabajo de producto** (§4) y **deuda de proceso/documental** (§6). El estado medido está
+en §2 y el orden sugerido en §10.
 
 `.harness/STATE.md` y `.harness/HANDOFF.md` ya no son fuente de estado: el primero es un
 puntero a este archivo y el segundo quedó marcado como histórico.
@@ -62,11 +61,12 @@ Ordenados por gravedad. Ninguno es código nuestro: dos son del cliente, uno es 
 |---|---|---|---|---|
 | **B1** | **Rotar la contraseña de Postgres y migrar a Supabase Cloud** | **Cliente** 🔴 | La base local **no tiene contraseña** (auth por confianza del usuario del sistema): no hay nada que rotar *ahí*. El bloqueante es la contraseña de la base de **Supabase**, que se usará al migrar los datos. Se resuelven las dos cosas de un movimiento: resetear la contraseña en el dashboard **es** el paso 1 de la migración. Ver `docs/references/migracion-supabase-cloud.md` | `specs/009.../assessment.md:127` |
 | ~~**B2**~~ | ~~Verificar el dominio de correo en Resend~~ | ✅ **RESUELTO 2026-10-14** | Dominio `biahnd.website` verificado (status `verified`). `MAIL_FROM` apunta a él. **Verificado end-to-end por la aplicación**: el correo 6 salió `enviado` en la bitácora y Resend lo reporta `delivered`. Los envíos anteriores fallaban con "The compras.bia domain is not verified" |
-| **B3** | **Aceptación por escrito del riesgo del link público** | **Cliente** 🔴 | El enlace expone precios de proveedores a cualquiera que lo tenga. Aparece 4 veces en la documentación como *"debe quedar aceptado por escrito antes de producción"* y **no consta que se haya obtenido**. | `prd.md:244`, `brief.md:45`, `architecture.md:98` |
+| ~~**B3**~~ | ~~Aceptación por escrito del riesgo del link público~~ | ✅ **RESUELTO 2026-10-14** | Aceptado por escrito por Compras (**Ladi Matute**), registrado en `docs/decisions/0007-riesgo-link-publico.md` con las mitigaciones vigentes (token de 12 bytes, expiración configurable, la decisión solo se acepta en `ENVIADA_A_SOLICITANTE`, no se indexa). Este renglón quedó viejo y lo corregí al revisar la deriva del documento |
 | **B4** | Obtener confirmación escrita de las 6 decisiones D1/D2/D3/D7/D9/D10 | **Cliente** 🟠 | Sin esto el piloto arranca sobre base no aprobada. El documento mismo dice *"se requiere confirmación por escrito"*. | `propuesta-decisiones-piloto.md:5, 26-38` |
 
-**Ninguno de los 4 lo puedo cerrar yo.** Los tres primeros necesitan una acción del cliente.
-Decí explícitamente si querés que los persiga con un correo redactado o los dejamos anotados.
+De los 4, **B1 y B4 siguen abiertos y solo los cierra el cliente** (rotar la contraseña de
+Supabase + migrar, y la confirmación por escrito de las decisiones del piloto). **B2 y B3 ya
+están resueltos.** Ninguno es código nuestro.
 
 ---
 
@@ -80,14 +80,15 @@ Verificado hoy por mí salvo donde se indica otra cosa.
 - Solicitante decide por token público; la solicitud cierra.
 - Admin ve KPIs reales, alertas, exporta Excel.
 
-### Calidad actual (medido hoy, `6dc64d5`)
+### Calidad actual (medido 2026-10-15, `146e20f`)
 | Batería | Resultado |
 |---|---|
-| Tests unitarios | **230 pasan · 7 skip** (29 archivos, 2 skip) |
+| Tests unitarios + integración | **505 pasan** (58 archivos) con `DATABASE_URL`; los de integración se omiten si no está |
 | `tsc --noEmit` | limpio |
-| `eslint` | **0 errores** |
-| Migraciones | **17 en disco, 17 aplicadas** — sin divergencia |
-| e2e (Playwright) | 5 specs existen. **NO los re-corrí**; la última cifra registrada es 22/22 (`e8ff42b`) |
+| `eslint` | **0 errores** (con algunos warnings) |
+| Migraciones | **19 en disco, 19 aplicadas** — sin divergencia |
+| Higiene de la base de tests | ✅ `vitest.global-setup.ts` deja **0** residuos (antes 1232 filas). Ver 4.10.13 |
+| e2e (Playwright) | 5 specs existen. **NO los re-corrí**; última cifra registrada 22/22 (`e8ff42b`) |
 
 ### Features cerradas con gates y evidencia
 | Feature | Estado | Evidencia |
@@ -152,8 +153,8 @@ Esto sí es trabajo real. Ordenado por tema. Las referencias `RF-xx` son del PRD
 ### 4.2 Comparativa y ahorro
 | # | Tarea | Ref | Nota |
 |---|---|---|---|
-| 4.2.1 | **Ahorro potencial en los pros** | — | ❌ **Hallazgo abierto**: cuando la IA responde los pros, reemplazan a los determinísticos y el ahorro desaparece (`comparativa.ts:226`). Registrado como `B5 ❌` en el checklist 3-roles. |
-| 4.2.2 | **Producto/servicio + detalle en la comparativa** | 2.1 / 3.2 | Mismo ítem, marcado dos veces. |
+| ~~4.2.1~~ | ~~Ahorro potencial en los pros~~ | ✅ **RESUELTO 2026-10-14** | Era el mismo defecto que 4.10.7: la fusión reemplazaba los pros deterministas cuando la IA respondía, y el ahorro (que es determinista) desaparecía. Ahora `comparativa.ts` fusiona ambos con `new Set([...det.contras, ...iaPC.contras])` y su equivalente en pros. Verificado leyendo el código al revisar la deriva |
+| 4.2.2 | **Producto/servicio + detalle en la comparativa** | 2.1 / 3.2 | Aparece dos veces en la doc (2.1 y 3.2). **Verificado hoy: sigue pendiente** — `components/coordinador/Comparativa.tsx` no menciona producto/servicio ni detalle |
 | 4.2.3 | Alertas por tipo (sin desglose, discrepancia, una sola cotización) | RF-54 / H4.4 | Diferido a Fase 3. |
 
 ### 4.3 Flujo de re-cotización
@@ -269,8 +270,9 @@ fiscales. Las otras (Q3 umbral de inactividad, Q4 dominios, Q5 formato de refere
 de archivo, Q9 registro de la interfaz) **ya tienen respuesta propuesta** en
 `propuesta-decisiones-piloto.md`, pero el documento sigue `En revisión`.
 
-⚠️ **Contradicción a resolver:** D11 dice que el registro es *"Usted"*, pero **toda la UI usa
-voseo** ("necesitás", "podés"). Alguien tiene que elegir.
+✅ **Resuelto (ADR 0008):** D11 fija el trato en *"Usted"*. La UI está migrada **salvo 3 strings**
+(`app/panel/page.tsx:93,316` y `app/api/solicitudes/[id]/informacion/route.ts:19`) y los **specs
+e2e**, que siguen en voseo. Cerrarlo es el punto 5 del orden de §10.
 
 ### 5.3 Insumos de infraestructura
 - Dominio de la aplicación (subdominio vs. dominio propio) — "prioridad #1 de Lady".
@@ -312,7 +314,7 @@ documentación**. Cuatro estaban mal. La columna de la derecha es la nueva fuent
 | Ref | Hallazgo | Lo que decía antes | Verificado |
 |---|---|---|---|
 | **A8** | Re-cotización sin UI | ❌ "ningún botón la invoca" | **REFUTADO.** Hay botón: "Reabrir cotizaciones" (`DetalleSolicitud.tsx:291-300`) con invocación en `:97-115`, y cubre `ENVIADA_A_SOLICITANTE → EN_COTIZACION`. Lo que **sí** falta es la UI del **solicitante**, y por diseño: `guardApi(["coordinador","admin"])` lo excluye. Ver 4.3.1 |
-| **B5** | Ahorro potencial no aparece con los pros de la IA | ❌ "`comparativa.ts:226` reemplaza los pros" | **REFUTADO.** Esa línea es `especificacionesSolicidadas`. La fusión real es `fusionarProsContras` (`:167-177`, aplicada en `:240-244`) y **sí reinyecta** el ahorro, con test. **Pero es parcial**: solo los pros con prefijo "Ahorro"; el resto de pros y todos los contras deterministas se pierden. Ver 4.10.7 |
+| **B5** | Ahorro potencial no aparece con los pros de la IA | ⚠️ "`comparativa.ts:226` reemplaza los pros" | **REFUTADO en su forma original y RESUELTO**: esa línea es `especificacionesSolicitadas`. La fusión real es `fusionarProsContras` y **reinyecta todos** los pros y contras deterministas (4.10.7, cerrado) |
 | **A7** | Card muestra "SIN FECHA LÍMITE" pese a tener fecha | ⚠️ abierto | **RESUELTO.** `listarPorEmail` ya incluye `fecha_requerida` (`postgres-repo.ts:428,439`) y la card la pasa al semáforo. Confirmado en `qa/checklist-piloto-3-roles.md:80` |
 | **A7b** | Tracker solo en el detalle, no en las cards | ⚠️ abierto | **REFUTADO.** Está en ambos: `mis-solicitudes/page.tsx:172` (`TrackerEtapes compacto`) y `[id]/page.tsx:89`. Por eso 4.6.1/§4.6 estaba obsoleta |
 | **A6** | La referencia real no se muestra en la confirmación | ⚠️ abierto | **RESUELTO.** `SolicitanteWizard.tsx:1376-1380` muestra `envio.referencia` |
@@ -408,31 +410,34 @@ Para que nadie lo re-propononga como si fuera un olvido. Todas tienen justificac
 > **El plan completo y el porqué del orden viven en `docs/references/plan-desarrollo.md`.**
 > Acá queda solo el primer movimiento.
 
-**Cerrado en esta sesión:** la feature **010 completa** (7 bloques). El ciclo de preguntas al
-solicitante funciona de punta a punta y está verificado en navegador. Ver
-`specs/010-preguntas-al-solicitante/verification.md`.
+**Cerrado recientemente:** la feature **010** (ciclo de preguntas al solicitante), el **CRUD de
+coordinadores** (4.4.2), la **plantilla de origen** (4.4.1a) y la **higiene de la base de tests**
+(4.10.13, que además barrió 1232 filas de prueba acumuladas). Los 6 críticos de la auditoría y la
+tanda de §4.7–§4.10 también están cerrados.
 
-**Cerrado desde la sesión anterior:** los 6 críticos de la auditoría (B3, la fuga de los 3
-endpoints, la bandeja del coordinador, los correos 1 y 4, y "Ninguna me sirve"). Los 8 pasos
-que estaban acá ya no aplican; este es el orden vigente.
+**Lo que se puede hacer ya**, sin esperar al cliente, por valor:
 
-Lo primero, por gravedad:
+1. **OCR en serverless (4.5.1)**: `/api/convertir` necesita Python, que no existe en Vercel →
+   degrada a carga manual. Es el hueco funcional más grande que queda.
+2. **`POST /logo` sin autorización (4.8.11)**: cualquiera con el UUID sube el logo de cualquier
+   solicitud. Necesita un token de un solo uso, no un guard más.
+3. **Alertas por tipo y preview (4.4.10)**: 4 tipos detectados, solo `inactividad` se notifica, y
+   `discrepancia` nunca se emite.
+4. **Correr los e2e y probar el ciclo 010 a mano**: los e2e **no se han corrido** con los cambios
+   recientes.
+5. **Cerrar el idioma (D11)**: quedan 3 strings en voseo y los specs e2e. Ver §5.2.
+6. **Deuda documental (§6)**, en especial 6.4 (`009` sin Spec Kit), 6.1 (132 casillas) y 6.12
+   (credenciales hardcodeadas en los scripts de QA).
+7. Lo demás de §4 por valor: 4.5.4, 4.8.6, 4.2.2, 4.10.10, 4.5.5, 4.7.6.
 
-1. **Tasa ISV desde configuración (4.10.1)** y **que la alerta de inactividad pueda dispararse
-   (4.10.2)**. El doc 16 lo pide; hoy está hardcodeada e inalcanzable.
-2. **Migrar los datos a Supabase Cloud** (`docs/references/migracion-supabase-cloud.md`):
-   falta el connection string del pooler y decidir si se migran los datos o se arranca con
-   esquema limpio (recomendado: limpio, los 168 registros locales son de desarrollo). Y hay
-   que decidir qué hacen los tests de integración, que **escriben de verdad en la base**.
-3. **OCR en serverless (2.2)**: `/api/convertir` necesita Python, que no existe en Vercel →
-   degrada a carga manual. Migrar la base no lo arregla.
-4. **Prueba manual del bloque de assessment (§2, `6dc64d5`)** y **del ciclo de 010**: 010 se
-   verificó en navegador con sesión real, pero **los e2e no se corrieron** y no cubren el flujo.
-5. **Higiene de tests (4.10.13)**: la suite deja solicitudes con `informacion_pendiente` en la
-   base de desarrollo, que el botón de alertas tomaría como reales.
-6. Lo demás de §4, por valor: 4.10.6, 4.10.7, 4.10.3, 4.4.2, 4.1.1.
+**Lo que hay que esperar:**
+- **Migrar a Supabase Cloud (B1)**: depende del cliente (reset de contraseña + connection string
+  del pooler). Al hacerlo hay que rehacer el supuesto de `vitest.global-setup.ts`, que **borra por
+  patrón**; contra una base de producción eso sería peligroso.
+- **4.4.1b** (versionar plantillas): falta la UI de edición de plantillas.
+- **4.4.3** (RLS): era política, no bug (Q2 resuelta).
 
-Los bloqueantes B1–B4 (§1) no dependen del equipo interno: van por correo al cliente.
+Los bloqueantes **B1 y B4** (§1) no dependen del equipo interno: van por correo al cliente.
 
 ---
 
@@ -492,7 +497,7 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | Máximo de preguntas | `MAX_PEGUNTAS = 10`, la doc pide 6. Y `consolidarPreguntas` puede exceder 10 porque los obligatorios nunca se recortan (deliberado) | 4.5.5 |
 | Respuestas del assessment persistidas | Viajan al PDF de Compras pero **nunca se guardan en `respuesta_campo`**. Como dato estructurado no existen: solo se persisten por la ruta de re-cotización | 4.5.6 |
 | PDF del paso 6 | Se regenera con `respuestas: {}`, o sea sin las respuestas del assessment (la parte de acceso público ya se cerró: ver 4.8.2 resuelto) | 4.5.6 |
-| Referencia en P5 antes de enviar | La doc la pide antes; el código muestra un placeholder `RFQ-2026-XXXX` y la asigna al transicionar | 4.1.1 |
+| Referencia en P5 antes de enviar | La doc la pide antes; el código muestra un placeholder `RFQ-2026-XXXX` y recién la asigna al transicionar. **No lo cubre 4.1.1** (que era la pantalla del admin inventando `SOL-XXXX`) | 4.1.1-c |
 | Nombre del comprador en P6 | Muestra texto fijo "Equipo Compras BIA" aunque el solicitante **eligió** comprador y el servidor lo asignó. El nombre real está en `estado.coordinadorId` y no se usa | — |
 | CTA "Decidir ahora" | Solo funciona si el token se guardó en **ese** navegador. Si se decidió en otro dispositivo, solo queda "abrilo desde el correo". Decisión de privacidad explícita, pero no documentada | — |
 | Barra de progreso | El rail tiene **5** pasos, la doc dice "paso 2 de 4" | — |
@@ -530,7 +535,7 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | Correo 3 con cotizaciones originales adjuntas | `estado/route.ts:167-195` |
 | Cancelar solicitud con modal propio | `DetalleSolicitud.tsx:530-576` |
 | Editar datos para re-cotizar, con evento `edicion` | `DetalleSolicitud.tsx:357-391` → `repo:196-207` |
-| Exportar comparativo a Excel (con el bug de 4.10.6) | `comparativa/excel/route.ts` |
+| Exportar comparativo a Excel (4.10.6 corregido) | `comparativa/excel/route.ts` |
 
 **A MEDIAS**
 | Funcionalidad | Qué falta | Tarea |
@@ -545,10 +550,10 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | Estados del archivo | Faltan "Sin archivo aún" / "convertido a Markdown ✓" | — |
 | Editar/borrar cotización | El servidor **ignora el `id`** de la ruta y usa el del body, sin verificar pertenencia | 4.8.3 |
 | Confirmación de borrado | `borrandoId === borrandoId` siempre true → nunca muestra "Eliminando…" | — |
-| Observación fiscal antes de precios | Existe y va antes, pero solo muestra `[0]` (se pierden las demás) y el **detector determinístico nunca producirá nada**: `comparativa/route.ts:33,100` pasa `especificacionesSolicitadas: {}` hardcodeado | 4.10.8 |
-| Aviso de monedas distintas | La conversión orientativa existe pero **solo en la vista pública**. En la del coordinador no hay ninguna observación | 4.10.7 |
+| ~~Observación fiscal antes de precios~~ | ✅ **Resuelto 2026-10-14** (4.10.8): la ruta ya **no** pasa `especificacionesSolicitadas: {}`; se alimenta de lo que respondió el solicitante. Verificado de punta a punta (2 discrepancias donde antes 0). **Queda** que solo se muestra `[0]` | 4.10.8 |
+| Aviso de monedas distintas | La conversión orientativa existe pero **solo en la vista pública**. En la del coordinador no hay ninguna observación | **4.10.10** (antes citaba 4.10.7 por error) |
 | Obs. fiscal por cotización | Se muestra en etapa **07**, la doc la ubica en la comparativa (08) | — |
-| Corregir el ahorro con la IA | La fusión solo recupera los pros "Ahorro"; **el resto de pros y todos los contras deterministas se pierden** → RN-06 queda en manos del modelo | 4.10.7 |
+| ~~Corregir el ahorro con la IA~~ | ✅ **Resuelto 2026-10-14** (4.10.7): la fusión ya reinyecta **todos** los pros y contras deterministas, no solo los de "Ahorro" | — |
 
 **FALTA**
 | Funcionalidad | Nota | Tarea |
@@ -582,28 +587,28 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 **A MEDIAS**
 | Funcionalidad | Qué falta | Tarea |
 |---|---|---|
-| **KPI "Sin decisión > 5 días"** | El umbral está **hardcodeado a 5** (`repo:835`) y la UI **nunca manda `umbralDias`**. El valor que el admin guarda en `/admin/configuracion` **solo lo lee `alertas/ejecutar`**. Además **incluye borradores**: un borrador de 8 días cuenta como "sin decisión". Y la etiqueta "> 5 días" está cableada al literal | 4.10.9 |
+| ~~KPI "Sin decisión > 5 días"~~ | ✅ **Resuelto 2026-10-14** (4.10.9): ya no cuenta borradores ni tiene el umbral cableado. Verificado contra la base: contaba 127 por 16 borradores viejos, ahora 111 | — |
 | Filtro "Hoy" | Mapea a `rango=dia` = `now() − 1 día`, o sea **las últimas 24h**, no el día calendario. Además el `minIso` del filtrado client-side se calcula en el `.finally()` del fetch de procesos: hay una ventana con el filtro aplicado sin `minIso` | — |
 | Tabla de procesos | La doc pide columna "tipo"; la tabla muestra **categoría** y no hay columna de tipo | — |
 | Detalle de coordinador en `/admin/coordinadores` | **Dos definiciones distintas de "tiempo de proceso" en el mismo rol**: aquí `fechaCierre − fechaCreacion`, en el KPI `fechaCierre − fechaEnvio` | — |
-| **Editar un campo de catálogo** | El endpoint acepta `label` pero **ninguna UI lo llama**. Y si se llamara, el handler manda `tipoDato:"texto", origen:"assessment", obligatorio:false, orden:100, activo:true` **hardcodeados** → **destruye el resto de los atributos** (upsert total) | 4.4.7 |
-| Crear campo con `campoKey` existente | `ON CONFLICT (campo_key) DO UPDATE` **sobrescribe en silencio** y devuelve 201. Sin 409 ni advertencia | 4.4.8 |
+| ~~Editar un campo de catálogo~~ | ✅ **Resuelto 2026-10-14** (4.4.7): la edición parcial ya no destruye el resto de los atributos | — |
+| ~~Crear campo con `campoKey` existente~~ | ✅ **Resuelto 2026-10-14** (4.4.8): ahora responde **409** en vez de sobrescribir en silencio | — |
 | `guardApi` en las rutas admin | 6 rutas dependen **solo del middleware**. Inconsistente con las que sí lo tienen | 4.8.5 |
 | Alertas: ejecutar y registrar | Carga **todas** las solicitudes + cotizaciones (N+1, sin filtro) y devuelve `{alertas, correosEnviados}`. La UI solo lee `d.alertas.length` | — |
 | Alertas: la UI confunde estados | Si `destinatario_alertas` está vacío, se calculan alertas y la UI dice **"Sin alertas que enviar"** — confunde "nada que alertar" con "no hay destinatario" | — |
 | Alertas: automatismo | **No hay cron.** Solo se ejecutan si un humano aprieta el botón. La doc describe un disparador por umbral | — |
-| Correo 5 | Solo al `destinatario_alertas` global; el **coordinador afectado no recibe nada** | 4.9.4 |
-| Timeline | Renderiza 5 tipos de evento que **nunca se insertan**. Faltan 4 `case` en `descripcionEvento` | 4.10.3, 4.10.4 |
-| Referencia de la solicitud | `admin/solicitud/[id]/page.tsx:37` y `admin/procesos/page.tsx:19` **inventan** `SOL-XXXX`, que es justo lo que el panel del coordinador se empezó a corregir. Inconsistencia entre roles | 4.1.1 |
+| ~~Correo 5~~ | ✅ **Resuelto 2026-10-14** (4.9.4): va al coordinador asignado y a administración, deduplicando | — |
+| ~~Timeline~~ | ✅ **Resuelto 2026-10-14** (4.10.3 y 4.10.4): los eventos se insertan y faltaban las descripciones, ya agregadas | — |
+| ~~Referencia de la solicitud~~ | ✅ **Resuelto 2026-10-14** (4.1.1): las 5 pantallas dicen lo mismo y ninguna inventa `SOL-XXXX` | — |
 
 **FALTA**
 | Funcionalidad | Nota | Tarea |
 |---|---|---|
-| **Borrar un campo de catálogo** | No hay `DELETE` en ninguna de las dos rutas | 4.4.9 |
+| ~~Borrar un campo de catálogo~~ | ✅ **Resuelto 2026-10-14** (4.4.9): existe `DELETE` | — |
 | **Selección de alertas por tipo** | Un solo botón que lo dispara todo. 4 tipos detectados, **solo `inactividad` se notifica**; `sin_desglose_fiscal`, `una_sola_cotizacion` y `discrepancia` se devuelven y nadie los muestra. Y `discrepancia` **nunca se emite**: la llamada no pasa `discrepanciasPorSolicitud` | 4.4.10 |
-| **Que la alerta de inactividad pueda dispararse** | La condición `!s.fechaEnvio` es imposible: toda solicitud en el panel ya fue enviada | 4.10.2 |
-| Configurar el formato de referencia | Se lee de `configuracion` con default `{{TIPO}}-{{ANIO}}-{{SECUENCIA}}` pero **no hay UI**, solo SQL. Y la secuencia por `MAX(regexp_match)+1` **puede duplicar** entre transacciones: no hay constraint UNIQUE | 4.1.1 |
-| Tasa ISV configurable | La clave `tasa_isv` **no existe** en `configuracion` | 4.10.1 |
+| ~~Que la alerta de inactividad pueda dispararse~~ | ✅ **Resuelto 2026-10-14** (4.10.2): el "último movimiento" sale del evento de trazabilidad más reciente | — |
+| Formato de referencia: UI y unicidad | Se lee de `configuracion` con default `{{TIPO}}-{{ANIO}}-{{SECUENCIA}}` pero **no hay UI**, solo SQL. Y la secuencia por `MAX(regexp_match)+1` **puede duplicar** entre transacciones: **no hay constraint UNIQUE** (esto **no** lo cubrió 4.1.1, que era solo la pantalla) | 4.1.1-b |
+| ~~Tasa ISV configurable~~ | ✅ **Resuelto 2026-10-14** (4.10.1): la clave **sí existía**; el código tenía `0.15` cableado. Ahora `repo.tasaIsv()` la lee y valida el rango | — |
 
 ### 11.4 Lo que cruza los tres roles
 
@@ -612,13 +617,13 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | ~~Correo 1 con PDF al coordinador~~ | ✅ **Resuelto**: va al coordinador asignado o al alias; nunca al solicitante | — |
 | Correos 2 y 3 | LISTO | — |
 | ~~Correo 4 (decisión registrada)~~ | ✅ **Resuelto 2026-10-03** | — |
-| Correo 5 (alerta) | A MEDIAS — destinatario único, y la alerta no puede dispararse | 4.9.4, 4.10.2 |
+| ~~Correo 5 (alerta)~~ | ✅ **Resuelto 2026-10-14** (4.9.4 y 4.10.2): va al coordinador asignado (con caída al alias) y a administración, deduplicando; y la alerta de inactividad ya puede dispararse | — |
 | Registro de correos en DB | LISTO — `enviado`/`fallido` + `intentos` + `errorDetalle` | — |
 | Trazabilidad de transiciones (RF-49) | LISTO — evento en la misma transacción | — |
-| Eventos de creación/cotización/comparativa/correo/acceso | **FALTA** — se renderizan pero no se insertan | 4.10.3 |
+| ~~Eventos de creación/cotización/comparativa/correo/acceso~~ | ✅ **Resuelto 2026-10-14** (4.10.3): ya se insertan | — |
 | ~~Exposición de montos al solicitante en `/mis-solicitudes/[id]`~~ | ✅ **Resuelto 2026-10-14** — el detalle muestra el conteo, no los importes. Ver 4.8.7 | — |
 | OCR serverless | **A MEDIAS** — degrada a carga manual en Vercel | 4.5.1 |
-| Referencia real | **FALTA** — fallback `SOL-XXXX` inventado desde el id | 4.1.1 |
+| ~~Referencia real~~ | ✅ **Resuelto 2026-10-14** (4.1.1) | — |
 | PDF con el diseño oficial | **FALTA** — hay membrete BIA, no el formato de Ladi | 4.1.2 |
 
 ---
@@ -630,3 +635,4 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | 2026-10-02 | Creación. Auditoría de `specs/`, `docs/`, `qa/`, `.harness/`, migraciones y working tree. Tests verificados: 230/7. e2e no re-corridos. |
 | 2026-10-02 | **Verificación funcional por rol contra código** (§11): inventario completo de los 3 roles con estado LISTO / A MEDIAS / FALTA. Agregadas §4.7 (integridad RN-01), §4.8 (seguridad), §4.9 (correos), §4.10 (reglas y trazabilidad). **§7 reescrito**: 4 hallazgos refutados (A8, B5, A7, D2) y 12 nuevos, 6 de ellos críticos. §10 reordenado por gravedad real |
 | 2026-10-02 | Post-commit `b28c5cd`: §3 reescrito como resuelto (con la tabla de las 9 piezas), §8 marcada resuelta tras unificar `.harness/`, §10 reordenada, tareas 6.12–6.15 agregadas (credenciales en QA, test de moneda, `doc-references`, specs históricos). Nombrada lista oficial de tareas en `AGENTS.md`. |
+| 2026-10-15 | **Corrección de deriva del documento** (el tablero mentía en ~15 filas). §0: los 6 críticos figuran como cerrados. §1: **B3 resuelto** (ADR 0007). §2: calidad real medida (`146e20f`): **505 tests / 58 archivos**, **19/19 migraciones**, higiene 0. §4.2: 4.2.1 resuelto, 4.2.2 verificado pendiente. §5.2: contradicción de D11 resuelta por ADR 0008. §10: reordenada a lo que de verdad queda. §11: filas de 4.10.1, 4.10.2, 4.10.3/4, 4.10.6–4.10.9, 4.4.7/8/9, 4.1.1 y 4.3.1 alineadas con §4; el aviso de monedas (4.10.10) tenía mal la referencia (decía 4.10.7). Se separan dos cosas que 4.1.1 no cubría: `4.1.1-b` (UI y unicidad del formato de referencia) y `4.1.1-c` (la referencia antes de enviar) |

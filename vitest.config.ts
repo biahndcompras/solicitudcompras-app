@@ -13,6 +13,9 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
+    // Higiene de la base de desarrollo: barre los residuos de pruebas (@bia.hn) al empezar y
+    // borra los de esta corrida al terminar. Ver `vitest.global-setup.ts` (4.10.13).
+    globalSetup: ["./vitest.global-setup.ts"],
     include: ["**/*.test.{ts,tsx}"],
   },
 });

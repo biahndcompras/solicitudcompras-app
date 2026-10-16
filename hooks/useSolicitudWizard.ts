@@ -629,7 +629,13 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
       if (archivoLogoFileRef.current) {
         setEnvio({ estado: "enviando", fase: "archivo" });
         await conTimeout(
-          (signal) => api.subirArchivoLogo(creada.id, archivoLogoFileRef.current!, { signal }),
+          (signal) =>
+            api.subirArchivoLogo(creada.id, archivoLogoFileRef.current!, {
+              signal,
+              // La identidad del solicitante: el servidor la exige para no dejar que
+              // cualquiera con el UUID reemplace el logo de una solicitud ajena.
+              email: estado.email,
+            }),
           MS_ARCHIVO,
           "El archivo tardó demasiado en subir"
         );

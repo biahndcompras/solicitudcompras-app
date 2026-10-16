@@ -255,6 +255,47 @@ describe("envío · no se manda una solicitud vencida o sin descripción (4.5.2 
   });
 });
 
+// El logo viaja DESPUÉS de crear la solicitud, en un POST aparte que antes no validaba nada:
+// cualquiera con el UUID podía reemplazar el material de marca ajeno. Ahora el servidor exige
+// el correo del solicitante, así que el cliente TIENE que mandarlo; si el hook dejara de
+// pasarlo, la subida fallaría con 401 en producción y este test lo caza antes.
+describe("envío · el logo viaja con la identidad del solicitante", () => {
+  // El `File` de jsdom no implementa `arrayBuffer()`, que es lo que usan tanto la validación
+  // del hook como el route. Un `File` real (pasa el `instanceof`) con los bytes de un PNG.
+  function archivoPngFalso(): File {
+    const f = Object.create(File.prototype) as File;
+    Object.defineProperties(f, {
+      name: { value: "logo.png" },
+      size: { value: 8 },
+      // `type` se define como propiedad propia a propósito: el getter de Blob de jsdom hace un
+      // brand-check y este objeto no es un Blob real por dentro ("'get type' called on an object
+      // that is not a valid instance of Blob").
+      type: { value: "image/png" },
+      arrayBuffer: {
+        value: async () => new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer,
+      },
+    });
+    return f;
+  }
+
+  it("sube el logo pasando el correo del solicitante", async () => {
+    const result = await wizardListoParaEnviar();
+    await act(async () => {
+      await result.current.elegirArchivoLogo(archivoPngFalso());
+    });
+    expect(result.current.estado.archivoLogo).toBe("logo.png");
+
+    await act(async () => {
+      await result.current.enviarSolicitud();
+    });
+
+    expect(subirArchivoLogo).toHaveBeenCalledTimes(1);
+    const [id, , opts] = subirArchivoLogo.mock.calls[0] as [string, unknown, { email?: string }];
+    expect(id).toBe(SOLICITUD.id);
+    expect(opts?.email).toBe(IDENTIDAD.email);
+  });
+});
+
 // El import está arriba para que el mock de `api-client` aplique a este módulo; se re-limpia
 // al final para no arrastrar el mock de `generador` a otros archivos del suite.
 afterEach(async () => {

@@ -32,7 +32,7 @@ vi.mock("@/lib/auth", () => ({ getSession: () => sesion() }));
 
 import { GET as getSolicitud, PATCH as patchSolicitud } from "./route";
 import { GET as getDocumento } from "./documento/route";
-import { GET as getLogo } from "./logo/route";
+import { GET as getLogo, POST as postLogo } from "./logo/route";
 
 const ID = "22222222-2222-4222-8222-222222222222";
 const SOLICITUD = {
@@ -146,5 +146,62 @@ describe("GET /api/solicitudes/[id]/logo · material de marca del solicitante", 
     );
     expect(res.status).toBe(401);
     expect(obtenerArchivoLogo).not.toHaveBeenCalled();
+  });
+});
+
+// El POST quedó sin guard mientras el GET sí lo tenía: "el id uuid es el token" protegía la
+// subida igual de mal que protegía la descarga. Cualquiera con el UUID (que viaja en la URL y
+// en los enlaces) podía REEMPLAZAR el logo de una solicitud ajena. Se le aplica la misma regla
+// que al GET: rol de Compras o el correo dueño.
+describe("POST /api/solicitudes/[id]/logo · no cualquiera reemplaza el material de marca", () => {
+  // Se le da al route exactamente lo que él consume —`url` y `formData()`— en vez de un
+  // `Request` real: pasarle un `FormData` de jsdom a un `Request` de Node no funciona (son
+  // clases de realms distintos, el `Content-Type` no se arma y el cuerpo no se puede parsear).
+  // El `archivo` sí es un `File` de verdad (pasa el `instanceof` y el `size`), porque el
+  // `File` de jsdom no implementa `arrayBuffer()`, que es lo que el route usa para leerlo.
+  function archivoFalso(nombre = "logo.png"): File {
+    const f = Object.create(File.prototype) as File;
+    Object.defineProperties(f, {
+      name: { value: nombre },
+      size: { value: 9 },
+      arrayBuffer: { value: async () => new Uint8Array([1, 2, 3]).buffer },
+    });
+    return f;
+  }
+
+  function subir(url: string) {
+    const archivo = archivoFalso();
+    const req = {
+      url,
+      formData: async () => ({ get: (k: string) => (k === "archivo" ? archivo : null) }),
+    } as unknown as Request;
+    return postLogo(req, { params });
+  }
+
+  it("sin correo ni sesión responde 401 y NO escribe el archivo", async () => {
+    const res = await subir(`http://localhost/api/solicitudes/${ID}/logo`);
+    expect(res.status).toBe(401);
+    expect(guardarArchivoLogo).not.toHaveBeenCalled();
+  });
+
+  it("otro correo NO reemplaza el logo", async () => {
+    const res = await subir(`http://localhost/api/solicitudes/${ID}/logo?email=curioso%40biafoods.co`);
+    expect(res.status).toBe(401);
+    expect(guardarArchivoLogo).not.toHaveBeenCalled();
+  });
+
+  it("el solicitante dueño SÍ sube su logo", async () => {
+    const res = await subir(
+      `http://localhost/api/solicitudes/${ID}/logo?email=mj.e2e%40biabrands.co`
+    );
+    expect(res.status).toBe(200);
+    expect(guardarArchivoLogo).toHaveBeenCalledTimes(1);
+  });
+
+  it("un coordinador con sesión también puede (es material del que Compras responde)", async () => {
+    sesion.mockResolvedValue({ rol: "coordinador", email: "coord@biafoods.co" });
+    const res = await subir(`http://localhost/api/solicitudes/${ID}/logo`);
+    expect(res.status).toBe(200);
+    expect(guardarArchivoLogo).toHaveBeenCalledTimes(1);
   });
 });

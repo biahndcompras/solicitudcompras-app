@@ -89,11 +89,18 @@ export const api = {
     }).then((r) => json(r));
   },
 
-  // H2: logo/archivo real del producto.
-  subirArchivoLogo(solicitudId: string, archivo: File, opts?: { signal?: AbortSignal }): Promise<{ ok: boolean; nombre: string }> {
+  // H2: logo/archivo real del producto. El correo es la identidad del solicitante (el flujo no
+  // tiene sesión), así que viaja como `?email=` igual que en la descarga y en `/mis-solicitudes`.
+  // El servidor lo exige: sin él, cualquiera con el UUID reemplazaría el logo de otra solicitud.
+  subirArchivoLogo(
+    solicitudId: string,
+    archivo: File,
+    opts?: { signal?: AbortSignal; email?: string }
+  ): Promise<{ ok: boolean; nombre: string }> {
     const form = new FormData();
     form.append("archivo", archivo);
-    return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}/logo`, {
+    const query = opts?.email ? `?email=${encodeURIComponent(opts.email)}` : "";
+    return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}/logo${query}`, {
       method: "POST",
       body: form,
       signal: opts?.signal,

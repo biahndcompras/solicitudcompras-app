@@ -4,8 +4,14 @@ import { guardRecursoDeSolicitud } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
 
-// POST: sube el logo/archivo real del producto (H2). El solicitante no tiene sesión
-// (flujo sin contraseñas), igual que la creación de solicitudes; el id uuid es el token.
+// POST: sube el logo/archivo real del producto (H2). El solicitante no tiene sesión (flujo
+// sin contraseñas), así que la identidad es su correo — el mismo mecanismo que el GET de acá
+// abajo y el de `?email=` del resto del flujo del solicitante.
+//
+// Antes decía "el id uuid es el token" y no validaba nada: cualquiera con el UUID (que viaja
+// en la URL y en los enlaces compartidos) podía **reemplazar** el material de marca de una
+// solicitud ajena. Era peor que el GET, que sí estaba protegido. Ahora se exige rol de Compras
+// o el correo dueño, igual que la descarga.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -16,6 +22,10 @@ export async function POST(
     if (!solicitud) {
       return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
     }
+    // Antes de leer el cuerpo: un remitente no autorizado no debe poder enviar 4 MB de archivo.
+    const auth = await guardRecursoDeSolicitud(request, solicitud);
+    if (!auth.autorizado) return auth.negada;
+
     const form = await request.formData();
     const archivo = form.get("archivo");
     if (!(archivo instanceof File) || archivo.size === 0) {

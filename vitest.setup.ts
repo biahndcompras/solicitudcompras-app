@@ -14,7 +14,10 @@ import { afterEach } from "vitest";
 // tests que dependen de `localStorage` (p. ej. A11.3, que sustituye `setItem` para simular
 // cuota llena) se vuelven intermitentes sin tocar una línea. Un `Storage` en memoria con la
 // misma superficie (`length`, `key(i)`) hace el suite determinista.
-{
+// Solo aplica en jsdom. Los tests que corren en entorno `node` (p. ej. los que llaman a la IA
+// en vivo, que con jsdom fallan con "Expected signal ... to be an instance of AbortSignal")
+// no tienen `window`, y este archivo se carga para todos.
+if (typeof window !== "undefined") {
   const memoria = new Map<string, string>();
   Object.defineProperty(window, "localStorage", {
     configurable: true,
@@ -33,5 +36,6 @@ import { afterEach } from "vitest";
 }
 
 afterEach(() => {
-  cleanup();
+  // `cleanup()` de Testing Library necesita un DOM; en entorno `node` no hay nada que limpiar.
+  if (typeof document !== "undefined") cleanup();
 });

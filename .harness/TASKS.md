@@ -205,6 +205,7 @@ no estaban en ninguna lista.
 | ~~**4.7.1**~~ | ~~B3 validado en el servidor~~ | ✅ **RESUELTO 2026-10-03** | `estado/route.ts:118-126`: sin recomendación (`trim()` vacío) devuelve **409** y **no transiciona, no guarda, no genera enlace**. 5 tests nuevos en `estado/route.test.ts`, 2 de ellos verificados **fallando** contra el código anterior. Reproducido en navegador con sesión real de coordinador: PATCH directo sin `nota` → 409; solo espacios → 409; con recomendación → 200 + enlace. Confirmado que la recomendación **llega al solicitante** por `/comparativa/[token]` |
 | ~~**4.7.2**~~ | ~~Correo 4: decisión registrada~~ | ✅ **RESUELTO 2026-10-03** | Ver 4.9.2, que ya lo documentaba. Esta fila quedó sin actualizar y contradecía a la otra |
 | ~~**4.7.3**~~ | ~~"Ninguna me sirve" reabre en `EN_COTIZACION`~~ | ✅ **RESUELTO 2026-10-03** | "Ninguna opción" devuelve la solicitud a `EN_COTIZACION` en vez de cerrarla como `CERRADA_SIN_DECISION` (que es terminal). La transición ya estaba permitida en la máquina de estados; nadie la invocaba. **Segunda mitad del bug**: el UPDATE ponía `fecha_cierre = now()` siempre, así que una solicitud reabierta quedaba con fecha de cierre y el semáforo la contaba como cerrada → ahora es condicional. La UI usa el dato real de la respuesta y deja de ofrecer tarjetas y botones muertos. Verificado contra la base real: `ENVIADA_A_SOLICITANTE` → `EN_COTIZACION` con `fecha_cierre` NULL |
+| ~~**4.7.5**~~ | ~~Los tests del assessment fallan con `OPENROUTER_API_KEY` en el entorno~~ | ✅ **NO REPRODUCIBLE 2026-10-15** | Corrí la suite **completa y con la clave puesta**: 505/505 en verde. Los tests que ejercitan la IA **mockean `fetch`** (`orchestrator.test.ts`, `comparativa-ia.test.ts`), así que no hacen llamadas reales y la suite es hermética: **ya no hace falta desexportar la clave**. **Hallazgo real detrás**: el cliente de IA **no funciona bajo jsdom** — `fetch` con `AbortSignal` falla con *"Expected signal … to be an instance of AbortSignal"*. Por eso `vitest.setup.ts` dejó de asumir DOM, y un test de IA puede correr en entorno `node` (así verifiqué el prompt en vivo) |
 | 4.7.6 | Limpiar la recomendación previa al regenerar la comparativa | bajo | `guardarComparativa` (`postgres-repo.ts:603-616`) hace upsert de precios/pros pero **no borra `recomendacion_comprador`**. **Riesgo contenido**: B3 fuerza una recomendación nueva en cada envío y el textarea arranca vacío, así que no puede llegar una vieja al solicitante. Es higiene, no bug vivo |
 | ~~4.7.8~~ | El enlace público no se revocaba al decidir | ✅ **RESUELTO 2026-10-14** | Ver 4.10/§4 (bloque de agentes en paralelo) |
 | ~~4.7.7~~ | `clasificacion_corregida` nunca se persiste | ✅ **RESUELTO 2026-10-14** | Se perdía en **cuatro saltos**: el hook no lo mandaba, el cliente no lo declaraba, el schema del POST lo descartaba como campo desconocido, y el INSERT no escribía la columna. Toda solicitud nacía en `false`, así que la precisión del clasificador (doc 16) era incalculable. 7 tests, 6 verificados fallando |
@@ -270,9 +271,16 @@ fiscales. Las otras (Q3 umbral de inactividad, Q4 dominios, Q5 formato de refere
 de archivo, Q9 registro de la interfaz) **ya tienen respuesta propuesta** en
 `propuesta-decisiones-piloto.md`, pero el documento sigue `En revisión`.
 
-✅ **Resuelto (ADR 0008):** D11 fija el trato en *"Usted"*. La UI está migrada **salvo 3 strings**
-(`app/panel/page.tsx:93,316` y `app/api/solicitudes/[id]/informacion/route.ts:19`) y los **specs
-e2e**, que siguen en voseo. Cerrarlo es el punto 5 del orden de §10.
+✅ **Cerrado el 2026-10-15 (ADR 0008).** D11 fija el trato en *"Usted"*. De los 3 strings que
+quedaban, **uno era copy real** (`panel/page.tsx:316` → "Pruebe con otro filtro o vea todas.") y
+**dos eran comentarios**. El barrido inicial se quedó corto: aparecieron **3 mensajes reales de UI**
+más en `lib/domain/archivos.ts` ("Expórtelo más liviano…", "Vuelva a exportarlo…", "Vuelva a
+generarlo…"). Los specs **e2e no tenían voseo**.
+
+Queda **a propósito** el prompt de IA (`lib/ai/prompts.ts`) escrito en voseo: su **salida real ya
+usa "usted"** —verificado en vivo contra OpenRouter el 2026-10-15 ("Entendí que **usted** necesita
+pintar…", "¿Qué tipo de pintura **prefiere**…?", "¿Qué color… **necesita**?")— y su propia REGLA lo
+exige de forma explícita. Reescribir el prompt arriesgaría el comportamiento sin ganancia.
 
 ### 5.3 Insumos de infraestructura
 - Dominio de la aplicación (subdominio vs. dominio propio) — "prioridad #1 de Lady".
@@ -425,7 +433,7 @@ tanda de §4.7–§4.10 también están cerrados.
    `discrepancia` nunca se emite.
 4. **Correr los e2e y probar el ciclo 010 a mano**: los e2e **no se han corrido** con los cambios
    recientes.
-5. **Cerrar el idioma (D11)**: quedan 3 strings en voseo y los specs e2e. Ver §5.2.
+5. ~~**Cerrar el idioma (D11)**~~ → ✅ **Hecho 2026-10-15**: 4 mensajes reales de UI corregidos (uno de ellos, `lib/domain/archivos.ts`, el barrido inicial no lo vio). Ver §5.2.
 6. **Deuda documental (§6)**, en especial 6.4 (`009` sin Spec Kit), 6.1 (132 casillas) y 6.12
    (credenciales hardcodeadas en los scripts de QA).
 7. Lo demás de §4 por valor: 4.5.4, 4.8.6, 4.2.2, 4.10.10, 4.5.5, 4.7.6.
@@ -636,3 +644,4 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | 2026-10-02 | **Verificación funcional por rol contra código** (§11): inventario completo de los 3 roles con estado LISTO / A MEDIAS / FALTA. Agregadas §4.7 (integridad RN-01), §4.8 (seguridad), §4.9 (correos), §4.10 (reglas y trazabilidad). **§7 reescrito**: 4 hallazgos refutados (A8, B5, A7, D2) y 12 nuevos, 6 de ellos críticos. §10 reordenado por gravedad real |
 | 2026-10-02 | Post-commit `b28c5cd`: §3 reescrito como resuelto (con la tabla de las 9 piezas), §8 marcada resuelta tras unificar `.harness/`, §10 reordenada, tareas 6.12–6.15 agregadas (credenciales en QA, test de moneda, `doc-references`, specs históricos). Nombrada lista oficial de tareas en `AGENTS.md`. |
 | 2026-10-15 | **Corrección de deriva del documento** (el tablero mentía en ~15 filas). §0: los 6 críticos figuran como cerrados. §1: **B3 resuelto** (ADR 0007). §2: calidad real medida (`146e20f`): **505 tests / 58 archivos**, **19/19 migraciones**, higiene 0. §4.2: 4.2.1 resuelto, 4.2.2 verificado pendiente. §5.2: contradicción de D11 resuelta por ADR 0008. §10: reordenada a lo que de verdad queda. §11: filas de 4.10.1, 4.10.2, 4.10.3/4, 4.10.6–4.10.9, 4.4.7/8/9, 4.1.1 y 4.3.1 alineadas con §4; el aviso de monedas (4.10.10) tenía mal la referencia (decía 4.10.7). Se separan dos cosas que 4.1.1 no cubría: `4.1.1-b` (UI y unicidad del formato de referencia) y `4.1.1-c` (la referencia antes de enviar) |
+| 2026-10-15 | **D11 cerrado** (idioma). El barrido encontró **4 mensajes reales de UI** en voseo, no 1: `panel/page.tsx` y **3 en `lib/domain/archivos.ts`** (que el conteo inicial no vio). Los otros 2 strings eran comentarios; los e2e no tenían voseo. Se decide **no** reescribir el prompt de IA (su salida ya es "usted", verificado en vivo). Además: **4.7.5 no reproducible** (505/505 con la clave puesta) y se documenta su causa real — el cliente de IA no funciona bajo jsdom (`AbortSignal`), por lo que `vitest.setup.ts` dejó de asumir DOM |

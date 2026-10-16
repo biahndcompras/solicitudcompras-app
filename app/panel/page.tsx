@@ -90,7 +90,7 @@ export default function PanelPage() {
     router.refresh();
   }
 
-  // Un fallo de red NO se renderiza como "no tenés solicitudes": va a su propia rama
+  // Un fallo de red NO se renderiza como "no tiene solicitudes": va a su propia rama
   // de error con reintento (P1-5). `intentoCarga` fuerza el reintento.
   useEffect(() => {
     const localId = sesion?.localId;
@@ -313,7 +313,7 @@ export default function PanelPage() {
                     <div className="text-sm font-medium text-slate-900">
                       No hay solicitudes en «{etiquetaDeFiltro(filtro)}»
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">Probá con otro filtro o mirá todas.</div>
+                    <div className="text-xs text-slate-500 mt-1">Pruebe con otro filtro o vea todas.</div>
                     <button
                       type="button"
                       onClick={() => setFiltro("todos")}

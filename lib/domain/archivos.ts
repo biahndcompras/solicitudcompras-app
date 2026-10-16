@@ -78,7 +78,7 @@ export function validarArchivoAdjunto(
     return {
       ok: false,
       motivo: "tamano",
-      mensaje: `El archivo pesa ${mb} MB y el máximo son 4 MB. Exportalo más liviano (PNG o JPG) e intentá de nuevo.`,
+      mensaje: `El archivo pesa ${mb} MB y el máximo son 4 MB. Expórtelo más liviano (PNG o JPG) e intente de nuevo.`,
     };
   }
   if (contenido) {
@@ -86,14 +86,14 @@ export function validarArchivoAdjunto(
       return {
         ok: false,
         motivo: "contenido",
-        mensaje: "El contenido del archivo no corresponde a su extensión. Volvé a exportarlo o tomá una captura en PNG.",
+        mensaje: "El contenido del archivo no corresponde a su extensión. Vuelva a exportarlo o tome una captura en PNG.",
       };
     }
     if (ext === ".pdf" && !pdfLooksCompleto(contenido)) {
       return {
         ok: false,
         motivo: "contenido",
-        mensaje: "El PDF parece estar incompleto o corrupto. Volvé a generarlo e intentá de nuevo.",
+        mensaje: "El PDF parece estar incompleto o corrupto. Vuelva a generarlo e intente de nuevo.",
       };
     }
   }

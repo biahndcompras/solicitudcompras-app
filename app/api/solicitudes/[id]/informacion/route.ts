@@ -16,7 +16,7 @@ const schema = z.object({
         // OPCIONAL: no toda pregunta de Compras corresponde a un campo del catálogo. Cuando
         // lo es, la respuesta se escribe además en ese campo; cuando no, vive en la ronda y
         // el coordinador la lee igual. Exigirlo obligaba a inventar un campo para preguntar
-        // algo tan simple como "¿tenés una foto de referencia?".
+        // algo tan simple como "¿tiene una foto de referencia?".
         campoKey: z.string().trim().max(80).optional(),
         // `trim()` ANTES de `min`: una pregunta de solo espacios no es una pregunta, y sin el
         // trim pasaba la validación y llegaba vacía al solicitante.

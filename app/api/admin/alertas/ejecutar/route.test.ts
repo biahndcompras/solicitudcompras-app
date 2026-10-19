@@ -19,6 +19,7 @@ const informacionVencida = vi.fn();
 const marcarRecordatorioInformacion = vi.fn();
 const marcarAlertaInactividad = vi.fn();
 const alertasInactividadAvisadas = vi.fn();
+const obtenerComparativaPorSolicitudId = vi.fn();
 
 vi.mock("@/lib/mail/enviar", () => ({ enviarCorreo: (...a: unknown[]) => enviarCorreo(...a) }));
 vi.mock("@/lib/api-guard", () => ({
@@ -35,6 +36,7 @@ vi.mock("@/lib/db/postgres-repo", () => ({
     marcarRecordatorioInformacion = (...a: unknown[]) => marcarRecordatorioInformacion(...a);
     marcarAlertaInactividad = (...a: unknown[]) => marcarAlertaInactividad(...a);
     alertasInactividadAvisadas = (...a: unknown[]) => alertasInactividadAvisadas(...a);
+    obtenerComparativaPorSolicitudId = (...a: unknown[]) => obtenerComparativaPorSolicitudId(...a);
   },
 }));
 
@@ -85,12 +87,28 @@ beforeEach(() => {
   marcarRecordatorioInformacion.mockReset().mockResolvedValue(undefined);
   marcarAlertaInactividad.mockReset().mockResolvedValue(undefined);
   alertasInactividadAvisadas.mockReset().mockResolvedValue({});
+  obtenerComparativaPorSolicitudId.mockReset().mockResolvedValue(null);
   config({ umbral_dias_sin_movimiento: 5, destinatario_alertas: "alertas@bia.hn", recordatorio_informacion_dias: 3 });
 });
 
+function ejecutarCon(body: Record<string, unknown>) {
+  return ejecutar(
+    new Request("http://localhost/api/admin/alertas/ejecutar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+  );
+}
+
+// Sin cuerpo: el default es procesar todos los tipos (compatibilidad con el disparo previo).
+function ejecutarSinCuerpo() {
+  return ejecutar(new Request("http://localhost/api/admin/alertas/ejecutar", { method: "POST" }));
+}
+
 describe("4.9.4 · el correo 5 llega al coordinador afectado y a administración", () => {
   it("se envía al coordinador asignado y al destinatario global", async () => {
-    const res = await ejecutar();
+    const res = await ejecutarSinCuerpo();
     expect(res.status).toBe(200);
 
     expect(destinatarios5().sort()).toEqual(["alertas@bia.hn", "bbonilla@biabrands.co"]);
@@ -100,7 +118,7 @@ describe("4.9.4 · el correo 5 llega al coordinador afectado y a administración
     process.env.MAIL_COORDINADOR_DEFAULT = "compras@bia.hn";
     listarTodas.mockResolvedValue([solicitud({ coordinadorId: undefined })]);
 
-    await ejecutar();
+    await ejecutarSinCuerpo();
 
     expect(destinatarios5().sort()).toEqual(["alertas@bia.hn", "compras@bia.hn"]);
   });
@@ -110,7 +128,7 @@ describe("4.9.4 · el correo 5 llega al coordinador afectado y a administración
       { id: "coord-1", nombre: "Compras", email: "alertas@bia.hn", activo: true, categoriasAsignadas: [] },
     ]);
 
-    await ejecutar();
+    await ejecutarSinCuerpo();
 
     expect(destinatarios5()).toEqual(["alertas@bia.hn"]);
   });
@@ -120,7 +138,7 @@ describe("4.9.4 · el correo 5 llega al coordinador afectado y a administración
     config({ umbral_dias_sin_movimiento: 5, destinatario_alertas: "", recordatorio_informacion_dias: 3 });
     listarTodas.mockResolvedValue([solicitud({ coordinadorId: undefined })]);
 
-    const res = await ejecutar();
+    const res = await ejecutarSinCuerpo();
     const body = await res.json();
 
     expect(destinatarios5()).toEqual([]);
@@ -128,12 +146,12 @@ describe("4.9.4 · el correo 5 llega al coordinador afectado y a administración
   });
 
   it("el solicitante nunca recibe la alerta", async () => {
-    await ejecutar();
+    await ejecutarSinCuerpo();
     expect(destinatarios5()).not.toContain("solicitante@bia.hn");
   });
 
   it("el cuerpo describe el estado real de la solicitud, no el título", async () => {
-    await ejecutar();
+    await ejecutarSinCuerpo();
 
     const datos = enviarCorreo.mock.calls[0][0] as { datos: { estadoActual?: string; titulo?: string } };
     expect(datos.datos.estadoActual).toBe("ENVIADA_A_COMPRAS");
@@ -145,7 +163,7 @@ describe("4.11.7 · el aviso no se repite por el mismo movimiento", () => {
   it("un segundo clic sobre la misma solicitud no vuelve a enviar", async () => {
     alertasInactividadAvisadas.mockResolvedValue({ "sol-1": MOV_MS });
 
-    const res = await ejecutar();
+    const res = await ejecutarSinCuerpo();
     const body = await res.json();
 
     expect(destinatarios5()).toEqual([]);
@@ -154,7 +172,7 @@ describe("4.11.7 · el aviso no se repite por el mismo movimiento", () => {
   });
 
   it("marca el aviso con el movimiento actual tras enviar", async () => {
-    await ejecutar();
+    await ejecutarSinCuerpo();
 
     expect(marcarAlertaInactividad).toHaveBeenCalledWith("sol-1", MOV_MS);
   });
@@ -163,7 +181,7 @@ describe("4.11.7 · el aviso no se repite por el mismo movimiento", () => {
     // Avisado por un movimiento más viejo: la solicitud se movió y volvió a frenar.
     alertasInactividadAvisadas.mockResolvedValue({ "sol-1": MOV_MS - 1000 });
 
-    await ejecutar();
+    await ejecutarSinCuerpo();
 
     expect(destinatarios5().length).toBeGreaterThan(0);
     expect(marcarAlertaInactividad).toHaveBeenCalledWith("sol-1", MOV_MS);
@@ -172,10 +190,94 @@ describe("4.11.7 · el aviso no se repite por el mismo movimiento", () => {
   it("si todos los envíos fallan, NO marca: el próximo clic reintenta", async () => {
     enviarCorreo.mockResolvedValue({ estadoEnvio: "fallido" });
 
-    const res = await ejecutar();
+    const res = await ejecutarSinCuerpo();
     const body = await res.json();
 
     expect(marcarAlertaInactividad).not.toHaveBeenCalled();
     expect(body.correosEnviados).toBe(0);
+  });
+});
+
+// 4.4.10 — la alerta de discrepancia nunca se emitía porque la ruta jamás le pasaba a
+// `detectarAlertas` el mapa `discrepanciasPorSolicitud`, aunque el dato vive en la tabla
+// `comparativa` (`discrepancias_detectadas`). Además el panel decía "N enviadas" contando
+// alertas detectadas en vez de correos reales, y no había forma de elegir tipos ni de
+// previsualizar antes de disparar.
+describe("4.4.10 · discrepancia sale de la comparativa guardada", () => {
+  it("emite discrepancia cuando la comparativa registra discrepancias", async () => {
+    obtenerComparativaPorSolicitudId.mockResolvedValue({
+      discrepanciasDetectadas: [{ aspecto: "material", severidad: "alta" }],
+    });
+
+    const res = await ejecutarCon({ tipos: ["discrepancia"], preview: true });
+    const body = await res.json();
+
+    expect(body.alertas).toHaveLength(1);
+    expect(body.alertas[0].tipo).toBe("discrepancia");
+    expect(body.alertas[0].solicitudId).toBe("sol-1");
+  });
+
+  it("no emite discrepancia cuando la comparativa no tiene ninguna", async () => {
+    obtenerComparativaPorSolicitudId.mockResolvedValue({ discrepanciasDetectadas: [] });
+
+    const res = await ejecutarCon({ tipos: ["discrepancia"], preview: true });
+    const body = await res.json();
+
+    expect(body.alertas).toEqual([]);
+  });
+
+  it("no consulta la comparativa si el tipo discrepancia no fue elegido", async () => {
+    await ejecutarCon({ tipos: ["inactividad"], preview: true });
+    expect(obtenerComparativaPorSolicitudId).not.toHaveBeenCalled();
+  });
+});
+
+describe("4.4.10 · selección por tipo y preview", () => {
+  it("filtra lo detectado al tipo elegido", async () => {
+    // Solicitud inactiva y, además, con una sola cotización.
+    listarCotizaciones.mockResolvedValue([{ id: "c1", proveedorNombre: "A", impuestosDesglosados: true }]);
+
+    const res = await ejecutarCon({ tipos: ["una_sola_cotizacion"], preview: true });
+    const body = await res.json();
+
+    expect(body.alertas.every((a: { tipo: string }) => a.tipo === "una_sola_cotizacion")).toBe(true);
+    expect(body.alertas.some((a: { tipo: string }) => a.tipo === "inactividad")).toBe(false);
+  });
+
+  it("el preview no envía correo ni marca el aviso", async () => {
+    const res = await ejecutarCon({ tipos: ["inactividad"], preview: true });
+    const body = await res.json();
+
+    expect(body.alertas.length).toBeGreaterThan(0);
+    expect(body.correosEnviados).toBe(0);
+    expect(enviarCorreo).not.toHaveBeenCalled();
+    expect(marcarAlertaInactividad).not.toHaveBeenCalled();
+  });
+
+  it("los tipos distintos de inactividad no generan correo", async () => {
+    listarCotizaciones.mockResolvedValue([{ id: "c1", proveedorNombre: "A", impuestosDesglosados: false }]);
+    obtenerComparativaPorSolicitudId.mockResolvedValue({
+      discrepanciasDetectadas: [{ aspecto: "material" }],
+    });
+
+    const res = await ejecutarCon({
+      tipos: ["sin_desglose_fiscal", "una_sola_cotizacion", "discrepancia"],
+    });
+    const body = await res.json();
+
+    expect(body.alertas.length).toBeGreaterThan(0);
+    expect(enviarCorreo).not.toHaveBeenCalled();
+    expect(body.correosEnviados).toBe(0);
+  });
+
+  it("el de-dup sigue evitando el reenvío al reejecutar el mismo tipo", async () => {
+    alertasInactividadAvisadas.mockResolvedValue({ "sol-1": MOV_MS });
+
+    const res = await ejecutarCon({ tipos: ["inactividad"] });
+    const body = await res.json();
+
+    expect(destinatarios5()).toEqual([]);
+    expect(body.correosEnviados).toBe(0);
+    expect(marcarAlertaInactividad).not.toHaveBeenCalled();
   });
 });

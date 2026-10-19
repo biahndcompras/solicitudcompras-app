@@ -89,7 +89,7 @@ describe("guardApi(['admin']) en las rutas que dependían solo del middleware (4
   it("POST /api/admin/alertas/ejecutar exige admin y no dispara correos sin sesión", async () => {
     guardApi.mockResolvedValue({ negada: NEGADA() });
 
-    const res = await alertasPOST();
+    const res = await alertasPOST(new Request("http://localhost/api/admin/alertas/ejecutar", { method: "POST" }));
 
     expect(res.status).toBe(403);
     expect(guardApi).toHaveBeenCalledWith(["admin"]);

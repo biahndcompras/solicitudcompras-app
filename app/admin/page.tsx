@@ -8,6 +8,7 @@ import { SemParoBadge } from "@/components/Semaforo";
 import { duracionAtencion } from "@/lib/domain/semaforo";
 import { api } from "@/lib/api-client";
 import type { MetricasDashboard } from "@/lib/domain/metrics";
+import type { AlertaCompras } from "@/lib/domain/alertas";
 import type { Solicitud } from "@/lib/domain/types";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { cn } from "@/lib/design/cn";
@@ -19,6 +20,17 @@ type CoordinadorLite = { id: string; nombre: string; email: string };
 type Orden = { col: "referencia" | "solicitante" | "coordinador" | "estado" | "tiempo" | "creacion"; dir: "asc" | "desc" };
 
 const POR_PAGINA = 25;
+
+type TipoAlerta = "inactividad" | "sin_desglose_fiscal" | "una_sola_cotizacion" | "discrepancia";
+
+// Orden y copy de los tipos de alerta. El detalle explica qué hace cada uno: solo la
+// inactividad envía correo; el resto se detecta y se ve en la previsualización.
+const TIPOS_ALERTA: { id: TipoAlerta; label: string; detalle: string }[] = [
+  { id: "inactividad", label: "Inactividad", detalle: "Solicitudes sin movimiento reciente. Es la única que envía correo." },
+  { id: "sin_desglose_fiscal", label: "Sin desglose fiscal", detalle: "Cotizaciones con monto total pero sin desglose de impuestos." },
+  { id: "una_sola_cotizacion", label: "Una sola cotización", detalle: "Solicitudes que aún no se pueden comparar." },
+  { id: "discrepancia", label: "Discrepancia de especificaciones", detalle: "Los proveedores ofertaron especificaciones distintas." },
+];
 
 // Orden canónico del ciclo para listar el tiempo por etapa igual que ocurre en la vida real.
 const ORDEN_ETAPAS = [
@@ -55,8 +67,10 @@ export default function AdminDashboardPage() {
   const [minIso, setMinIso] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
   const [orden, setOrden] = useState<Orden>({ col: "creacion", dir: "desc" });
-  const [alertasInfo, setAlertasInfo] = useState<string | null>(null);
-  const [alertasEstado, setAlertasEstado] = useState<"idle" | "loading" | "ok" | "error">("idle");
+  const [tiposAlerta, setTiposAlerta] = useState<TipoAlerta[]>(TIPOS_ALERTA.map((t) => t.id));
+  const [alertasPreview, setAlertasPreview] = useState<AlertaCompras[] | null>(null);
+  const [alertasMensaje, setAlertasMensaje] = useState<string | null>(null);
+  const [alertasEstado, setAlertasEstado] = useState<"idle" | "preview" | "loading" | "ok" | "error">("idle");
 
   const desdem = rango === "all" ? undefined : rango === "hoy" ? "dia" : rango;
 
@@ -154,19 +168,63 @@ export default function AdminDashboardPage() {
   // El umbral del KPI no es un literal: es el que el admin configuró (4.10.9).
   const umbralSinDecision = metricas.umbralDias ?? 5;
 
-  function ejecutarAlertas() {
-    setAlertasEstado("loading");
-    setAlertasInfo(null);
-    fetch("/api/admin/alertas/ejecutar", { method: "POST" })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d) => {
-        setAlertasInfo(d.alertas?.length ? `${d.alertas.length} alerta${d.alertas.length === 1 ? "" : "s"} enviada${d.alertas.length === 1 ? "" : "s"}` : "Sin alertas que enviar");
-        setAlertasEstado("ok");
-      })
-      .catch(() => {
-        setAlertasInfo("No se pudieron ejecutar las alertas");
-        setAlertasEstado("error");
+  function alternarTipoAlerta(t: TipoAlerta) {
+    setTiposAlerta((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+    // La previsualización se invalida al cambiar la selección: ya no refleja lo elegido.
+    setAlertasPreview(null);
+    setAlertasMensaje(null);
+  }
+
+  async function previsualizarAlertas() {
+    if (tiposAlerta.length === 0) return;
+    setAlertasEstado("preview");
+    setAlertasMensaje(null);
+    try {
+      const r = await fetch("/api/admin/alertas/ejecutar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipos: tiposAlerta, preview: true }),
       });
+      if (!r.ok) throw new Error(String(r.status));
+      const d = (await r.json()) as { alertas: AlertaCompras[] };
+      setAlertasPreview(d.alertas ?? []);
+      setAlertasEstado("idle");
+    } catch {
+      setAlertasMensaje("No se pudieron previsualizar las alertas.");
+      setAlertasEstado("error");
+    }
+  }
+
+  async function enviarAlertas() {
+    if (tiposAlerta.length === 0) return;
+    // Única acción de esta ruta que envía correo. Se confirma como en /admin/campos.
+    if (!window.confirm("Se enviará el correo de inactividad al coordinador asignado y a administración, una sola vez por movimiento, y se procesarán los recordatorios de información pendientes. ¿Continuar?")) {
+      return;
+    }
+    setAlertasEstado("loading");
+    setAlertasMensaje(null);
+    try {
+      const r = await fetch("/api/admin/alertas/ejecutar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipos: tiposAlerta }),
+      });
+      if (!r.ok) throw new Error(String(r.status));
+      const d = (await r.json()) as { alertas: AlertaCompras[]; correosEnviados: number; recordatorios: number };
+      const plural = (n: number) => (n === 1 ? "" : "s");
+      // Se muestra lo que de verdad salió: los correos de inactividad enviados (no las alertas
+      // detectadas) y los recordatorios, sin ocultar cuántas alertas se detectaron.
+      setAlertasMensaje(
+        `Se enviaron ${d.correosEnviados} correo${plural(d.correosEnviados)} de inactividad` +
+          (d.recordatorios ? ` y ${d.recordatorios} recordatorio${plural(d.recordatorios)}` : "") +
+          `. Se detectaron ${d.alertas.length} alerta${plural(d.alertas.length)} en los tipos elegidos.`
+      );
+      setAlertasEstado("ok");
+      setAlertasPreview(null);
+    } catch {
+      setAlertasMensaje("No se pudieron enviar las alertas.");
+      setAlertasEstado("error");
+    }
   }
 
   const exportUrl = `/api/metricas/excel?rango=${rango === "all" ? "todo" : rango === "hoy" ? "dia" : rango}${coordinador !== "all" ? `&coordinador=${coordinador}` : ""}`;
@@ -216,6 +274,13 @@ export default function AdminDashboardPage() {
   const visibles = procesosOrdenados.slice(desde, desde + POR_PAGINA);
 
   const filtrando = busqueda.trim() !== "" || coordinador !== "all" || rango !== "all";
+
+  // Previsualización agrupada por tipo, en el orden canónico de TIPOS_ALERTA.
+  const gruposPreview = alertasPreview
+    ? TIPOS_ALERTA.map((t) => ({ ...t, alertas: alertasPreview.filter((a) => a.tipo === t.id) })).filter(
+        (g) => g.alertas.length > 0
+      )
+    : [];
 
   function alternarOrden(col: Orden["col"]) {
     setOrden((o) => (o.col === col ? { col, dir: o.dir === "asc" ? "desc" : "asc" } : { col, dir: "asc" }));
@@ -436,17 +501,97 @@ export default function AdminDashboardPage() {
             >
               Exportar
             </a>
+          </div>
 
-            <button
-              type="button"
-              onClick={ejecutarAlertas}
-              disabled={alertasEstado === "loading"}
-              className="text-[12px] font-semibold text-rose-700 hover:text-rose-800 disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
-            >
-              {alertasEstado === "loading" ? "Enviando…" : alertasInfo ?? "Ejecutar alertas"}
-            </button>
+          <div className="bg-white rounded-lg border border-slate-200 p-4 mb-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-[13px] font-semibold text-slate-800">Alertas</div>
+                <p className="text-[12px] text-slate-500 mt-0.5 max-w-2xl">
+                  Elija los tipos a revisar y previsualice lo detectado antes de enviar. Solo la alerta de inactividad
+                  envía correo (al coordinador asignado y a administración); los demás tipos se muestran aquí y no
+                  notifican a nadie. Al enviar también se ejecutan los recordatorios de información pendientes.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={previsualizarAlertas}
+                  disabled={tiposAlerta.length === 0 || alertasEstado === "preview" || alertasEstado === "loading"}
+                  className="text-[12px] font-semibold text-slate-700 hover:text-slate-900 disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
+                >
+                  {alertasEstado === "preview" ? "Revisando…" : "Previsualizar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={enviarAlertas}
+                  disabled={tiposAlerta.length === 0 || alertasEstado === "loading"}
+                  className="text-[12px] font-semibold text-rose-700 hover:text-rose-800 disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
+                >
+                  {alertasEstado === "loading" ? "Enviando…" : "Enviar correos"}
+                </button>
+              </div>
+            </div>
 
-            {alertasEstado === "error" && <span className="text-[12px] text-rose-700">Error al enviar</span>}
+            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3">
+              {TIPOS_ALERTA.map((t) => (
+                <label key={t.id} className="inline-flex items-center gap-2 text-[12px] text-slate-700" title={t.detalle}>
+                  <input
+                    type="checkbox"
+                    checked={tiposAlerta.includes(t.id)}
+                    onChange={() => alternarTipoAlerta(t.id)}
+                    className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  {t.label}
+                </label>
+              ))}
+            </div>
+
+            {tiposAlerta.length === 0 && (
+              <p className="text-[12px] text-amber-700 mt-3">Seleccione al menos un tipo de alerta.</p>
+            )}
+
+            {alertasMensaje && (
+              <p
+                role="status"
+                className={cn(
+                  "text-[12px] mt-3 px-3 py-2 rounded-lg border",
+                  alertasEstado === "error"
+                    ? "bg-rose-50 text-rose-800 border-rose-200"
+                    : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                )}
+              >
+                {alertasMensaje}
+              </p>
+            )}
+
+            {alertasPreview && (
+              <div className="mt-3 border-t border-slate-200 pt-3">
+                {gruposPreview.length === 0 ? (
+                  <p className="text-[12px] text-slate-500">No se detectó nada en los tipos elegidos.</p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {gruposPreview.map((g) => (
+                      <div key={g.id}>
+                        <div className="text-[12px] font-semibold text-slate-800 mb-1">
+                          {g.label}{" "}
+                          <span className="font-normal text-slate-500 tabular-nums">
+                            · {g.alertas.length} {g.id === "inactividad" ? "(envía correo)" : "(solo informativo)"}
+                          </span>
+                        </div>
+                        <ul className="flex flex-col gap-1">
+                          {g.alertas.map((a) => (
+                            <li key={`${a.solicitudId}-${a.detalle}`} className="text-[12px] text-slate-600">
+                              <span className="font-medium text-slate-800">{a.titulo}</span> — {a.detalle}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-lg border border-slate-200">

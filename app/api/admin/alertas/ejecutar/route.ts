@@ -1,15 +1,39 @@
 import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
-import { detectarAlertas } from "@/lib/domain/alertas";
+import { detectarAlertas, type AlertaCompras } from "@/lib/domain/alertas";
 import type { Cotizacion, EventoTrazabilidad, Solicitud } from "@/lib/domain/types";
 import { guardApi } from "@/lib/api-guard";
 
 const repo = new PostgresRepositorio();
 
-export async function POST() {
+const TIPOS_ALERTA = ["inactividad", "sin_desglose_fiscal", "una_sola_cotizacion", "discrepancia"] as const;
+type TipoAlerta = (typeof TIPOS_ALERTA)[number];
+
+/**
+ * Cuerpo del POST (4.4.10). El admin elige qué tipos procesar y puede pedir un preview.
+ *  - `tipos` ausente = todos los tipos (compatibilidad con el disparo previo sin selección).
+ *  - `tipos: []` = ninguno (la UI no debería llegar aquí, pero no se inventa un default).
+ *  - `preview: true` = detectar y devolver sin enviar correo ni marcar avisos.
+ */
+async function leerSeleccion(req: Request): Promise<{ tipos: TipoAlerta[]; preview: boolean }> {
+  let body: unknown = null;
+  try {
+    body = await req.json();
+  } catch {
+    body = null;
+  }
+  const b = (body && typeof body === "object" ? body : {}) as { tipos?: unknown; preview?: unknown };
+  const tipos = Array.isArray(b.tipos)
+    ? (b.tipos.filter((t) => (TIPOS_ALERTA as readonly string[]).includes(String(t))) as TipoAlerta[])
+    : [...TIPOS_ALERTA];
+  return { tipos, preview: b.preview === true };
+}
+
+export async function POST(req: Request) {
   const auth = await guardApi(["admin"]);
   if (auth.negada) return auth.negada;
   try {
+    const { tipos, preview } = await leerSeleccion(req);
     const umbral = Number((await repo.leerConfig("umbral_dias_sin_movimiento")) ?? 5);
     const destAdmin = String((await repo.leerConfig("destinatario_alertas")) ?? "").trim();
 
@@ -21,12 +45,30 @@ export async function POST() {
       eventosMap[s.id] = await repo.listarEventos(s.id);
     }
 
-    const alertas = detectarAlertas({
+    // Discrepancias: el dato vive en `comparativa.discrepancias_detectadas` (array). La ruta
+    // nunca lo leía, así que la rama estaba muerta. Solo se consulta si el tipo fue elegido,
+    // para no encadenar consultas inútiles cuando no se pide.
+    const discrepanciasPorSolicitud: Record<string, boolean> = {};
+    if (tipos.includes("discrepancia")) {
+      for (const s of solicitudes) {
+        const comparativa = await repo.obtenerComparativaPorSolicitudId(s.id);
+        if ((comparativa?.discrepanciasDetectadas?.length ?? 0) > 0) discrepanciasPorSolicitud[s.id] = true;
+      }
+    }
+
+    const detectadas = detectarAlertas({
       solicitudes,
       cotizacionesPorSolicitud: cotsMap,
       eventosPorSolicitud: eventosMap,
+      discrepanciasPorSolicitud,
       umbralDias: umbral,
     });
+    const alertas: AlertaCompras[] = detectadas.filter((a) => tipos.includes(a.tipo));
+
+    // Preview: se devuelve lo detectado y no se toca nada (ni correo ni marcador de 4.11.7).
+    if (preview) {
+      return NextResponse.json({ alertas, correosEnviados: 0, recordatorios: 0, preview: true });
+    }
 
     // Correo 5 (alerta de inactividad). Va al coordinador ASIGNADO y a administración
     // (`destinatario_alertas`), no solo al buzón global: el coordinador es quien tiene la

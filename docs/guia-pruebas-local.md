@@ -12,9 +12,10 @@ npm install
 cp .env.example .env.local   # llenar DATABASE_URL, Supabase, RESEND, OPENROUTER
 npm run db:migrate           # o: bash scripts/db-migrate.sh
 
-# 3. Python para conversión de documentos (PDF → Markdown)
-uv venv .venv-md --python 3.11
-uv pip install --python .venv-md/bin/python "markitdown[pdf]"
+# 3. Conversión de documentos (PDF/imagen → Markdown)
+#    Ya NO requiere Python: la hace un modelo multimodal de OpenRouter (necesita
+#    OPENROUTER_API_KEY en .env.local). Si la IA no está o falla, la pantalla de carga
+#    de cotizaciones degrada a carga manual.
 
 # 4. Usuarios en Supabase Auth (coordinador + admin)
 node scripts/seed-auth.mjs

@@ -1,46 +1,46 @@
 import { NextResponse } from "next/server";
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { convertirDocumento } from "@/lib/pdf/convert";
+import { convertirDocumentoAMarkdown } from "@/lib/ai/conversion";
 
-// Conversión de documento (PDF/DOCX/imagen) a Markdown para la descarga de cotizaciones.
-// Requiere python3 + markitdown disponible en el runtime; si no, responde 503 y el
-// frontend degrada a carga manual (disponibilidad: la IA nunca bloquea).
+// Conversión de documento (PDF/imagen) a Markdown para la carga de cotizaciones del coordinador.
+//
+// Se hace con un modelo multimodal de OpenRouter. Antes dependía de `python3` + `markitdown`,
+// que no existen en Vercel: en producción **siempre** fallaba y el coordinador cargaba a mano.
+// Ahora no hay binarios ni archivos temporales: los bytes van directo al modelo.
+//
+// Si la IA no está disponible o falla, se responde 503 y el frontend degrada a carga manual
+// (la IA nunca bloquea el trabajo del coordinador).
+
+const MAX_BYTES = 4 * 1024 * 1024;
+const MIMES = ["image/png", "image/jpeg", "application/pdf"];
 
 export async function POST(request: Request) {
-  let dir: string | undefined;
   try {
     const form = await request.formData();
     const archivo = form.get("archivo");
-    if (!(archivo instanceof File)) {
+    if (!(archivo instanceof File) || archivo.size === 0) {
       return NextResponse.json({ error: "Archivo no recibido" }, { status: 400 });
     }
-
-    // Guardar el archivo en un directorio temporal para pasarlo al script Python.
-    dir = await mkdtemp(path.join(tmpdir(), "bia-conv-"));
-    const nombreSeguro = archivo.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const ruta = path.join(dir, nombreSeguro);
-    await writeFile(ruta, Buffer.from(await archivo.arrayBuffer()));
-
-    const res = await convertirDocumento(ruta);
-    if (!res.ok) {
+    if (archivo.size > MAX_BYTES) {
+      return NextResponse.json({ error: "El archivo supera los 4 MB" }, { status: 413 });
+    }
+    // El navegador manda el MIME; si viene vacío o raro, el tipo real lo decide la extensión
+    // dentro de `convertirDocumentoAMarkdown` (una imagen renombrada no cuela como PDF).
+    if (archivo.type && !MIMES.includes(archivo.type)) {
       return NextResponse.json(
-        { error: res.error ?? "No se pudo convertir el documento" },
-        { status: res.error?.includes("markitdown") ? 503 : 422 }
+        { error: "Formato no soportado. Se aceptan PDF, PNG o JPG." },
+        { status: 415 }
       );
     }
 
+    const res = await convertirDocumentoAMarkdown({
+      bytes: new Uint8Array(await archivo.arrayBuffer()),
+      nombre: archivo.name,
+    });
+    if (!res.ok) {
+      return NextResponse.json({ error: res.error }, { status: 503 });
+    }
     return NextResponse.json({ ok: true, markdown: res.markdown });
   } catch {
     return NextResponse.json({ error: "Error procesando el archivo" }, { status: 500 });
-  } finally {
-    if (dir) {
-      try {
-        await rm(dir, { recursive: true, force: true });
-      } catch {
-        // limpieza best-effort
-      }
-    }
   }
 }

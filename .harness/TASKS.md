@@ -181,7 +181,7 @@ Esto sí es trabajo real. Ordenado por tema. Las referencias `RF-xx` son del PRD
 ### 4.5 OCR y conversión
 | # | Tarea | Ref | Nota |
 |---|---|---|---|
-| 4.5.1 | **OCR funcional en serverless** | — | `/api/convertir` sin Python en Vercel → **degrada a carga manual**. Además `convert.ts:36` ejecuta el script dos veces y descarta la primera salida |
+| ~~4.5.1~~ | ~~OCR funcional en serverless~~ | ✅ **RESUELTO 2026-10-17** | `/api/convertir` dependía de `python3` + `markitdown`, que **no existen en Vercel**: en producción la conversión fallaba **siempre** y el coordinador cargaba a mano. Ahora la hace un **modelo multimodal de OpenRouter** (`lib/ai/conversion.ts`), sin binarios ni archivos temporales. Se eligió multimodal y no una librería de extracción de texto en JS porque la app acepta **PDF y también PNG/JPG**, y las cotizaciones suelen llegar **escaneadas o fotografiadas** (ahí un extractor de texto no ve nada). De paso desaparece el bug de la doble ejecución del script. **Verificado en vivo**: PDF e imagen → HTTP 200 con todos los montos; tipo no soportado → 415; si la IA falla → 503 y la pantalla degrada a carga manual |
 | ~~4.5.2~~ | La fecha requerida aceptaba fechas pasadas | ✅ **RESUELTO 2026-10-14** | Ver 4.10/§4 (bloque de agentes en paralelo) |
 | ~~4.5.3~~ | La descripción no era obligatoria | ✅ **RESUELTO 2026-10-14** | Ver 4.10/§4 (bloque de agentes en paralelo) |
 | 4.5.4 | **Retomar borrador desde P1** | medio | `app/page.tsx:22` borra el borrador antes de navegar con `?nuevo=1`, dejando el modal inalcanzable por ese camino |
@@ -427,8 +427,8 @@ tanda de §4.7–§4.10 también están cerrados.
 
 **Lo que se puede hacer ya**, sin esperar al cliente, por valor:
 
-1. **OCR en serverless (4.5.1)**: `/api/convertir` necesita Python, que no existe en Vercel →
-   degrada a carga manual. Es el hueco funcional más grande que queda.
+1. ~~**OCR en serverless (4.5.1)**~~ → ✅ **Hecho 2026-10-17**: la conversión ya no usa Python; la
+   hace un modelo multimodal de OpenRouter (PDF e imágenes). Verificado en vivo.
 2. ~~**`POST /logo` sin autorización (4.8.11)**~~ → ✅ **Hecho 2026-10-15**: se le aplicó el mismo
    guard que al GET (rol de Compras o el correo dueño), antes de leer el cuerpo. Ver §4.8.
 3. **Alertas por tipo y preview (4.4.10)**: 4 tipos detectados, solo `inactividad` se notifica, y
@@ -555,7 +555,7 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | Navegación entre etapas | Solo el paso **08** se bloquea sin 2 cotizaciones. El **09 sigue accesible** con 0 → se llega a una pantalla vacía y se puede pulsar "Enviar" (el server responde 409, pero es un callejón sin salida) | — |
 | Panel lateral del detalle | **Falta `fecha de creación`** y **falta el tipo RFI/RFQ/RFP** (muestra la categoría en su lugar) | — |
 | Orden de la bandeja | La doc pide `fecha requerida ASC`; el código usa `fecha_creacion DESC` | — |
-| Conversión del archivo a Markdown | Depende de **python3 + markitdown en el runtime**. En Vercel serverless **no funciona** → degrada a carga manual. Además `convert.ts:36` **ejecuta el script dos veces** y descarta la primera salida | 4.5.1 |
+| ~~Conversión del archivo a Markdown~~ | ✅ **Resuelto 2026-10-17** (4.5.1): la hace un modelo multimodal de OpenRouter. Ya no depende de Python ni descarga nada al cliente. Verificado en vivo con PDF e imagen | — |
 | Slots de proveedor | Hay que **crear la cotización manual primero** y solo después adjuntar. El archivo no se puede subir antes de tener los datos | — |
 | Estados del archivo | Faltan "Sin archivo aún" / "convertido a Markdown ✓" | — |
 | Editar/borrar cotización | El servidor **ignora el `id`** de la ruta y usa el del body, sin verificar pertenencia | 4.8.3 |
@@ -649,3 +649,4 @@ Cada fila dice su estado y qué falta. Los IDs de §4 son la tarea a abrir.
 | 2026-10-15 | **D11 cerrado** (idioma). El barrido encontró **4 mensajes reales de UI** en voseo, no 1: `panel/page.tsx` y **3 en `lib/domain/archivos.ts`** (que el conteo inicial no vio). Los otros 2 strings eran comentarios; los e2e no tenían voseo. Se decide **no** reescribir el prompt de IA (su salida ya es "usted", verificado en vivo). Además: **4.7.5 no reproducible** (505/505 con la clave puesta) y se documenta su causa real — el cliente de IA no funciona bajo jsdom (`AbortSignal`), por lo que `vitest.setup.ts` dejó de asumir DOM |
 | 2026-10-15 | **4.8.11 cerrado** (seguridad). `POST /logo` no validaba nada: cualquiera con el UUID reemplazaba el logo de una solicitud ajena —peor que el GET, que sí estaba protegido—. Se le aplica el mismo guard (rol de Compras o el correo dueño), **antes** de leer el cuerpo. El cliente manda el correo; se verificó en rojo contra el código anterior y de punta a punta con curl (401 sin correo, 401 ajeno, 200 dueño y archivo escrito). Decisión registrada: no se hizo el "token de un solo uso" que pedía la nota, porque el correo es la identidad de todo el flujo sin login |
 | 2026-10-16 | **B5 / 4.8.12 — la base de Supabase estaba abierta con la `anon` key** (crítico). El linter de Supabase avisaba de RLS desactivado; al verificarlo resultó peor: con la `anon` key (que **se envía al navegador**) se podía **leer y escribir** todo `public` —`usuario` devolvía 7 filas reales y un `POST` anónimo devolvía 201—. Se escribió `migrations/020_rls_deny_all.sql` (RLS deny-all sin políticas + revocar `anon`/`authenticated` + quitar los privilegios por defecto de las tablas futuras) y se **probó en local**: 18/18 tablas con RLS, un rol con `GRANT` pasó de ver 13 filas a 0, y 510/510 tests siguen pasando. **Falta correrlo en Supabase** (dashboard): es lo único que no puedo cerrar yo |
+| 2026-10-17 | **4.5.1 cerrado** (OCR serverless). `/api/convertir` dependía de `python3` + `markitdown`, que no existen en Vercel: en producción fallaba **siempre** y el coordinador cargaba a mano; además el helper ejecutaba el script **dos veces**. Ahora convierte un **modelo multimodal de OpenRouter** (PDF e imágenes, sin binarios ni temporales), elegido así porque la app acepta también PNG/JPG y las cotizaciones suelen venir escaneadas. Verificado en vivo (PDF y PNG → 200 con todos los montos) y en rojo contra la versión anterior. Se borraron `lib/pdf/convert.ts`, `scripts/convert-document.py` y el paso de Python de `docs/guia-pruebas-local.md`. De paso se corrigieron 2 strings de UI en tú ("Revisa…", "Intenta…") que el barrido de D11 no vio |

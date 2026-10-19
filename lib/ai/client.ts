@@ -1,8 +1,15 @@
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1/chat/completions";
 
+// Un mensaje puede ser texto plano o una lista de partes (multimodal). Se usa para la
+// conversión de documentos: la imagen o el PDF viajan como parte, no como texto.
+export type OpenRouterContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } }
+  | { type: "file"; file: { filename: string; file_data: string } };
+
 export type OpenRouterMessage = {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | OpenRouterContentPart[];
 };
 
 export type OpenRouterRequest = {

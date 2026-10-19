@@ -78,7 +78,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
     }
   }
 
-  // Sube el archivo real → conversión markitdown → extracción IA. Nunca bloquea.
+  // Sube el archivo real → conversión a Markdown (IA multimodal) → extracción IA. Nunca bloquea.
   async function onFileSeleccionado(idx: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     const c = cotizaciones[idx];
@@ -97,7 +97,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
       onCotizacionCargada();
       if (!conv.ok) setError(conv.error ?? "No se pudo extraer datos automáticamente.");
     } catch {
-      setError("No se pudo subir. Intenta de nuevo.");
+      setError("No se pudo subir. Intente de nuevo.");
     } finally {
       setFaseSubida(null);
     }

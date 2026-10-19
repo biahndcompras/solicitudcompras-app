@@ -359,7 +359,7 @@ export default function AdminCamposPage() {
         ) : cargandoError ? (
           <div className="px-4 py-10 text-center">
             <p className="text-[13px] font-semibold text-slate-700">No se pudo cargar el catálogo</p>
-            <p className="text-[12px] text-slate-500 mt-1">Revisa la conexión e inténtalo de nuevo.</p>
+            <p className="text-[12px] text-slate-500 mt-1">Revise la conexión e inténtelo de nuevo.</p>
             <button type="button" onClick={recargar} className="mt-3 text-[12px] font-semibold text-sky-700 hover:text-sky-900">
               Reintentar
             </button>

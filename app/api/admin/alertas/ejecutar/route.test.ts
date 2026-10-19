@@ -281,3 +281,18 @@ describe("4.4.10 · selección por tipo y preview", () => {
     expect(marcarAlertaInactividad).not.toHaveBeenCalled();
   });
 });
+
+// 4.4.11 — el botón de alertas NO debe mandar los recordatorios RF-62. Antes los procesaba
+// escondidos dentro de "Enviar correos": marcar solo "Discrepancia" igual mandaba correos a
+// personas reales (pasó en una prueba de navegador). Ahora tienen su propia acción.
+describe("4.4.11 · las alertas no disparan los recordatorios de información", () => {
+  it("aunque haya rondas vencidas, no envía el correo 8 ni marca la ronda", async () => {
+    informacionVencida.mockResolvedValue([
+      { solicitud: solicitud({ id: "sol-info" }), dias: 5, ronda: 1 },
+    ]);
+    await ejecutarCon({ tipos: ["inactividad"] });
+    const tipos = enviarCorreo.mock.calls.map((c) => (c[0] as { tipoCorreo: string }).tipoCorreo);
+    expect(tipos).not.toContain("8");
+    expect(marcarRecordatorioInformacion).not.toHaveBeenCalled();
+  });
+});

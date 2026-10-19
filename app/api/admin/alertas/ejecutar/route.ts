@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
     // Preview: se devuelve lo detectado y no se toca nada (ni correo ni marcador de 4.11.7).
     if (preview) {
-      return NextResponse.json({ alertas, correosEnviados: 0, recordatorios: 0, preview: true });
+      return NextResponse.json({ alertas, correosEnviados: 0, preview: true });
     }
 
     // Correo 5 (alerta de inactividad). Va al coordinador ASIGNADO y a administración
@@ -134,43 +134,11 @@ export async function POST(req: Request) {
       if (algunoEnviado) await repo.marcarAlertaInactividad(a.solicitudId, movimientoMs);
     }
 
-    // Recordatorio 010 (RF-62): las rondas de preguntas que superaron el umbral sin
-    // respuesta. Se engancha acá y no a un programador propio porque el proyecto no tiene
-    // ninguno: hoy este botón es el único disparador real. El día que haya cron, la ruta de
-    // /api/cron/recordatorios hace lo mismo sin tocar esto.
-    const diasRecordatorio = Number(await repo.leerConfig("recordatorio_informacion_dias")) || 3;
-    let recordatorios = 0;
-    const { enviarCorreo: enviar } = await import("@/lib/mail/enviar");
-    for (const v of await repo.informacionVencida(diasRecordatorio)) {
-      const destinatario = await destinatarioDe(v.solicitud.coordinadorId);
-      if (!destinatario) continue;
-      try {
-        const r = await enviar({
-          repo,
-          tipoCorreo: "8",
-          solicitudId: v.solicitud.id,
-          destinatario,
-          datos: {
-            numeroReferencia: v.solicitud.numeroReferencia,
-            titulo: v.solicitud.titulo,
-            solicitanteNombre: v.solicitud.solicitanteNombre,
-            coordinadorNombre: "Compras",
-            diasEsperando: v.dias,
-            preguntas: (v.solicitud.informacionPreguntas?.preguntas ?? []).map((p) => ({ pregunta: p.pregunta })),
-            urlDetalle: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/panel/solicitud/${v.solicitud.id}`,
-          },
-        });
-        // Solo se marca si el correo salió: `enviar` devuelve "fallido" en vez de lanzar, y
-        // marcarla igual apagaría el recordatorio para esa ronda sin haber avisado.
-        if (r.estadoEnvio !== "enviado") continue;
-        await repo.marcarRecordatorioInformacion(v.solicitud.id, v.ronda);
-        recordatorios += 1;
-      } catch {
-        // `enviar` ya registra el fallo en `correo_enviado`.
-      }
-    }
+    // Los recordatorios de información pendiente (RF-62, correo 8) YA NO se disparan acá:
+    // este botón es de alertas y no debe mandar correos que el admin no pidió. Tienen su
+    // propia acción (`/api/admin/recordatorios/ejecutar`) y el cron diario (4.4.11).
 
-    return NextResponse.json({ alertas, correosEnviados: enviadas, recordatorios });
+    return NextResponse.json({ alertas, correosEnviados: enviadas });
   } catch {
     return NextResponse.json({ error: "Error al ejecutar alertas" }, { status: 500 });
   }

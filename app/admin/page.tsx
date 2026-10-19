@@ -71,6 +71,11 @@ export default function AdminDashboardPage() {
   const [alertasPreview, setAlertasPreview] = useState<AlertaCompras[] | null>(null);
   const [alertasMensaje, setAlertasMensaje] = useState<string | null>(null);
   const [alertasEstado, setAlertasEstado] = useState<"idle" | "preview" | "loading" | "ok" | "error">("idle");
+  // Recordatorios (RF-62): acción SEPARADA del botón de alertas. Antes se disparaban dentro de
+  // "Enviar correos" y podían salir a personas reales sin que el admin lo esperara (4.4.11).
+  const [recordatoriosEstado, setRecordatoriosEstado] = useState<"idle" | "preview" | "loading" | "ok" | "error">("idle");
+  const [recordatoriosMensaje, setRecordatoriosMensaje] = useState<string | null>(null);
+  const [recordatoriosPendientes, setRecordatoriosPendientes] = useState<number | null>(null);
 
   const desdem = rango === "all" ? undefined : rango === "hoy" ? "dia" : rango;
 
@@ -198,7 +203,7 @@ export default function AdminDashboardPage() {
   async function enviarAlertas() {
     if (tiposAlerta.length === 0) return;
     // Única acción de esta ruta que envía correo. Se confirma como en /admin/campos.
-    if (!window.confirm("Se enviará el correo de inactividad al coordinador asignado y a administración, una sola vez por movimiento, y se procesarán los recordatorios de información pendientes. ¿Continuar?")) {
+    if (!window.confirm("Se enviará el correo de inactividad al coordinador asignado y a administración, una sola vez por movimiento. Los recordatorios de información pendiente tienen su propia acción. ¿Continuar?")) {
       return;
     }
     setAlertasEstado("loading");
@@ -210,20 +215,69 @@ export default function AdminDashboardPage() {
         body: JSON.stringify({ tipos: tiposAlerta }),
       });
       if (!r.ok) throw new Error(String(r.status));
-      const d = (await r.json()) as { alertas: AlertaCompras[]; correosEnviados: number; recordatorios: number };
+      const d = (await r.json()) as { alertas: AlertaCompras[]; correosEnviados: number };
       const plural = (n: number) => (n === 1 ? "" : "s");
       // Se muestra lo que de verdad salió: los correos de inactividad enviados (no las alertas
-      // detectadas) y los recordatorios, sin ocultar cuántas alertas se detectaron.
+      // detectadas), sin ocultar cuántas alertas se detectaron.
       setAlertasMensaje(
-        `Se enviaron ${d.correosEnviados} correo${plural(d.correosEnviados)} de inactividad` +
-          (d.recordatorios ? ` y ${d.recordatorios} recordatorio${plural(d.recordatorios)}` : "") +
-          `. Se detectaron ${d.alertas.length} alerta${plural(d.alertas.length)} en los tipos elegidos.`
+        `Se enviaron ${d.correosEnviados} correo${plural(d.correosEnviados)} de inactividad. ` +
+          `Se detectaron ${d.alertas.length} alerta${plural(d.alertas.length)} en los tipos elegidos.`
       );
       setAlertasEstado("ok");
       setAlertasPreview(null);
     } catch {
       setAlertasMensaje("No se pudieron enviar las alertas.");
       setAlertasEstado("error");
+    }
+  }
+
+  async function previsualizarRecordatorios() {
+    setRecordatoriosEstado("preview");
+    setRecordatoriosMensaje(null);
+    try {
+      const r = await fetch("/api/admin/recordatorios/ejecutar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preview: true }),
+      });
+      if (!r.ok) throw new Error(String(r.status));
+      const d = (await r.json()) as { vencidas: number };
+      setRecordatoriosPendientes(d.vencidas);
+      setRecordatoriosEstado("idle");
+      setRecordatoriosMensaje(
+        d.vencidas === 0
+          ? "No hay recordatorios pendientes: ninguna ronda de preguntas superó el umbral sin respuesta."
+          : `Hay ${d.vencidas} recordatorio${d.vencidas === 1 ? "" : "s"} pendiente${d.vencidas === 1 ? "" : "s"} de enviar.`
+      );
+    } catch {
+      setRecordatoriosEstado("error");
+      setRecordatoriosMensaje("No se pudieron revisar los recordatorios.");
+    }
+  }
+
+  async function enviarRecordatorios() {
+    if (!window.confirm(`Se enviará el recordatorio de información pendiente (correo 8) al coordinador asignado de cada solicitud. Es un correo real y se envía una sola vez por ronda. ¿Continuar?`)) {
+      return;
+    }
+    setRecordatoriosEstado("loading");
+    setRecordatoriosMensaje(null);
+    try {
+      const r = await fetch("/api/admin/recordatorios/ejecutar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!r.ok) throw new Error(String(r.status));
+      const d = (await r.json()) as { vencidas: number; recordatoriosEnviados: number };
+      const plural = (n: number) => (n === 1 ? "" : "s");
+      setRecordatoriosEstado("ok");
+      setRecordatoriosPendientes(0);
+      setRecordatoriosMensaje(
+        `Se enviaron ${d.recordatoriosEnviados} recordatorio${plural(d.recordatoriosEnviados)} de ${d.vencidas} pendiente${plural(d.vencidas)}.`
+      );
+    } catch {
+      setRecordatoriosEstado("error");
+      setRecordatoriosMensaje("No se pudieron enviar los recordatorios.");
     }
   }
 
@@ -510,7 +564,7 @@ export default function AdminDashboardPage() {
                 <p className="text-[12px] text-slate-500 mt-0.5 max-w-2xl">
                   Elija los tipos a revisar y previsualice lo detectado antes de enviar. Solo la alerta de inactividad
                   envía correo (al coordinador asignado y a administración); los demás tipos se muestran aquí y no
-                  notifican a nadie. Al enviar también se ejecutan los recordatorios de información pendientes.
+                  notifican a nadie. Los recordatorios de información pendiente son una acción aparte, más abajo.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -591,6 +645,51 @@ export default function AdminDashboardPage() {
                   </div>
                 )}
               </div>
+            )}
+          </div>
+
+          {/* Recordatorios (RF-62): acción SEPARADA de las alertas. Antes se disparaban dentro
+              de "Enviar correos" y podían salir a personas reales sin que el admin lo esperara. */}
+          <div className="bg-white rounded-lg border border-slate-200">
+            <div className="px-4 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-[12px] font-semibold text-slate-700">
+                Recordatorios de información pendiente
+                <p className="font-normal text-slate-500 mt-0.5">
+                  Avisa al coordinador cuando la ronda de preguntas al solicitante superó el umbral sin respuesta.
+                  Es independiente de las alertas y manda correos reales.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={previsualizarRecordatorios}
+                  disabled={recordatoriosEstado === "preview" || recordatoriosEstado === "loading"}
+                  className="text-[12px] font-semibold text-slate-700 hover:text-slate-900 disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
+                >
+                  {recordatoriosEstado === "preview" ? "Revisando…" : "Revisar pendientes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={enviarRecordatorios}
+                  disabled={recordatoriosEstado === "loading" || recordatoriosPendientes === 0}
+                  className="text-[12px] font-semibold text-rose-700 hover:text-rose-800 disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
+                >
+                  {recordatoriosEstado === "loading" ? "Enviando…" : "Enviar recordatorios"}
+                </button>
+              </div>
+            </div>
+            {recordatoriosMensaje && (
+              <p
+                role="status"
+                className={cn(
+                  "text-[12px] m-4 px-3 py-2 rounded-lg border",
+                  recordatoriosEstado === "error"
+                    ? "bg-rose-50 text-rose-800 border-rose-200"
+                    : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                )}
+              >
+                {recordatoriosMensaje}
+              </p>
             )}
           </div>
 

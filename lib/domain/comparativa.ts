@@ -6,7 +6,21 @@ import type {
   Discrepancia,
   ProsContras,
   RespuestaCampo,
+  SubtipoSolicitud,
 } from "./types";
+
+/**
+ * Etiqueta del producto/servicio que encabeza la comparativa (4.2.2). El glosario define la
+ * comparativa como "el producto/servicio a la izquierda y un proveedor por columna"; sin esto,
+ * quien abre el comparativo —el coordinador o el solicitante por el enlace— no ve QUÉ se está
+ * comparando.
+ */
+export function etiquetaSubtipo(subtipo?: SubtipoSolicitud): string {
+  if (subtipo === "producto") return "Producto";
+  if (subtipo === "servicio") return "Servicio";
+  if (subtipo === "mixto") return "Producto y servicio";
+  return "No especificado";
+}
 
 export type ResultadoComparativa = {
   discrepancias: Discrepancia[];

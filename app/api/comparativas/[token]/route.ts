@@ -28,11 +28,17 @@ export async function GET(
       return NextResponse.json({ error: "Comparativa no encontrada" }, { status: 404 });
     }
     const cotizaciones = await repo.listarCotizaciones(comparativa.solicitudId);
+    // 4.2.2 — solo lo justo para encabezar la comparativa (qué producto/servicio y con qué
+    // detalle). No se expone la solicitud completa: esta ruta se abre con el token.
+    const solicitud = await repo.obtenerSolicitud(comparativa.solicitudId);
 
     return NextResponse.json({
       comparativa,
       cotizaciones,
       solicitudId: comparativa.solicitudId,
+      solicitud: solicitud
+        ? { titulo: solicitud.titulo, descripcion: solicitud.descripcion, subtipo: solicitud.subtipo }
+        : null,
       // La vista pública dice "este enlace vence el X": sin esto el solicitante no
       // puede saber si tiene tiempo para decidir.
       fechaExpiracion: link.fechaExpiracion ?? null,

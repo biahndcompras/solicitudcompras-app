@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { Modal } from "@/components/ui-ext/Modal";
-import type { Cotizacion, ProsContras } from "@/lib/domain/types";
-import { formato } from "@/lib/domain/comparativa";
+import type { Cotizacion, ProsContras, SubtipoSolicitud } from "@/lib/domain/types";
+import { etiquetaSubtipo, formato } from "@/lib/domain/comparativa";
 import { equivalenteOrientativo, formatoMoneda } from "@/lib/domain/moneda";
 
 type VistaPublicaProps = {
   token: string;
   solicitudId: string;
+  /** Producto/servicio y detalle que encabezan la comparativa (4.2.2). */
+  solicitud?: { titulo: string; descripcion?: string; subtipo?: SubtipoSolicitud } | null;
   cotizaciones: Cotizacion[];
   prosContras: Record<string, ProsContras>;
   recomendacion?: string;
@@ -27,6 +29,7 @@ type VistaPublicaProps = {
 export function VistaPublica({
   token,
   solicitudId,
+  solicitud,
   cotizaciones,
   prosContras,
   recomendacion,
@@ -118,6 +121,18 @@ export function VistaPublica({
             {bloqueada ? "Esta comparativa ya fue resuelta." : "Revise las opciones y decida cuál quiere."}
           </p>
         </div>
+
+        {solicitud ? (
+          <div className="mb-4 bg-white/80 border border-slate-200 rounded-2xl px-5 py-4">
+            <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+              {etiquetaSubtipo(solicitud.subtipo)}
+            </div>
+            <div className="text-sm font-semibold text-slate-900 mt-1">{solicitud.titulo}</div>
+            {solicitud.descripcion ? (
+              <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">{solicitud.descripcion}</p>
+            ) : null}
+          </div>
+        ) : null}
 
         {vencimiento ? (
           <div

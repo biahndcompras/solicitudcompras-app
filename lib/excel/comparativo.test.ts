@@ -99,3 +99,34 @@ describe("generarExcelComparativo", () => {
     expect(filaContras!.slice(1)).toContain("Más caro");
   });
 });
+// 4.2.2 — el glosario define la comparativa como "el producto/servicio a la izquierda y un
+// proveedor por columna". Sin estas filas el Excel comparaba precios sin declarar qué se compra.
+describe("4.2.2 · producto/servicio y detalle en la hoja Comparativo", () => {
+  it("encabeza con el producto/servicio y el detalle de la solicitud", () => {
+    const buffer = generarExcelComparativo({
+      solicitud: { ...solicitud, subtipo: "producto" },
+      comparativa,
+      cotizaciones: [
+        cot("c1", "CostaPrint", { neto: 100, total: 100, desglosado: false }),
+        cot("c2", "PlayaPromo", { neto: 90, total: 90, desglosado: false }),
+      ],
+    });
+    const libro = XLSX.read(buffer, { type: "buffer" });
+    const filas = XLSX.utils.sheet_to_json(libro.Sheets["Comparativo"], { header: 1 }) as unknown[][];
+    const texto = filas.flat().map((v) => String(v ?? ""));
+    expect(texto).toContain("Producto/Servicio:");
+    expect(texto).toContain("Producto");
+    expect(texto).toContain("Detalle:");
+    expect(texto).toContain("Sombrillas con logo");
+  });
+
+  it("sin subtipo no inventa: dice 'No especificado'", () => {
+    const buffer = generarExcelComparativo({ solicitud, comparativa, cotizaciones: [
+      cot("c1", "CostaPrint", { neto: 100, total: 100, desglosado: false }),
+      cot("c2", "PlayaPromo", { neto: 90, total: 90, desglosado: false }),
+    ] });
+    const libro = XLSX.read(buffer, { type: "buffer" });
+    const texto = (XLSX.utils.sheet_to_json(libro.Sheets["Comparativo"], { header: 1 }) as unknown[][]).flat().map((v) => String(v ?? ""));
+    expect(texto).toContain("No especificado");
+  });
+});

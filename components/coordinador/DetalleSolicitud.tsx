@@ -515,7 +515,7 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
                 />
               ) : etapa === 8 ? (
                 comparativaData ? (
-                  <ComparativaView solicitudId={solicitud.id} comparativa={comparativaData} cotizaciones={cotizaciones} onContinuar={() => setEtapa(9)} />
+                  <ComparativaView solicitudId={solicitud.id} solicitud={solicitud} comparativa={comparativaData} cotizaciones={cotizaciones} onContinuar={() => setEtapa(9)} />
                 ) : errorComparativa ? (
                   <div className="rounded-xl px-5 py-6 text-center border border-amber-200 bg-amber-50" role="alert">
                     <div className="text-sm font-semibold text-slate-900">No pudimos generar la comparativa</div>

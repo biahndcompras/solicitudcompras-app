@@ -3,6 +3,7 @@
 // 3 hojas: Comparativo / Detalle de cotizaciones / Requerimiento original.
 import * as XLSX from "xlsx";
 import type { Comparativa, Cotizacion, Solicitud } from "@/lib/domain/types";
+import { etiquetaSubtipo } from "@/lib/domain/comparativa";
 
 type DatosExcel = {
   solicitud: Solicitud;
@@ -24,6 +25,10 @@ function hojaComparativo(d: DatosExcel): (string | number)[][] {
   filas.push(["COMPARATIVO DE COTIZACIONES"]);
   filas.push(["Referencia:", d.solicitud.numeroReferencia ?? "—", "Tipo:", d.solicitud.tipo ?? "—"]);
   filas.push(["Solicitud:", d.solicitud.titulo]);
+  // 4.2.2 — "el producto/servicio a la izquierda": sin estas dos filas, el Excel comparaba
+  // precios sin declarar qué se está comprando ni con qué detalle.
+  filas.push(["Producto/Servicio:", etiquetaSubtipo(d.solicitud.subtipo)]);
+  filas.push(["Detalle:", d.solicitud.descripcion ?? "—"]);
   filas.push(["Solicitante:", d.solicitud.solicitanteNombre, "Área:", d.solicitud.areaSolicitante ?? "—"]);
   filas.push(["Fecha:", new Date().toISOString().split("T")[0]]);
   filas.push([]);

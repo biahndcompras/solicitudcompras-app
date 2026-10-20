@@ -1,7 +1,7 @@
 "use client";
 
-import type { Comparativa } from "@/lib/domain/types";
-import { formato } from "@/lib/domain/comparativa";
+import type { Comparativa, SubtipoSolicitud } from "@/lib/domain/types";
+import { etiquetaSubtipo, formato } from "@/lib/domain/comparativa";
 
 type CotizacionVista = {
   id: string;
@@ -20,12 +20,14 @@ type CotizacionVista = {
 
 type ComparativaViewProps = {
   solicitudId: string;
+  /** El ítem que se está comparando (4.2.2). Sin esto la tabla de precios flota sin decir de qué. */
+  solicitud: { titulo: string; descripcion?: string; subtipo?: SubtipoSolicitud };
   comparativa: Comparativa;
   cotizaciones: CotizacionVista[];
   onContinuar: () => void;
 };
 
-export function ComparativaView({ solicitudId, comparativa, cotizaciones, onContinuar }: ComparativaViewProps) {
+export function ComparativaView({ solicitudId, solicitud, comparativa, cotizaciones, onContinuar }: ComparativaViewProps) {
   const hayDiscrepancia = comparativa.discrepanciasDetectadas.length > 0;
   const urlExcel = `/api/solicitudes/${solicitudId}/comparativa/excel`;
 
@@ -49,6 +51,18 @@ export function ComparativaView({ solicitudId, comparativa, cotizaciones, onCont
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </div>
+      </div>
+
+      {/* 4.2.2 — el glosario define la comparativa como "el producto/servicio a la izquierda y
+          un proveedor por columna". Sin este bloque, quien la abre ve precios sin saber de qué. */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm px-5 py-4 mb-4">
+        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+          {etiquetaSubtipo(solicitud.subtipo)}
+        </div>
+        <div className="text-sm font-semibold text-slate-900 mt-1">{solicitud.titulo}</div>
+        {solicitud.descripcion ? (
+          <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">{solicitud.descripcion}</p>
+        ) : null}
       </div>
 
       {hayDiscrepancia ? (

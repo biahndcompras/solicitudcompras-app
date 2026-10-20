@@ -6,10 +6,12 @@ import Link from "next/link";
 import { VistaPublica } from "@/components/publica/VistaPublica";
 import { cotizacionesFixture, comparativaFixture, usuariosFixture } from "@/lib/fixtures";
 import { guardarDecisionToken } from "@/lib/enlaces-decision";
-import type { Cotizacion, ProsContras } from "@/lib/domain/types";
+import type { Cotizacion, ProsContras, SubtipoSolicitud } from "@/lib/domain/types";
 
 type Datos = {
   solicitudId: string;
+  /** Producto/servicio y detalle que encabezan la comparativa (4.2.2). */
+  solicitud?: { titulo: string; descripcion?: string; subtipo?: SubtipoSolicitud } | null;
   cotizaciones: Cotizacion[];
   prosContras: Record<string, ProsContras>;
   recomendacion?: string;
@@ -71,6 +73,7 @@ export default function ComparativaPublicaPage() {
         if (!activo) return;
         setDatos({
           solicitudId: d.solicitudId,
+          solicitud: d.solicitud ?? null,
           cotizaciones: Array.isArray(d.cotizaciones) ? d.cotizaciones : [],
           prosContras: d.comparativa?.prosContras ?? {},
           recomendacion: d.comparativa?.recomendacionComprador,
@@ -108,6 +111,7 @@ export default function ComparativaPublicaPage() {
     <VistaPublica
       token={token}
       solicitudId={datos.solicitudId}
+      solicitud={datos.solicitud ?? null}
       cotizaciones={datos.cotizaciones}
       prosContras={datos.prosContras}
       recomendacion={datos.recomendacion}

@@ -35,6 +35,8 @@ import { GET as getDocumento } from "./documento/route";
 import { GET as getLogo, POST as postLogo } from "./logo/route";
 
 const ID = "22222222-2222-4222-8222-222222222222";
+// Magic bytes de un PNG real: lo que el servidor debe comprobar (4.8.6).
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const SOLICITUD = {
   id: ID,
   solicitanteEmail: "mj.e2e@biabrands.co",
@@ -153,24 +155,54 @@ describe("GET /api/solicitudes/[id]/logo · material de marca del solicitante", 
 // subida igual de mal que protegía la descarga. Cualquiera con el UUID (que viaja en la URL y
 // en los enlaces) podía REEMPLAZAR el logo de una solicitud ajena. Se le aplica la misma regla
 // que al GET: rol de Compras o el correo dueño.
+// Se le da al route exactamente lo que él consume —`url` y `formData()`— en vez de un
+// `Request` real: pasarle un `FormData` de jsdom a un `Request` de Node no funciona (son
+// clases de realms distintos, el `Content-Type` no se arma y el cuerpo no se puede parsear).
+// El `archivo` sí es un `File` de verdad (pasa el `instanceof` y el `size`), porque el
+// `File` de jsdom no implementa `arrayBuffer()`, que es lo que el route usa para leerlo.
+function archivoFalso(nombre = "logo.png", contenido: Uint8Array = PNG): File {
+  const f = Object.create(File.prototype) as File;
+  Object.defineProperties(f, {
+    name: { value: nombre },
+    size: { value: contenido.byteLength },
+    type: { value: "" },
+    arrayBuffer: {
+      value: async () =>
+        contenido.buffer.slice(contenido.byteOffset, contenido.byteOffset + contenido.byteLength),
+    },
+  });
+  return f;
+}
+
+function subir(url: string, archivo: File = archivoFalso()) {
+  const req = {
+    url,
+    formData: async () => ({ get: (k: string) => (k === "archivo" ? archivo : null) }),
+  } as unknown as Request;
+  return postLogo(req, { params });
+}
+
 describe("POST /api/solicitudes/[id]/logo · no cualquiera reemplaza el material de marca", () => {
   // Se le da al route exactamente lo que él consume —`url` y `formData()`— en vez de un
   // `Request` real: pasarle un `FormData` de jsdom a un `Request` de Node no funciona (son
   // clases de realms distintos, el `Content-Type` no se arma y el cuerpo no se puede parsear).
   // El `archivo` sí es un `File` de verdad (pasa el `instanceof` y el `size`), porque el
   // `File` de jsdom no implementa `arrayBuffer()`, que es lo que el route usa para leerlo.
-  function archivoFalso(nombre = "logo.png"): File {
+  function archivoFalso(nombre = "logo.png", contenido: Uint8Array = PNG): File {
     const f = Object.create(File.prototype) as File;
     Object.defineProperties(f, {
       name: { value: nombre },
-      size: { value: 9 },
-      arrayBuffer: { value: async () => new Uint8Array([1, 2, 3]).buffer },
+      size: { value: contenido.byteLength },
+      type: { value: "" },
+      arrayBuffer: {
+        value: async () =>
+          contenido.buffer.slice(contenido.byteOffset, contenido.byteOffset + contenido.byteLength),
+      },
     });
     return f;
   }
 
-  function subir(url: string) {
-    const archivo = archivoFalso();
+  function subir(url: string, archivo: File = archivoFalso()) {
     const req = {
       url,
       formData: async () => ({ get: (k: string) => (k === "archivo" ? archivo : null) }),
@@ -201,6 +233,38 @@ describe("POST /api/solicitudes/[id]/logo · no cualquiera reemplaza el material
   it("un coordinador con sesión también puede (es material del que Compras responde)", async () => {
     sesion.mockResolvedValue({ rol: "coordinador", email: "coord@biafoods.co" });
     const res = await subir(`http://localhost/api/solicitudes/${ID}/logo`);
+    expect(res.status).toBe(200);
+    expect(guardarArchivoLogo).toHaveBeenCalledTimes(1);
+  });
+});
+// 4.8.6 — el cliente ya validaba los magic bytes, pero el servidor solo miraba el tamaño y el
+// nombre. Cualquiera podía subir un ejecutable renombrado a .png (o un PDF truncado) y quedaba
+// guardado. La validación del cliente no es una frontera de seguridad: se salta con curl.
+describe("POST /api/solicitudes/[id]/logo · el SERVIDOR valida el contenido (4.8.6)", () => {
+  const dueno = `http://localhost/api/solicitudes/${ID}/logo?email=mj.e2e%40biabrands.co`;
+
+  it("rechaza un .png cuyo contenido NO es un PNG (renombrado)", async () => {
+    const res = await subir(dueno, archivoFalso("logo.png", new Uint8Array([0x4d, 0x5a, 0x90, 0x00])));
+    expect(res.status).toBe(415);
+    expect(guardarArchivoLogo).not.toHaveBeenCalled();
+  });
+
+  it("rechaza una extensión no admitida aunque el contenido sea válido", async () => {
+    const res = await subir(dueno, archivoFalso("logo.txt", PNG));
+    expect(res.status).toBe(415);
+    expect(guardarArchivoLogo).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un PDF truncado (sin %%EOF)", async () => {
+    const roto = new TextEncoder().encode("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\n");
+    const res = await subir(dueno, archivoFalso("cotizacion.pdf", roto));
+    expect(res.status).toBe(415);
+    expect(guardarArchivoLogo).not.toHaveBeenCalled();
+  });
+
+  it("acepta un PDF completo", async () => {
+    const ok = new TextEncoder().encode("%PDF-1.4\n...\n%%EOF\n");
+    const res = await subir(dueno, archivoFalso("cotizacion.pdf", ok));
     expect(res.status).toBe(200);
     expect(guardarArchivoLogo).toHaveBeenCalledTimes(1);
   });

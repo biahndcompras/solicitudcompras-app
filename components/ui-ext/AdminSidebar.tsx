@@ -10,12 +10,13 @@ export type NavAdminItem = { href: string; label: string; icon: string };
 
 // Etiquetas específicas a propósito (no "Catálogo" genérico): el nombre dice lo
 // que hay dentro, para que se pueda predecir sin abrir la página.
+// "Umbrales y alertas" NO va en el menú de este piloto (decisión 2026-10-21). La ruta
+// `/admin/configuracion` y su lógica siguen existiendo: solo se oculta del sidebar.
 export const NAV_ADMIN: NavAdminItem[] = [
   { href: "/admin", label: "Dashboard", icon: "M4 20V10M10 20V4M16 20v-6M22 20H2" },
   { href: "/admin/procesos", label: "Procesos", icon: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5" },
   { href: "/admin/coordinadores", label: "Coordinadores", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" },
   { href: "/admin/campos", label: "Campos", icon: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" },
-  { href: "/admin/configuracion", label: "Umbrales y alertas", icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7.4-3a7.4 7.4 0 0 0-.12-1.45l2.1-1.64-2-3.46-2.48 1a7.4 7.4 0 0 0-2.5-1.45L14.2 2h-4l-.2 2.5a7.4 7.4 0 0 0-2.5 1.45l-2.48-1-2 3.46 2.1 1.64A7.4 7.4 0 0 0 4.6 12a7.4 7.4 0 0 0 .12 1.45l-2.1 1.64 2 3.46 2.48-1a7.4 7.4 0 0 0 2.5 1.45L10.2 22h4l.2-2.5a7.4 7.4 0 0 0 2.5-1.45l2.48 1 2-3.46-2.1-1.64A7.4 7.4 0 0 0 19.4 12z" },
   { href: "/admin/ajustes", label: "Mi perfil", icon: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" },
 ];
 

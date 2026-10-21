@@ -656,7 +656,7 @@ function PasoCaptura({
           <div>
             <label htmlFor="tipo-necesidad" className="block text-xs font-medium text-slate-700 mb-1.5">Tipo de necesidad</label>
             <select id="tipo-necesidad" value={estado.tipoNecesidad} onChange={(e) => set("tipoNecesidad", e.target.value)} className="w-full min-h-[44px] bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:bg-white transition-all cursor-pointer">
-              <option value="" disabled>Seleccioná una opción</option>
+              <option value="" disabled>Seleccione una opción</option>
               {CATEGORIAS.map((c) => (
                 <option key={c.clave} value={c.clave}>{c.etiqueta}</option>
               ))}

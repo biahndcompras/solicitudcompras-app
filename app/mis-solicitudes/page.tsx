@@ -124,7 +124,7 @@ function MisSolicitudesInner() {
             className="inline-flex items-center gap-1.5 min-h-[44px] text-xs font-medium text-slate-500 hover:text-sky-600 transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 6.25A2.25 2.25 0 0 1 14.25 4h4A2.75 2.75 0 0 1 21 6.75v10.5A2.75 2.75 0 0 1 18.25 20h-4A2.25 2.25 0 0 1 12 17.75z"/><path d="M12 6.25A2.25 2.25 0 0 0 9.75 4h-4A2.75 2.75 0 0 0 3 6.75v10.5A2.75 2.75 0 0 0 5.75 20h4A2.25 2.25 0 0 0 12 17.75"/></svg>
-            ¿Primera vez por acá? Mirá la guía rápida
+            ¿Primera vez aquí? Vea la guía rápida
           </Link>
         </p>
 

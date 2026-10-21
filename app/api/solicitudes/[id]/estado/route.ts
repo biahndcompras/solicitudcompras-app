@@ -115,7 +115,7 @@ export async function PATCH(
         return NextResponse.json(
           {
             error:
-              "Escribí la recomendación de Compras antes de enviar la comparativa. Sin ella el solicitante no tiene un criterio humano para decidir.",
+              "Escriba la recomendación de Compras antes de enviar la comparativa. Sin ella el solicitante no tiene un criterio humano para decidir.",
           },
           { status: 409 }
         );

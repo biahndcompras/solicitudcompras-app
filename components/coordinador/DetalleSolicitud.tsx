@@ -207,7 +207,7 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
         setErrorComparativa(
           e instanceof Error && !(e instanceof TypeError) && e.message
             ? e.message
-            : "No se pudo generar la comparativa. Intentá de nuevo."
+            : "No se pudo generar la comparativa. Intente de nuevo."
         );
       })
       .finally(() => {

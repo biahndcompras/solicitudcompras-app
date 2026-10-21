@@ -223,7 +223,7 @@ function marcarDecisionEnPagina(guardadoEn: number | null): void {
 export type CoordinadorPublico = { id: string; nombre: string; categorias: string[] };
 
 const ERROR_CONEXION =
-  "No pudimos conectarnos con el servidor. Revisá tu conexión a internet e intentá de nuevo.";
+  "No pudimos conectarnos con el servidor. Revise su conexión a internet e intente de nuevo.";
 
 /**
  * Traduce fallos técnicos (fetch, red, timeout) a un mensaje que no culpa al usuario.
@@ -239,7 +239,7 @@ export function mensajeErrorAmigable(e: unknown, porDefecto: string): string {
     return ERROR_CONEXION;
   }
   if (/aborted|timeout|timed out|etimedout/i.test(crudo)) {
-    return "La solicitud tardó demasiado. Intentá de nuevo en un momento.";
+    return "La solicitud tardó demasiado. Intente de nuevo en un momento.";
   }
   if (!esFraseParaPersona(crudo)) return porDefecto;
   return crudo;
@@ -679,7 +679,7 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
     } catch (e) {
       setEnvio({
         estado: "error",
-        mensaje: mensajeErrorAmigable(e, "No se pudo enviar la solicitud. Intentá de nuevo."),
+        mensaje: mensajeErrorAmigable(e, "No se pudo enviar la solicitud. Intente de nuevo."),
       });
     } finally {
       enviandoRef.current = false;

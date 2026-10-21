@@ -33,7 +33,7 @@ const IMPERATIVOS = /Cargá|Agregá|Adjuntá|Verificá|Generar comparativa|Míni
 describe("CargaCotizaciones · solicitud viva", () => {
   it("pide el trabajo con imperativos y deja las acciones disponibles", () => {
     render(<CargaCotizaciones {...props()} />);
-    expect(screen.getByText(/Cargá cada oferta/)).toBeInTheDocument();
+    expect(screen.getByText(/Cargue cada oferta/)).toBeInTheDocument();
     expect(screen.getByText("Mínimo 2 para comparativa")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Agregar cotización manual/ })).toBeInTheDocument();
   });
@@ -61,7 +61,7 @@ describe("CargaCotizaciones · solicitud terminal (solo lectura)", () => {
     render(<CargaCotizaciones {...props({ cotizaciones: [cot(), cot({ id: "c-2" })], soloLectura: true })} />);
     expect(screen.getByRole("heading", { name: "Cotizaciones registradas" })).toBeInTheDocument();
     expect(screen.getByText("2 registradas")).toBeInTheDocument();
-    expect(screen.queryByText(/Cargá cada oferta/)).toBeNull();
+    expect(screen.queryByText(/Cargue cada oferta/)).toBeNull();
     expect(screen.queryByText("Mínimo 2 para comparativa")).toBeNull();
     expect(screen.queryByRole("button", { name: /Agregar cotización manual/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Generar comparativa/ })).toBeNull();

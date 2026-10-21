@@ -151,7 +151,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
               ? count === 0
                 ? "No se registraron ofertas de proveedores para comparar. El ciclo está cerrado."
                 : `Estas son las ${count} ${count === 1 ? "oferta cargada" : "ofertas cargadas"} con las que se comparó esta solicitud. El ciclo está cerrado.`
-              : "Cargá cada oferta con sus datos, o adjuntá el archivo del proveedor para que la IA la lea."}
+              : "Cargue cada oferta con sus datos, o adjunte el archivo del proveedor para que la IA la lea."}
           </p>
         </div>
         <div className="text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl">
@@ -427,7 +427,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
             ) : (
               <>
                 <div className="text-base font-semibold text-slate-900">Todavía no hay cotizaciones</div>
-                <div className="text-sm text-slate-500 mt-1">Agregá la primera con el botón de arriba, o adjuntá el archivo de un proveedor.</div>
+                <div className="text-sm text-slate-500 mt-1">Agregue la primera con el botón de arriba, o adjunte el archivo de un proveedor.</div>
               </>
             )}
           </div>

@@ -47,7 +47,7 @@ export function PedirInformacion({
 
   async function enviar() {
     if (validas.length === 0) {
-      setError("Escribí al menos una pregunta.");
+      setError("Escriba al menos una pregunta.");
       return;
     }
     setEnviando(true);

@@ -59,7 +59,7 @@ export function ResponderPreguntas({
     } catch (e) {
       setError(
         e instanceof Error && /failed to fetch|networkerror|load failed/i.test(e.message)
-          ? "Se cortó la conexión y no sabemos si se guardó. Volvé a intentar: si ya había quedado, no se duplica."
+          ? "Se cortó la conexión y no sabemos si se guardó. Vuelva a intentar: si ya había quedado, no se duplica."
           : e instanceof Error
             ? e.message
             : "No pudimos guardar su respuesta"

@@ -560,7 +560,11 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
 
           {/* Formulario original + historial de rondas: el contexto completo para el
               coordinador, al final de la columna derecha (4.13.20). */}
-          <FormularioYRespuestas preguntas={formulario} rondas={rondas} rondaAbierta={rondaAbierta} />
+          <FormularioYRespuestas
+            preguntas={formulario}
+            rondas={rondas}
+            rondaAbierta={rondaAbierta ? (solicitud.informacionPreguntas?.ronda ?? null) : null}
+          />
         </aside>
       </div>
 

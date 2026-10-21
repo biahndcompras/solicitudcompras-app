@@ -68,20 +68,87 @@ export function armarFormularioOriginal(
 export function completarRondas(rondas: RondaPreguntas[], solicitud: Solicitud): RondaPreguntas[] {
   const actual = solicitud.informacionPreguntas;
   if (!actual) return rondas;
-  if (rondas.some((r) => r.ronda === actual.ronda)) return rondas;
 
   const respuesta = solicitud.informacionRespuesta?.ronda === actual.ronda ? solicitud.informacionRespuesta : undefined;
-  return [
-    ...rondas,
-    {
-      id: `solicitud-${solicitud.id}-ronda-${actual.ronda}`,
-      solicitudId: solicitud.id,
-      ronda: actual.ronda,
-      preguntas: actual.preguntas,
-      respuestas: respuesta?.respuestas,
-      pedidaPor: actual.pedidaPor,
-      pedidaEn: actual.pedidaEn,
-      respondidaEn: respuesta?.respondidaEn,
-    },
-  ];
+  const detallada: RondaPreguntas = {
+    id: `solicitud-${solicitud.id}-ronda-${actual.ronda}`,
+    solicitudId: solicitud.id,
+    ronda: actual.ronda,
+    preguntas: actual.preguntas,
+    respuestas: respuesta?.respuestas,
+    pedidaPor: actual.pedidaPor,
+    pedidaEn: actual.pedidaEn,
+    respondidaEn: respuesta?.respondidaEn,
+    detalleDisponible: true,
+  };
+
+  const indice = rondas.findIndex((r) => r.ronda === actual.ronda);
+  if (indice === -1) return [...rondas, detallada];
+  // Si la ronda abierta llegó como marcador desde el evento (sin detalle), se mejora con
+  // el texto real: es la única que sí sabemos completa.
+  if (rondas[indice].detalleDisponible === false) {
+    const copia = [...rondas];
+    copia[indice] = {
+      ...detallada,
+      respuestas: rondas[indice].respuestas ?? detallada.respuestas,
+      respondidaEn: rondas[indice].respondidaEn ?? detallada.respondidaEn,
+    };
+    return copia;
+  }
+  return rondas;
+}
+
+type EventoResumen = {
+  tipoEvento: string;
+  nota?: string;
+  timestamp: string;
+  actorIdentificador?: string;
+};
+
+/**
+ * Reconstruye las rondas ANTERIORES a la migración 024 a partir de los eventos.
+ *
+ * De esas rondas no queda el texto (el evento solo guarda "Ronda N: X pregunta(s)"), pero el
+ * número, la fecha y si se respondió sí. Se muestran como cards incompletas, avisando que el
+ * detalle no se guardó: preferimos un historial honesto a uno que finja estar completo.
+ */
+export function rondasDesdeEventos(
+  solicitudId: string,
+  eventos: EventoResumen[],
+  rondas: RondaPreguntas[]
+): RondaPreguntas[] {
+  const porRonda = new Map(rondas.map((r) => [r.ronda, r]));
+  const pedidas = new Map<number, { en: string; por?: string; total: number }>();
+  const respondidas = new Map<number, { en: string; total: number }>();
+
+  for (const ev of eventos) {
+    if (ev.tipoEvento === "pregunta_solicitante") {
+      const m = /^Ronda (\d+):\s*(\d+)\s*pregunta/i.exec(ev.nota ?? "");
+      if (m) pedidas.set(Number(m[1]), { en: ev.timestamp, por: ev.actorIdentificador, total: Number(m[2]) });
+    } else if (ev.tipoEvento === "respuesta_solicitante") {
+      const m = /^Ronda (\d+)\s*respondida:\s*(\d+)/i.exec(ev.nota ?? "");
+      if (m) respondidas.set(Number(m[1]), { en: ev.timestamp, total: Number(m[2]) });
+    }
+  }
+
+  const numeros = new Set<number>([...pedidas.keys(), ...respondidas.keys()]);
+  for (const n of numeros) {
+    if (porRonda.has(n)) continue;
+    const pedida = pedidas.get(n);
+    const respondida = respondidas.get(n);
+    porRonda.set(n, {
+      id: `evento-${solicitudId}-ronda-${n}`,
+      solicitudId,
+      ronda: n,
+      preguntas: [],
+      pedidaEn: pedida?.en ?? respondida!.en,
+      pedidaPor: pedida?.por,
+      respondidaEn: respondida?.en,
+      detalleDisponible: false,
+      totalPreguntas: pedida?.total ?? 0,
+      totalRespuestas: respondida?.total,
+    });
+  }
+
+  return [...porRonda.values()].sort((a, b) => a.ronda - b.ronda);
 }

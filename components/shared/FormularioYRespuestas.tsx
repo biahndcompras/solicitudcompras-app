@@ -6,8 +6,11 @@ type Props = {
   preguntas: PreguntaOriginal[];
   /** Historial de rondas, en orden. */
   rondas: RondaPreguntas[];
-  /** La solicitud tiene una ronda esperando respuesta. */
-  rondaAbierta?: boolean;
+  /**
+   * Número de la ronda que espera respuesta (si hay). No alcanza con "hay una abierta":
+   * el historial puede traer rondas viejas con número mayor que la abierta y marcarlas mal.
+   */
+  rondaAbierta?: number | null;
 };
 
 function fechaCorta(iso: string): string {
@@ -23,8 +26,7 @@ function fechaCorta(iso: string): string {
  * respondió en el formulario, y debajo una card por ronda. Antes solo se veía la última
  * ronda y los campos ya fusionados, así que el contexto de las rondas anteriores se perdía.
  */
-export function FormularioYRespuestas({ preguntas, rondas, rondaAbierta = false }: Props) {
-  const ultimaRonda = rondas.reduce((max, r) => Math.max(max, r.ronda), 0);
+export function FormularioYRespuestas({ preguntas, rondas, rondaAbierta = null }: Props) {
 
   return (
     <>
@@ -53,7 +55,9 @@ export function FormularioYRespuestas({ preguntas, rondas, rondaAbierta = false 
       </section>
 
       {rondas.map((r) => {
-        const abierta = rondaAbierta && r.ronda === ultimaRonda;
+        const abierta = rondaAbierta != null && r.ronda === rondaAbierta;
+        const sinDetalle = r.detalleDisponible === false;
+        const respondida = sinDetalle ? Boolean(r.respondidaEn) : !abierta;
         return (
           <section key={r.id} className="bg-white rounded-2xl border border-sky-200/70 shadow-sm p-5">
             <div className="flex items-start justify-between gap-2 mb-3">
@@ -67,13 +71,29 @@ export function FormularioYRespuestas({ preguntas, rondas, rondaAbierta = false 
               <span
                 className={
                   "shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full " +
-                  (abierta ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800")
+                  (respondida ? "bg-emerald-100 text-emerald-800" : abierta ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600")
                 }
               >
-                {abierta ? "Esperando respuesta" : "Respondida"}
+                {respondida ? "Respondida" : abierta ? "Esperando respuesta" : "Sin respuesta registrada"}
               </span>
             </div>
 
+            {sinDetalle ? (
+              <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
+                <p className="text-xs text-slate-700">
+                  {r.totalPreguntas && r.totalPreguntas > 0
+                    ? `Se hicieron ${r.totalPreguntas} ${r.totalPreguntas === 1 ? "pregunta" : "preguntas"}.`
+                    : "Se registró una respuesta."}{" "}
+                  El detalle no se guardó: esta ronda es anterior al 21 de octubre de 2026.
+                </p>
+                {r.respondidaEn ? (
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Respondida el {fechaCorta(r.respondidaEn)}
+                    {r.totalRespuestas !== undefined ? ` · ${r.totalRespuestas} respuesta(s)` : ""}.
+                  </p>
+                ) : null}
+              </div>
+            ) : (
             <ul className="space-y-2">
               {r.preguntas.map((p) => {
                 const valor = r.respuestas?.[p.campoKey];
@@ -85,12 +105,13 @@ export function FormularioYRespuestas({ preguntas, rondas, rondaAbierta = false 
                     ) : abierta ? (
                       <span className="block text-[11px] text-slate-400 mt-0.5">Sin responder todavía</span>
                     ) : (
-                      <span className="block text-[11px] text-slate-400 mt-0.5">No lo sé</span>
+                      <span className="block text-[11px] text-slate-400 mt-0.5">Sin respuesta registrada</span>
                     )}
                   </li>
                 );
               })}
             </ul>
+            )}
           </section>
         );
       })}

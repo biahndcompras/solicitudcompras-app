@@ -7,7 +7,7 @@ import { CancelarSolicitudButton } from "@/components/CancelarSolicitudButton";
 import { ReasignarCoordinador } from "@/components/ReasignarCoordinador";
 import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
 import { FormularioYRespuestas } from "@/components/shared/FormularioYRespuestas";
-import { armarFormularioOriginal, completarRondas } from "@/lib/domain/formulario";
+import { armarFormularioOriginal, completarRondas, rondasDesdeEventos } from "@/lib/domain/formulario";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { duracionAtencion } from "@/lib/domain/semaforo";
@@ -43,7 +43,7 @@ export default async function AdminSolicitudDetallePage({
     repo.listarRondasPreguntas(id),
     s.plantillaId ? repo.listarCamposDePlantillaPorId(s.plantillaId) : Promise.resolve([]),
   ]);
-  const rondas = completarRondas(rondasGuardadas, s);
+  const rondas = completarRondas(rondasDesdeEventos(id, eventos, rondasGuardadas), s);
   const formulario = armarFormularioOriginal(camposPlantilla, respuestas);
 
   // El admin ve TODO: lo que respondió el solicitante, las cotizaciones con precios, la
@@ -269,7 +269,11 @@ export default async function AdminSolicitudDetallePage({
             </div>
           </div>
 
-          <FormularioYRespuestas preguntas={formulario} rondas={rondas} rondaAbierta={s.informacionPendiente === true} />
+          <FormularioYRespuestas
+            preguntas={formulario}
+            rondas={rondas}
+            rondaAbierta={s.informacionPendiente ? (s.informacionPreguntas?.ronda ?? null) : null}
+          />
         </aside>
       </div>
     </AdminShell>

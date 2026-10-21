@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { armarFormularioOriginal, completarRondas } from "./formulario";
+import { armarFormularioOriginal, completarRondas, rondasDesdeEventos } from "./formulario";
 import type { CampoCatalogo, RespuestaCampo, RondaPreguntas, Solicitud } from "./types";
 
 function campo(campoKey: string, label: string, orden = 0): CampoCatalogo {
@@ -100,5 +100,65 @@ describe("completarRondas", () => {
     } as Solicitud;
 
     expect(completarRondas([existente], s)).toHaveLength(1);
+  });
+
+  it("mejora un marcador con el detalle de la ronda abierta", () => {
+    const s = {
+      ...base,
+      informacionPendiente: true,
+      informacionPreguntas: {
+        ronda: 2,
+        pedidaEn: "2026-10-14T09:15:00Z",
+        preguntas: [{ campoKey: "garantia", pregunta: "¿Garantía?" }],
+      },
+    } as Solicitud;
+    const marcador: RondaPreguntas = {
+      id: "e2",
+      solicitudId: "s1",
+      ronda: 2,
+      preguntas: [],
+      pedidaEn: "2026-10-14T09:15:00Z",
+      detalleDisponible: false,
+      totalPreguntas: 1,
+    };
+
+    const out = completarRondas([marcador], s);
+
+    expect(out).toHaveLength(1);
+    expect(out[0].detalleDisponible).toBe(true);
+    expect(out[0].preguntas[0].pregunta).toBe("¿Garantía?");
+  });
+});
+
+describe("rondasDesdeEventos", () => {
+  it("reconstruye las rondas sin detalle y no pisa las que sí lo tienen", () => {
+    const eventos = [
+      { tipoEvento: "respuesta_solicitante", nota: "Ronda 1 respondida: 2 campo(s)", timestamp: "2026-10-14T09:03:00Z", actorIdentificador: "s@b.co" },
+      { tipoEvento: "pregunta_solicitante", nota: "Ronda 1: 2 pregunta(s) al solicitante", timestamp: "2026-10-14T08:56:00Z", actorIdentificador: "c@b.co" },
+      { tipoEvento: "pregunta_solicitante", nota: "Ronda 2: 1 pregunta(s) al solicitante", timestamp: "2026-10-14T09:15:00Z", actorIdentificador: "c@b.co" },
+    ];
+    const real: RondaPreguntas = {
+      id: "r2",
+      solicitudId: "s1",
+      ronda: 2,
+      preguntas: [{ campoKey: "x", pregunta: "¿X?" }],
+      pedidaEn: "2026-10-14T09:15:00Z",
+      detalleDisponible: true,
+    };
+
+    const out = rondasDesdeEventos("s1", eventos, [real]);
+
+    expect(out.map((r) => r.ronda)).toEqual([1, 2]);
+    expect(out[0].detalleDisponible).toBe(false);
+    expect(out[0].totalPreguntas).toBe(2);
+    expect(out[0].totalRespuestas).toBe(2);
+    expect(out[0].respondidaEn).toBe("2026-10-14T09:03:00Z");
+    expect(out[1].detalleDisponible).toBe(true);
+    expect(out[1].preguntas[0].pregunta).toBe("¿X?");
+  });
+
+  it("ignora eventos con nota que no se puede interpretar", () => {
+    const out = rondasDesdeEventos("s1", [{ tipoEvento: "pregunta_solicitante", nota: "texto libre", timestamp: "2026-10-14T09:15:00Z" }], []);
+    expect(out).toEqual([]);
   });
 });

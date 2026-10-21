@@ -150,6 +150,15 @@ export type RondaPreguntas = {
   pedidaPor?: string;
   pedidaEn: string;
   respondidaEn?: string;
+  /**
+   * `false` en rondas anteriores a la migración 024: solo queda el resumen del evento
+   * ("Ronda N: X pregunta(s)"), no el texto ni las respuestas.
+   */
+  detalleDisponible?: boolean;
+  /** Preguntas que se hicieron cuando el detalle no está disponible. */
+  totalPreguntas?: number;
+  /** Respuestas registradas cuando el detalle no está disponible. */
+  totalRespuestas?: number;
 };
 
 export type RespuestaCampo = {

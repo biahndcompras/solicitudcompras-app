@@ -49,7 +49,7 @@ describe("FormularioYRespuestas", () => {
       <FormularioYRespuestas
         preguntas={[{ campoKey: "cantidad", label: "Cantidad", valor: "45", origen: "assessment" }]}
         rondas={rondas}
-        rondaAbierta
+        rondaAbierta={2}
       />
     );
 
@@ -62,6 +62,65 @@ describe("FormularioYRespuestas", () => {
     expect(screen.getByText("Esperando respuesta")).toBeInTheDocument();
     expect(screen.getByText("Respondida")).toBeInTheDocument();
     expect(screen.getByText("Sin responder todavía")).toBeInTheDocument();
+  });
+
+  it("muestra las rondas antiguas sin detalle, avisando que no se guardó", () => {
+    render(
+      <FormularioYRespuestas
+        preguntas={[]}
+        rondas={[
+          {
+            id: "e1",
+            solicitudId: "s1",
+            ronda: 1,
+            preguntas: [],
+            pedidaEn: "2026-10-07T11:00:00Z",
+            respondidaEn: "2026-10-07T11:48:00Z",
+            detalleDisponible: false,
+            totalPreguntas: 2,
+            totalRespuestas: 2,
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText(/Se hicieron 2 preguntas/)).toBeInTheDocument();
+    expect(screen.getByText(/detalle no se guardó/)).toBeInTheDocument();
+    expect(screen.getByText("Respondida")).toBeInTheDocument();
+  });
+
+  it("no marca como respondida la ronda abierta si hay un marcador viejo con número mayor", () => {
+    // Regresión: la ronda abierta era 3 y un marcador de la ronda 4 (sin detalle) la dejaba
+    // como "Respondida" por usar el número máximo en vez del número real de la abierta.
+    render(
+      <FormularioYRespuestas
+        preguntas={[]}
+        rondas={[
+          {
+            id: "r3",
+            solicitudId: "s1",
+            ronda: 3,
+            preguntas: [{ campoKey: "garantia", pregunta: "¿Garantía?" }],
+            pedidaEn: "2026-10-21T10:00:00Z",
+          },
+          {
+            id: "e4",
+            solicitudId: "s1",
+            ronda: 4,
+            preguntas: [],
+            pedidaEn: "2026-10-14T08:55:00Z",
+            respondidaEn: "2026-10-14T08:55:00Z",
+            detalleDisponible: false,
+            totalPreguntas: 0,
+            totalRespuestas: 1,
+          },
+        ]}
+        rondaAbierta={3}
+      />
+    );
+
+    expect(screen.getByText("Sin responder todavía")).toBeInTheDocument();
+    expect(screen.getAllByText("Esperando respuesta")).toHaveLength(1);
   });
 
   it("sin preguntas ni rondas lo dice explícitamente (no deja un hueco)", () => {

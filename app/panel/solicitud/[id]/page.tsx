@@ -5,7 +5,7 @@ import { Badge, type BadgeTone } from "@/components/Badge";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { formatoFechaLegible } from "@/lib/domain/semaforo";
 import type { Decision } from "@/lib/domain/types";
-import { armarFormularioOriginal, completarRondas } from "@/lib/domain/formulario";
+import { armarFormularioOriginal, completarRondas, rondasDesdeEventos } from "@/lib/domain/formulario";
 
 const repo = new PostgresRepositorio();
 
@@ -22,7 +22,10 @@ export default async function SolicitudDetallePage({
   // Campos que el solicitante respondió: durante el wizard y al contestar preguntas de
   // Compras. Antes solo existían dentro del PDF.
   const respuestas = await repo.listarRespuestas(id);
-  const rondas = completarRondas(await repo.listarRondasPreguntas(id), solicitud);
+  // Las rondas previas a la migración 024 no tienen texto: se reconstruyen del resumen del
+  // evento para al menos mostrarlas como incompletas (no inventar ni esconderlas).
+  const eventos = await repo.listarEventos(id);
+  const rondas = completarRondas(rondasDesdeEventos(id, eventos, await repo.listarRondasPreguntas(id)), solicitud);
   // El cuestionario original se lee de la plantilla CONGELADA de la solicitud (RF-55), no de
   // la vigente: si el admin la edita, el detalle no debe mostrar preguntas que no se hicieron.
   const camposPlantilla = solicitud.plantillaId

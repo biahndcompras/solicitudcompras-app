@@ -8,6 +8,7 @@ import { ComparativaView } from "./Comparativa";
 import { Recomendacion } from "./Recomendacion";
 import { Modal } from "./Modal";
 import { PedirInformacion, type CampoParaPreguntar } from "./PedirInformacion";
+import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
 import { api } from "@/lib/api-client";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { formatoFechaLegible, fechaInput } from "@/lib/domain/semaforo";
@@ -613,6 +614,9 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
               ) : null}
             </div>
           </div>
+
+          {/* Documentos adjuntos (4.4.12): Compras sube y también ve lo que subió el solicitante. */}
+          <DocumentosAdjuntos solicitudId={solicitud.id} />
         </aside>
       </div>
 

@@ -6,6 +6,7 @@ import { SemParoBadge } from "@/components/Semaforo";
 import { TrackerEtapas } from "@/components/TrackerEtapas";
 import { CTADecision } from "@/components/solicitante/CTADecision";
 import { ResponderPreguntas } from "@/components/solicitante/ResponderPreguntas";
+import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
 import { duracionAtencion, formatoFechaLegible } from "@/lib/domain/semaforo";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
@@ -141,6 +142,9 @@ export default async function DetalleSolicitudSolicitantePage({
             </>
           )}
         </div>
+
+        {/* El solicitante también puede adjuntar (4.4.12): aclaraciones, fichas, fotos. */}
+        <DocumentosAdjuntos solicitudId={solicitud.id} email={email} puedeSubir />
 
         {/* P2-c: el detalle también es un lugar desde donde se decide, no solo el listado. */}
         <CTADecision solicitudId={solicitud.id} estado={solicitud.estado} />

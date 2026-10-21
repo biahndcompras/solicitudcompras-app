@@ -276,6 +276,47 @@ export const api = {
     });
   },
 
+  // Documentos adjuntos (4.4.12). El correo es la identidad del solicitante (no tiene sesión);
+  // para Compras va vacío y manda la cookie de sesión.
+  listarAdjuntos(solicitudId: string, email?: string): Promise<{ adjuntos: import("@/lib/domain/types").Adjunto[] }> {
+    const q = email ? `?email=${encodeURIComponent(email)}` : "";
+    return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}/adjuntos${q}`).then((r) => json(r));
+  },
+
+  subirAdjunto(solicitudId: string, archivo: File, email?: string): Promise<{ adjunto: import("@/lib/domain/types").Adjunto }> {
+    const form = new FormData();
+    form.append("archivo", archivo);
+    const q = email ? `?email=${encodeURIComponent(email)}` : "";
+    return fetch(`/api/solicitudes/${encodeURIComponent(solicitudId)}/adjuntos${q}`, {
+      method: "POST",
+      body: form,
+    }).then(async (r) => {
+      if (!r.ok) {
+        const detalle = await r.json().catch(() => ({ error: "No se pudo subir el documento" }));
+        throw new Error(detalle.error ?? "No se pudo subir el documento");
+      }
+      return r.json();
+    });
+  },
+
+  eliminarAdjunto(solicitudId: string, adjuntoId: string, email?: string): Promise<void> {
+    const q = email ? `?email=${encodeURIComponent(email)}` : "";
+    return fetch(
+      `/api/solicitudes/${encodeURIComponent(solicitudId)}/adjuntos/${encodeURIComponent(adjuntoId)}${q}`,
+      { method: "DELETE" }
+    ).then(async (r) => {
+      if (!r.ok) {
+        const detalle = await r.json().catch(() => ({ error: "No se pudo eliminar el documento" }));
+        throw new Error(detalle.error ?? "No se pudo eliminar el documento");
+      }
+    });
+  },
+
+  urlAdjunto(solicitudId: string, adjuntoId: string, email?: string): string {
+    const q = email ? `?email=${encodeURIComponent(email)}` : "";
+    return `/api/solicitudes/${encodeURIComponent(solicitudId)}/adjuntos/${encodeURIComponent(adjuntoId)}${q}`;
+  },
+
   listarCoordinadoresPublicos(): Promise<{ id: string; nombre: string; categorias: string[] }[]> {
     return fetch("/api/coordinadores", { method: "GET" }).then((r) => json<{ id: string; nombre: string; categorias: string[] }[]>(r));
   },

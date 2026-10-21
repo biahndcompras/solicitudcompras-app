@@ -4,6 +4,7 @@ import type { Pool } from "pg";
 import { esTerminal, esTransicionValida } from "@/lib/domain/state-machine";
 import { pool as obtenerPool } from "./pool";
 import type {
+  Adjunto,
   CampoCatalogo,
   Comparativa,
   CorreoEnviado,
@@ -59,6 +60,20 @@ function filaSolicitud(f: Record<string, unknown>): Solicitud {
     informacionDesde: f.informacion_desde ? new Date(f.informacion_desde as string).toISOString() : undefined,
     informacionRespuesta: (f.informacion_respuesta as RespuestaDelSolicitante | null) ?? undefined,
     archivoLogoNombre: (f.archivo_logo_nombre as string) ?? undefined,
+  };
+}
+
+function filaAdjunto(f: Record<string, unknown>): Adjunto {
+  return {
+    id: String(f.id),
+    solicitudId: String(f.solicitud_id),
+    tipo: (f.tipo as Adjunto["tipo"]) ?? "anexo",
+    nombreArchivo: String(f.nombre_archivo),
+    mimeType: (f.mime_type as string) ?? undefined,
+    tamanoBytes: f.tamano_bytes != null ? Number(f.tamano_bytes) : undefined,
+    subidoPorEmail: (f.subido_por_email as string) ?? undefined,
+    creadoEn: aISO(f.creado_en) ?? "",
+    contenido: f.contenido ? new Uint8Array(f.contenido as Buffer) : undefined,
   };
 }
 
@@ -757,6 +772,117 @@ export class PostgresRepositorio implements Repositorio {
       `UPDATE solicitud SET archivo_logo_nombre = $2, archivo_logo_bytea = $3 WHERE id = $1`,
       [solicitudId, nombre, Buffer.from(bytea)]
     );
+  }
+
+  // ---------- Documentos adjuntos (migración 021) ----------
+
+  /**
+   * Alta del documento + evento de trazabilidad en la MISMA transacción: si el evento falla, el
+   * archivo no queda huérfano (y al revés). `ruta_almacenamiento` es lógica: el binario vive en
+   * `contenido` (bytea), como el logo.
+   */
+  async crearAdjunto(input: {
+    solicitudId: string;
+    nombreArchivo: string;
+    mimeType?: string;
+    contenido: Uint8Array;
+    subidoPorEmail?: string;
+    actorTipo?: "coordinador" | "admin" | "solicitante";
+  }): Promise<Adjunto> {
+    const client = await this.pg.connect();
+    try {
+      await client.query("BEGIN");
+      const res = await client.query(
+        `INSERT INTO adjunto
+           (solicitud_id, tipo, nombre_archivo, ruta_almacenamiento, mime_type, tamano_bytes,
+            subido_por_email, contenido)
+         VALUES ($1, 'anexo', $2, $3, $4, $5, $6, $7)
+         RETURNING id, solicitud_id, nombre_archivo, mime_type, tamano_bytes, subido_por_email, creado_en`,
+        [
+          input.solicitudId,
+          input.nombreArchivo,
+          `adjuntos/${input.solicitudId}/${input.nombreArchivo}`,
+          input.mimeType ?? null,
+          input.contenido.byteLength,
+          input.subidoPorEmail ?? null,
+          Buffer.from(input.contenido),
+        ]
+      );
+      await client.query(
+        `INSERT INTO evento_trazabilidad
+           (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota)
+         VALUES ($1, 'adjunto', $2, $3, $4)`,
+        [
+          input.solicitudId,
+          input.actorTipo ?? "coordinador",
+          input.subidoPorEmail ?? null,
+          `Documento adjuntado: ${input.nombreArchivo}`,
+        ]
+      );
+      await client.query("COMMIT");
+      return filaAdjunto(res.rows[0]);
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  async listarAdjuntos(solicitudId: string): Promise<Adjunto[]> {
+    const res = await this.pg.query(
+      `SELECT id, solicitud_id, nombre_archivo, mime_type, tamano_bytes, subido_por_email, creado_en
+         FROM adjunto WHERE solicitud_id = $1 ORDER BY creado_en DESC`,
+      [solicitudId]
+    );
+    return res.rows.map(filaAdjunto);
+  }
+
+  async obtenerAdjunto(solicitudId: string, adjuntoId: string): Promise<Adjunto | null> {
+    const res = await this.pg.query(
+      `SELECT * FROM adjunto WHERE id = $1 AND solicitud_id = $2 LIMIT 1`,
+      [adjuntoId, solicitudId]
+    );
+    return res.rows[0] ? filaAdjunto(res.rows[0]) : null;
+  }
+
+  /** Borra el documento y deja el evento. Devuelve `false` si no existía en esa solicitud. */
+  async eliminarAdjunto(input: {
+    solicitudId: string;
+    adjuntoId: string;
+    actorTipo?: string;
+    actorIdentificador?: string;
+  }): Promise<boolean> {
+    const client = await this.pg.connect();
+    try {
+      await client.query("BEGIN");
+      const res = await client.query(
+        `DELETE FROM adjunto WHERE id = $1 AND solicitud_id = $2 RETURNING nombre_archivo`,
+        [input.adjuntoId, input.solicitudId]
+      );
+      if (!res.rows[0]) {
+        await client.query("ROLLBACK");
+        return false;
+      }
+      await client.query(
+        `INSERT INTO evento_trazabilidad
+           (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota)
+         VALUES ($1, 'adjunto', $2, $3, $4)`,
+        [
+          input.solicitudId,
+          input.actorTipo ?? "coordinador",
+          input.actorIdentificador ?? null,
+          `Documento eliminado: ${String(res.rows[0].nombre_archivo)}`,
+        ]
+      );
+      await client.query("COMMIT");
+      return true;
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
   }
 
   /**

@@ -43,6 +43,9 @@ export type DatosCorreo = {
   preguntas?: { pregunta: string; respuesta?: string }[];
   ronda?: number;
   diasEsperando?: number;
+  /** Correo 9: documento adjunto nuevo. */
+  documentoNombre?: string;
+  subidoPor?: string;
 };
 
 const saludo = (nombre?: string) => (nombre ? `Hola, ${esc(nombre)}:` : "Hola:");
@@ -251,6 +254,32 @@ export const PLANTILLAS_CORREO = {
           tablaDatos((d.preguntas ?? []).map((p) => [p.pregunta, "—"])) +
           boton(d.urlDetalle ?? "", "Ver la solicitud") +
           parrafoFinal("Puede insistir por otro medio o seguir con lo que ya tiene."),
+      }),
+  },
+  // 9 — Documento adjunto nuevo (4.4.12): avisa al otro lado del mostrador.
+  "9": {
+    asunto: (d: DatosCorreo) =>
+      `Nuevo documento en la solicitud ${esc(d.numeroReferencia ?? "")}`.trim(),
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: "Hay un documento nuevo",
+        etiqueta: d.numeroReferencia ?? "Documento adjunto",
+        preheader: d.documentoNombre
+          ? `Se adjuntó «${d.documentoNombre}».`
+          : "Se adjuntó un documento a la solicitud.",
+        contenido:
+          parrafo(saludo(d.solicitanteNombre)) +
+          parrafo(
+            `${esc(d.subidoPor ?? "El equipo de Compras")} adjuntó un documento a la solicitud ${
+              esc(d.numeroReferencia ?? "")
+            }${d.titulo ? ` — ${esc(d.titulo)}` : ""}.`
+          ) +
+          tablaDatos([
+            ["Documento", d.documentoNombre ?? ""],
+            ["Adjuntado por", d.subidoPor ?? ""],
+          ]) +
+          boton(d.urlDetalle ?? "", "Ver el documento") +
+          parrafoFinal("El documento queda disponible dentro de la solicitud."),
       }),
   },
 } as const;

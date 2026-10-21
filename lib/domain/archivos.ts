@@ -99,3 +99,75 @@ export function validarArchivoAdjunto(
   }
   return { ok: true };
 }
+
+
+// ---------- Documentos adjuntos de la solicitud ----------
+//
+// El coordinador/admin y el solicitante pueden adjuntar documentos (no solo las cotizaciones).
+// Igual que con el logo, el servidor valida **extensión + contenido**: el `Content-Type` que
+// declara el navegador no es una frontera de seguridad (se salta con curl).
+export const MAX_BYTES_DOCUMENTO = 10 * 1024 * 1024;
+export const MAX_MB_DOCUMENTO = MAX_BYTES_DOCUMENTO / (1024 * 1024);
+export const EXTENSIONES_DOCUMENTO = [".pdf", ".docx", ".doc", ".pptx", ".ppt", ".png", ".jpg", ".jpeg"] as const;
+
+export type ResultadoValidacionDocumento =
+  | { ok: true }
+  | { ok: false; motivo: "vacio" | "tipo" | "tamano" | "contenido"; mensaje: string };
+
+function primerosBytes(bytes: ArrayBuffer | Uint8Array, n = 8): number[] {
+  const b8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  return Array.from(b8.slice(0, n));
+}
+
+/** Firma de un ZIP (docx/pptx) o de un OLE (doc/ppt legado). */
+function esZip(bytes: ArrayBuffer | Uint8Array): boolean {
+  const m = primerosBytes(bytes, 4);
+  return m[0] === 0x50 && m[1] === 0x4b && (m[2] === 0x03 || m[2] === 0x05) && (m[3] === 0x04 || m[3] === 0x06);
+}
+function esOle(bytes: ArrayBuffer | Uint8Array): boolean {
+  const m = primerosBytes(bytes, 8);
+  return m[0] === 0xd0 && m[1] === 0xcf && m[2] === 0x11 && m[3] === 0xe0 && m[4] === 0xa1 && m[5] === 0xb1 && m[6] === 0x1a && m[7] === 0xe1;
+}
+
+export function validarDocumentoAdjunto(
+  archivo: { name: string; size: number },
+  contenido: ArrayBuffer | Uint8Array
+): ResultadoValidacionDocumento {
+  const ext = extension(archivo.name);
+  if (archivo.size === 0) {
+    return { ok: false, motivo: "vacio", mensaje: "El archivo está vacío." };
+  }
+  if (!(EXTENSIONES_DOCUMENTO as readonly string[]).includes(ext)) {
+    return {
+      ok: false,
+      motivo: "tipo",
+      mensaje: `Formato no admitido (${ext || "sin extensión"}). Se aceptan ${EXTENSIONES_DOCUMENTO.join(", ")}.`,
+    };
+  }
+  if (archivo.size > MAX_BYTES_DOCUMENTO) {
+    const mb = (archivo.size / (1024 * 1024)).toFixed(1);
+    return {
+      ok: false,
+      motivo: "tamano",
+      mensaje: `El archivo pesa ${mb} MB y el máximo son ${MAX_MB_DOCUMENTO} MB.`,
+    };
+  }
+
+  const coincide =
+    ext === ".pdf"
+      ? contenidoCoincide(ext, contenido) && pdfLooksCompleto(contenido)
+      : ext === ".docx" || ext === ".pptx"
+        ? esZip(contenido)
+        : ext === ".doc" || ext === ".ppt"
+          ? esOle(contenido)
+          : contenidoCoincide(ext, contenido);
+
+  if (!coincide) {
+    return {
+      ok: false,
+      motivo: "contenido",
+      mensaje: "El contenido del archivo no corresponde a su extensión.",
+    };
+  }
+  return { ok: true };
+}

@@ -9,6 +9,7 @@ import type {
   DocumentoGenerado,
   EventoTrazabilidad,
   LinkPublico,
+  Adjunto,
   RespuestaCampo,
   Solicitud,
   Usuario,
@@ -43,6 +44,24 @@ export interface Repositorio {
 
   guardarRespuestas(solicitudId: string, respuestas: RespuestaCampo[]): Promise<void>;
   listarRespuestas(solicitudId: string): Promise<RespuestaCampo[]>;
+
+  /** Documentos adjuntos (migración 021). */
+  crearAdjunto(input: {
+    solicitudId: string;
+    nombreArchivo: string;
+    mimeType?: string;
+    contenido: Uint8Array;
+    subidoPorEmail?: string;
+    actorTipo?: "coordinador" | "admin" | "solicitante";
+  }): Promise<Adjunto>;
+  listarAdjuntos(solicitudId: string): Promise<Adjunto[]>;
+  obtenerAdjunto(solicitudId: string, adjuntoId: string): Promise<Adjunto | null>;
+  eliminarAdjunto(input: {
+    solicitudId: string;
+    adjuntoId: string;
+    actorTipo?: string;
+    actorIdentificador?: string;
+  }): Promise<boolean>;
   guardarRespuestasPorClave(solicitudId: string, respuestas: Record<string, string>): Promise<void>;
 
   transicionarEstado(input: {

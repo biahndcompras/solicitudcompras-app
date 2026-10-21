@@ -5,6 +5,7 @@ import { Badge, type BadgeTone } from "@/components/Badge";
 import { SemParoBadge } from "@/components/Semaforo";
 import { CancelarSolicitudButton } from "@/components/CancelarSolicitudButton";
 import { ReasignarCoordinador } from "@/components/ReasignarCoordinador";
+import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { duracionAtencion } from "@/lib/domain/semaforo";
@@ -71,6 +72,9 @@ export default async function AdminSolicitudDetallePage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
+          {/* Documentos adjuntos (4.4.12): el admin ve y gestiona lo mismo que Compras. */}
+          <DocumentosAdjuntos solicitudId={s.id} />
+
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
             <h3 className="text-sm font-semibold text-slate-900 mb-6">Línea de tiempo (Trazabilidad)</h3>
             {timeline.length ? (

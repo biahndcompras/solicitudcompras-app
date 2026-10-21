@@ -150,6 +150,11 @@ export type Adjunto = {
   nombreArchivo: string;
   mimeType?: string;
   tamanoBytes?: number;
+  /** Correo de quien lo subió: dice de qué lado viene (Compras o el solicitante). */
+  subidoPorEmail?: string;
+  creadoEn?: string;
+  /** Solo al descargar: el binario no viaja en los listados. */
+  contenido?: Uint8Array;
 };
 
 export type Cotizacion = {
@@ -179,6 +184,7 @@ export type Cotizacion = {
   archivoBytea?: Uint8Array; // contenido binario del archivo original (solo lectura/uso interno servidor)
 };
 
+/** Documento adjunto de una solicitud (coordinador/admin o el propio solicitante). */
 export type Discrepancia = {
   aspecto: string;
   solicitado: string;

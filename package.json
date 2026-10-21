@@ -18,12 +18,12 @@
     "secret-scan": "bash scripts/secret-scan.sh"
   },
   "dependencies": {
-    "@pdfme/generator": "^6.1.12",
-    "@pdfme/schemas": "^6.1.12",
+    "@pdf-lib/fontkit": "^1.1.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "clsx": "^2.1.1",
     "next": "^16.3.0",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.23.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

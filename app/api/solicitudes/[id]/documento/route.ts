@@ -21,7 +21,13 @@ export async function GET(
     const auth = await guardRecursoDeSolicitud(request, solicitud);
     if (!auth.autorizado) return auth.negada;
     const tipo = solicitud.tipo ?? "RFQ";
-    const pdf = await generarDocumento({ tipo, solicitud, respuestas: {} });
+    // El PDF que descarga el solicitante debe incluir lo que respondió. Antes se generaba
+    // con `respuestas: {}`, así que esta copia salía sin especificaciones.
+    const persistidas = await repo.listarRespuestas(id).catch(() => []);
+    const respuestas = Object.fromEntries(
+      persistidas.map((r) => [r.campoLabel, r.valor ?? ""])
+    );
+    const pdf = await generarDocumento({ tipo, solicitud, respuestas });
     const nombre = `${solicitud.numeroReferencia ?? solicitud.id}.pdf`;
     return new NextResponse(Buffer.from(pdf.buffer), {
       status: 200,

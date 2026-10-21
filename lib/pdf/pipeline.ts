@@ -63,7 +63,21 @@ export async function pipelineEnvioACompras(opts: {
   // un hecho de negocio) y quien llama decide qué hacer con el fallo.
   let pdf;
   try {
-    pdf = await generarDocumento({ tipo, solicitud, respuestas, coordenadorNombre });
+    // Las respuestas llegan como `{campoKey: valor}`, pero el PDF muestra una tabla
+    // "Campo | Respuesta": hay que resolver la etiqueta del catálogo. Ya están persistidas
+    // por la ruta antes de llamar acá; si no se pueden leer, se cae al mapa original.
+    let respuestasConEtiqueta = respuestas;
+    try {
+      const persistidas = await repo.listarRespuestas(solicitud.id);
+      if (persistidas.length > 0) {
+        respuestasConEtiqueta = Object.fromEntries(
+          persistidas.map((r) => [r.campoLabel, r.valor ?? ""])
+        );
+      }
+    } catch {
+      // se usa el mapa tal cual
+    }
+    pdf = await generarDocumento({ tipo, solicitud, respuestas: respuestasConEtiqueta, coordenadorNombre });
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error al generar el PDF" };
   }

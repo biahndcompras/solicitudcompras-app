@@ -10,6 +10,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const obtenerSolicitud = vi.fn();
 const obtenerArchivoLogo = vi.fn();
 const listarCotizaciones = vi.fn();
+const listarRespuestas = vi.fn();
 const guardarArchivoLogo = vi.fn();
 const actualizarCamposSolicitud = vi.fn();
 const generarDocumento = vi.fn();
@@ -19,6 +20,7 @@ vi.mock("@/lib/db/postgres-repo", () => ({
     obtenerSolicitud = (...a: unknown[]) => obtenerSolicitud(...a);
     obtenerArchivoLogo = (...a: unknown[]) => obtenerArchivoLogo(...a);
     listarCotizaciones = (...a: unknown[]) => listarCotizaciones(...a);
+    listarRespuestas = (...a: unknown[]) => listarRespuestas(...a);
     guardarArchivoLogo = (...a: unknown[]) => guardarArchivoLogo(...a);
     actualizarCamposSolicitud = (...a: unknown[]) => actualizarCamposSolicitud(...a);
   },
@@ -56,6 +58,7 @@ beforeEach(() => {
   obtenerSolicitud.mockReset().mockResolvedValue(SOLICITUD);
   obtenerArchivoLogo.mockReset().mockResolvedValue({ nombre: "logo.png", bytea: Buffer.from("png") });
   listarCotizaciones.mockReset().mockResolvedValue([{ id: "c1", proveedorNombre: "Alfa", valorTotal: 11500 }]);
+  listarRespuestas.mockReset().mockResolvedValue([]);
   guardarArchivoLogo.mockReset().mockResolvedValue(undefined);
   actualizarCamposSolicitud.mockReset().mockResolvedValue(undefined);
   generarDocumento.mockReset().mockResolvedValue({ buffer: Buffer.from("%PDF-1.4"), tipo: "RFQ", referencia: "RFQ-2026-0042" });
@@ -103,6 +106,18 @@ describe("GET /api/solicitudes/[id]/documento · el solicitante ve SU pdf", () =
     );
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("application/pdf");
+  });
+
+  it("el PDF incluye las respuestas guardadas (antes salía con respuestas vacías)", async () => {
+    generarDocumento.mockClear();
+    listarRespuestas.mockResolvedValue([{ campoLabel: "Materiales", valor: "poliéster" }]);
+    await getDocumento(
+      pedir(`http://localhost/api/solicitudes/${ID}/documento?email=mj.e2e%40biabrands.co`),
+      { params }
+    );
+    expect(generarDocumento).toHaveBeenCalledWith(
+      expect.objectContaining({ respuestas: { Materiales: "poliéster" } })
+    );
   });
 
   it("sin correo responde 401: es lo que rompía la pantalla de confirmación", async () => {

@@ -71,3 +71,8 @@ qa/**/*.pdf
 docs/bia-logo-card*.png
 docs/formato-referencia.png
 docs/muestras-pdf/*.png
+
+# Token temporal de Vercel para cargar variables (nunca se versiona)
+.vercel-token
+.vercel/
+.env*

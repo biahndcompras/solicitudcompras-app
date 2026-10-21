@@ -10,19 +10,24 @@ vi.mock("@/lib/ai/conversion", () => ({
   convertirDocumentoAMarkdown: (...a: unknown[]) => convertir(...a),
 }));
 
+import JSZip from "jszip";
 import { POST } from "./route";
 
 // Se le da al route solo lo que consume (`formData()`), por el choque de realms entre el
 // `FormData` de jsdom y el `Request` de Node (el multipart no se puede parsear). El archivo sí
 // es un `File` real (la ruta lo exige con `instanceof`), con las propiedades propias porque el
 // `File` de jsdom no implementa `arrayBuffer()`, que es lo que la ruta usa para leerlo.
-function archivoFalso(nombre: string, size: number, type: string): File {
+function archivoFalso(nombre: string, size: number, type: string, contenido?: Uint8Array): File {
   const f = Object.create(File.prototype) as File;
+  const bytes = contenido ?? new Uint8Array([1, 2, 3]);
   Object.defineProperties(f, {
     name: { value: nombre },
     size: { value: size },
     type: { value: type },
-    arrayBuffer: { value: async () => new Uint8Array([1, 2, 3]).buffer },
+    arrayBuffer: {
+      value: async () =>
+        bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    },
   });
   return f;
 }
@@ -48,7 +53,7 @@ describe("POST /api/convertir", () => {
   });
 
   it("un tipo no soportado responde 415 sin llamar al modelo", async () => {
-    const res = await pedirCon(archivoFalso("nota.docx", 1200, "application/msword"));
+    const res = await pedirCon(archivoFalso("nota.txt", 1200, "text/plain"));
     expect(res.status).toBe(415);
     expect(convertir).not.toHaveBeenCalled();
   });
@@ -69,5 +74,34 @@ describe("POST /api/convertir", () => {
     const res = await pedirCon(ARCHIVO());
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toMatchObject({ ok: true, markdown: expect.stringContaining("Item") });
+  });
+});
+
+
+// 4.5.1 ampliado: Word y PowerPoint no pasan por la IA (son ZIP con XML).
+describe("POST /api/convertir · Word y PowerPoint", () => {
+  async function docx(parrafos: string[]): Promise<Uint8Array> {
+    const zip = new JSZip();
+    const body = parrafos.map((p) => `<w:p><w:r><w:t>${p}</w:t></w:r></w:p>`).join("");
+    zip.file("word/document.xml", `<w:document><w:body>${body}</w:body></w:document>`);
+    return new Uint8Array(await zip.generateAsync({ type: "uint8array" }));
+  }
+
+  it("extrae el texto de un .docx sin llamar al modelo", async () => {
+    const bytes = await docx(["Ferretería La Económica", "Total L 37,030.00"]);
+    const res = await pedirCon(
+      archivoFalso("cotizacion.docx", bytes.byteLength, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", bytes)
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.markdown).toContain("Total L 37,030.00");
+    expect(convertir).not.toHaveBeenCalled();
+  });
+
+  it("rechaza .doc (formato viejo) con una instrucción clara", async () => {
+    const res = await pedirCon(archivoFalso("cotizacion.doc", 100, "application/msword"));
+    expect(res.status).toBe(415);
+    expect((await res.json()).error).toMatch(/docx/i);
+    expect(convertir).not.toHaveBeenCalled();
   });
 });

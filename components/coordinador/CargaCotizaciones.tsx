@@ -301,7 +301,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
                       <div className="mt-3 flex items-start gap-2 text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                         <span className="text-sm">
-                          Revisión manual requerida: campos con baja confianza de extracción — <span className="font-semibold">{bajaConfianza.join(", ")}</span>. Verificá estos datos antes de generar la comparativa.
+                          Revisión manual requerida: campos con baja confianza de extracción — <span className="font-semibold">{bajaConfianza.join(", ")}</span>. Verifique estos datos antes de generar la comparativa.
                         </span>
                       </div>
                     )
@@ -365,7 +365,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
                         hidden
                         ref={(el) => { fileInputs.current[c.id] = el; }}
                         onChange={(e) => onFileSeleccionado(idx, e)}
-                        accept=".pdf,.doc,.docx,image/*"
+                        accept=".pdf,.docx,.pptx,.png,.jpg,.jpeg"
                       />
                       {esEditando ? (
                         <button type="button" onClick={guardarEdicion} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">

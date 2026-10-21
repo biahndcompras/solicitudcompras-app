@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server";
 import { convertirDocumentoAMarkdown } from "@/lib/ai/conversion";
+import { extraerTextoOficina } from "@/lib/ai/oficina";
 
-// Conversión de documento (PDF/imagen) a Markdown para la carga de cotizaciones del coordinador.
+// Conversión de una cotización a texto para que la IA la parsee.
 //
-// Se hace con un modelo multimodal de OpenRouter. Antes dependía de `python3` + `markitdown`,
-// que no existen en Vercel: en producción **siempre** fallaba y el coordinador cargaba a mano.
-// Ahora no hay binarios ni archivos temporales: los bytes van directo al modelo.
+// Formatos que llegan de verdad: PDF, imagen (foto o captura), **Word** y **PowerPoint**.
+//  · PDF e imágenes → modelo multimodal de OpenRouter (no hay Python en Vercel).
+//  · .docx / .pptx → extracción de texto del ZIP, **sin IA**: es determinística y gratis.
+//  · .doc / .ppt (binarios viejos) → se rechazan con una instrucción clara.
 //
-// Si la IA no está disponible o falla, se responde 503 y el frontend degrada a carga manual
-// (la IA nunca bloquea el trabajo del coordinador).
+// Si algo falla, la ruta responde 503 y el coordinador carga la cotización a mano (la IA nunca
+// bloquea el trabajo).
 
 const MAX_BYTES = 4 * 1024 * 1024;
-const MIMES = ["image/png", "image/jpeg", "application/pdf"];
+const EXT_IA = ["pdf", "png", "jpg", "jpeg"];
+const EXT_OFICINA = ["docx", "pptx"];
+const EXT_VIEJAS = ["doc", "ppt"];
+
+function extension(nombre: string): string {
+  const p = nombre.toLowerCase().split(".");
+  return p.length > 1 ? p[p.length - 1] : "";
+}
 
 export async function POST(request: Request) {
   try {
@@ -23,19 +32,45 @@ export async function POST(request: Request) {
     if (archivo.size > MAX_BYTES) {
       return NextResponse.json({ error: "El archivo supera los 4 MB" }, { status: 413 });
     }
-    // El navegador manda el MIME; si viene vacío o raro, el tipo real lo decide la extensión
-    // dentro de `convertirDocumentoAMarkdown` (una imagen renombrada no cuela como PDF).
-    if (archivo.type && !MIMES.includes(archivo.type)) {
+
+    const ext = extension(archivo.name);
+    if (EXT_VIEJAS.includes(ext)) {
       return NextResponse.json(
-        { error: "Formato no soportado. Se aceptan PDF, PNG o JPG." },
+        {
+          error: `Los archivos .${ext} (formato viejo de Office) no se pueden leer. Abralo y guardelo como .${ext === "doc" ? "docx" : "pptx"}, o suba un PDF.`,
+        },
+        { status: 415 }
+      );
+    }
+    if (!EXT_IA.includes(ext) && !EXT_OFICINA.includes(ext)) {
+      return NextResponse.json(
+        { error: "Formato no soportado. Se aceptan PDF, imágenes, Word (.docx) y PowerPoint (.pptx)." },
         { status: 415 }
       );
     }
 
-    const res = await convertirDocumentoAMarkdown({
-      bytes: new Uint8Array(await archivo.arrayBuffer()),
-      nombre: archivo.name,
-    });
+    const bytes = new Uint8Array(await archivo.arrayBuffer());
+
+    if (EXT_OFICINA.includes(ext)) {
+      try {
+        const texto = await extraerTextoOficina(bytes, ext === "docx" ? ".docx" : ".pptx");
+        if (!texto.trim()) {
+          return NextResponse.json(
+            { error: "El documento no parece contener texto. Si es una imagen, suba una captura." },
+            { status: 422 }
+          );
+        }
+        return NextResponse.json({ ok: true, markdown: texto });
+      } catch (e) {
+        return NextResponse.json(
+          { error: e instanceof Error ? e.message : "No se pudo leer el documento de Office." },
+          { status: 422 }
+        );
+      }
+    }
+
+    // PDF o imagen: modelo multimodal.
+    const res = await convertirDocumentoAMarkdown({ bytes, nombre: archivo.name });
     if (!res.ok) {
       return NextResponse.json({ error: res.error }, { status: 503 });
     }

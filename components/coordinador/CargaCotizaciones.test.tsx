@@ -28,7 +28,7 @@ const props = (extra: Partial<React.ComponentProps<typeof CargaCotizaciones>> = 
   ...extra,
 });
 
-const IMPERATIVOS = /Cargá|Agregá|Adjuntá|Verificá|Generar comparativa|Mínimo 2|antes de generar|antes de comparar|Requiere aclaración/i;
+const IMPERATIVOS = /Cargá|Agregá|Adjuntá|Verifique|Generar comparativa|Mínimo 2|antes de generar|antes de comparar|Requiere aclaración/i;
 
 describe("CargaCotizaciones · solicitud viva", () => {
   it("pide el trabajo con imperativos y deja las acciones disponibles", () => {
@@ -51,7 +51,8 @@ describe("CargaCotizaciones · solicitud viva", () => {
         })}
       />
     );
-    expect(screen.getByText(/Verificá estos datos antes de generar la comparativa/)).toBeInTheDocument();
+    // El texto va partido por un <span> con los campos: se comprueba el contenido, no un nodo.
+    expect(document.body.textContent).toContain("Verifique estos datos antes de generar la comparativa");
     expect(screen.getByText(/Revisión fiscal:/)).toBeInTheDocument();
   });
 });

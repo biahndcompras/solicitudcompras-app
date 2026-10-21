@@ -263,6 +263,33 @@ no estaban en ninguna lista.
 
 ---
 
+## 4.13 Peticiones urgentes del 2026-10-21 (por precisar antes de codificar)
+
+Pedidas por el cliente para el piloto. **Cada una queda bloqueada por una decisión**; no se
+implementa hasta cerrarla (ver la nota de cada fila).
+
+| # | Tarea | Bloqueo / decisión pendiente |
+|---|---|---|
+| 4.13.1 | **Panel de coordinadores: "doble icono de flecha" y botones muy altos** | No lo pude reproducir en el código (`/admin/coordinadores` no tiene flechas; `/panel` tiene una sola). **Falta**: URL exacta + captura |
+| 4.13.2 | **Los documentos no se cargan en ninguna vista** | Causa probable: el dev apunta a **Supabase (vacío)** y los datos están en local. **Falta**: confirmar en qué base se probó. Si es eso, no es un bug |
+| 4.13.3 | **Cotizaciones y respuestas del solicitante en el detalle del ADMIN** | Confirmado: el detalle del admin **no** muestra cotizaciones ni respuestas (solo el timeline). Decidir si el admin ve **precios** (sí, es su rol) |
+| 4.13.4 | **Respuestas del solicitante en el detalle del COORDINADOR** | El componente **ya las renderiza** (`DetalleSolicitud` → "Respuestas del solicitante"). Verificar contra una solicitud con datos; si no aparece, es un bug de datos |
+| 4.13.5 | **Rediseño completo del dashboard admin** (premium, no básico) | Usar **impeccable**. Decidir si se adopta **shadcn/ui** (hoy no está instalado; Tailwind v4) y si la migración es solo del dashboard o de todo el admin |
+| 4.13.6 | **Quitar la card de "Alertas" del home** | Sin bloqueo. La ruta y la funcionalidad se conservan |
+| 4.13.7 | **Quitar "Umbrales y alertas" del sidebar** | Sin bloqueo. **No** se borra `/admin/configuracion` ni su lógica |
+| 4.13.8 | **"Mi perfil" con datos reales** | Hoy muestra "Gestionado por el proveedor de identidad" en todos los campos. Decidir: solo **lectura** con nombre/correo/rol reales, o **editable** (requiere endpoint) |
+| 4.13.9 | **Alta de cuentas desde el admin + invitación por correo + cambio de contraseña al primer ingreso** | Decidir el mecanismo: **invitación de Supabase** (el usuario define su contraseña al entrar, no hay "cambio") vs **contraseña temporal + pantalla de cambio obligatorio** (requiere flag y middleware) |
+| 4.13.10 | **Administrar roles desde el admin** | Hoy el CRUD solo crea coordinadores. Decidir si el admin puede crear/promover **admins** y cambiar el rol de una cuenta existente |
+| 4.13.11 | **El botón del correo 9 debe llevar al documento** | Hoy lleva a la **solicitud**, no al archivo. Un enlace directo para el solicitante (sin sesión) exige token firmado o su correo en la URL. Decidir cuál |
+| 4.13.12 | **B4 — confirmación escrita del cliente** | No es código: lo cierra el cliente |
+| 4.13.13 | **§6 deuda menor + 4.8.13 (exigir logo con branding)** | Ya están en §6/§4.8; se priorizan dentro de este bloque |
+
+**Decisión transversal (afecta a todas):** con la migración hecha, `DATABASE_URL` de `.env.local`
+apunta a Supabase y el **dev escribe en la base del piloto** (hoy vacía). Propuesta: dejar el dev
+en la base **local** y que Supabase sea solo producción (Vercel). Ver la respuesta del 2026-10-21.
+
+---
+
 ## 5. Decisiones pendientes del cliente — NO son trabajo mío hasta que respondan
 
 Esto no es "pendiente" en el sentido de tarea. Es **esperar**. Si lo trato como tarea, invento

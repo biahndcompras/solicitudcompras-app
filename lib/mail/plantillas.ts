@@ -1,5 +1,17 @@
-// Plantillas de correo 1–5 (documento 13) — Portal de Compras BIA.
-// Cuerpos HTML simples. Nomenclatura vigente: 4 del ciclo + 1 alerta configurable.
+// Plantillas de los 8 correos del sistema — Portal de Compras BIA.
+//
+// Todas comparten el marco de `layout.ts` (logo, barra de marca, título, pie legal) para que
+// ninguna comunicación salga como texto plano. El copy está en **usted** (ADR 0008).
+import {
+  boton,
+  destacado,
+  escapar as esc,
+  layoutCorreo,
+  lista,
+  parrafo,
+  parrafoFinal,
+  tablaDatos,
+} from "./layout";
 
 export type DatosCorreo = {
   coordinadorNombre?: string;
@@ -33,141 +45,213 @@ export type DatosCorreo = {
   diasEsperando?: number;
 };
 
-export function esc(s: string | undefined): string {
-  if (!s) return "";
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
-}
+const saludo = (nombre?: string) => (nombre ? `Hola, ${esc(nombre)}:` : "Hola:");
 
 export const PLANTILLAS_CORREO = {
   // 1 — Nueva solicitud asignada (coordinador)
   "1": {
     asunto: (d: DatosCorreo) => `Nueva solicitud ${esc(d.numeroReferencia)} — ${esc(d.titulo)}`,
-    cuerpo: (d: DatosCorreo) => `
-      <p>Hola ${esc(d.coordinadorNombre)},</p>
-      <p>Se te asignó una nueva solicitud de cotización.</p>
-      <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:13px">
-        <tr><td><b>Referencia</b></td><td>${esc(d.numeroReferencia)}</td></tr>
-        <tr><td><b>Tipo</b></td><td>${esc(d.tipo)}</td></tr>
-        <tr><td><b>Necesidad</b></td><td>${esc(d.titulo)}</td></tr>
-        <tr><td><b>Solicitante</b></td><td>${esc(d.solicitanteNombre)} — ${esc(d.area)}</td></tr>
-        <tr><td><b>Requerida para</b></td><td>${esc(d.fechaRequerida)}</td></tr>
-      </table>
-      <p>${esc(d.resumen)}</p>
-      <p>Adjunto encontrarás el documento listo para enviar a proveedores.</p>
-      <p>Cargá las cotizaciones en el portal referenciadas a ${esc(d.numeroReferencia)}: ${esc(d.urlPanel)}</p>
-      <p>Portal de Compras BIA</p>`,
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: "Tiene una nueva solicitud asignada",
+        etiqueta: d.numeroReferencia ?? "Nueva solicitud",
+        preheader: `Solicitud ${d.numeroReferencia} de ${d.solicitanteNombre ?? "un solicitante"}.`,
+        contenido:
+          parrafo(saludo(d.coordinadorNombre).replace(/:$/, ".")) +
+          parrafo("Se le asignó una nueva solicitud de cotización para gestionar.") +
+          tablaDatos([
+            ["Tipo", d.tipo ?? ""],
+            ["Necesidad", d.titulo ?? ""],
+            ["Solicitante", `${d.solicitanteNombre ?? ""} — ${d.area ?? ""}`],
+            ["Requerida para", d.fechaRequerida ?? ""],
+          ]) +
+          (d.resumen ? destacado(esc(d.resumen)) : "") +
+          parrafo("Adjunto encontrará el documento listo para enviar a proveedores.") +
+          boton(d.urlPanel ?? d.urlDetalle ?? "", "Abrir el panel") +
+          parrafoFinal(
+            `Cargue las cotizaciones en el portal citando la referencia ${esc(d.numeroReferencia)}.`
+          ),
+      }),
   },
+
   // 2 — Acuse de recibo (solicitante)
   "2": {
     asunto: (d: DatosCorreo) => `Recibimos su solicitud ${esc(d.numeroReferencia)}`,
-    cuerpo: (d: DatosCorreo) => `
-      <p>Hola ${esc(d.solicitanteNombre)},</p>
-      <p>Su solicitud fue recibida y enviada al equipo de Compras.</p>
-      <table cellpadding="6" cellspacing="0" style="font-size:13px">
-        <tr><td><b>Referencia</b></td><td>${esc(d.numeroReferencia)}</td></tr>
-        <tr><td><b>Necesidad</b></td><td>${esc(d.titulo)}</td></tr>
-        <tr><td><b>Atiende</b></td><td>${esc(d.coordinadorNombre)}</td></tr>
-      </table>
-      <p>A partir de aquí, el equipo de Compras gestiona la cotización. Cuando tengamos las cotizaciones listas, te enviaremos un correo con el comparativo para que elijas.</p>
-      <p>Portal de Compras BIA</p>`,
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: "Recibimos su solicitud",
+        etiqueta: d.numeroReferencia ?? "Acuse de recibo",
+        preheader: "Su solicitud ya está en manos del equipo de Compras.",
+        contenido:
+          parrafo(saludo(d.solicitanteNombre)) +
+          parrafo("Su solicitud fue recibida y enviada al equipo de Compras.") +
+          tablaDatos([
+            ["Referencia", d.numeroReferencia ?? ""],
+            ["Necesidad", d.titulo ?? ""],
+            ["Atiende", d.coordinadorNombre ?? ""],
+          ]) +
+          parrafo(
+            "A partir de aquí, el equipo de Compras gestiona la cotización. Cuando tengamos las cotizaciones listas, le enviaremos un correo con el comparativo para que elija."
+          ) +
+          parrafoFinal("Gracias por usar el Portal de Compras BIA."),
+      }),
   },
+
   // 3 — Comparativo listo (solicitante, enlace público)
   "3": {
     asunto: (d: DatosCorreo) => `Su comparativo está listo — ${esc(d.numeroReferencia)}`,
-    cuerpo: (d: DatosCorreo) => `
-      <p>Hola ${esc(d.solicitanteNombre)},</p>
-      <p>Ya tenemos las cotizaciones para su solicitud y preparamos el comparativo.</p>
-      <table cellpadding="6" cellspacing="0" style="font-size:13px">
-        <tr><td><b>Referencia</b></td><td>${esc(d.numeroReferencia)}</td></tr>
-        <tr><td><b>Cotizaciones</b></td><td>${d.cantidadCotizaciones ?? "—"}</td></tr>
-      </table>
-      ${d.recomendacion ? `<p><b>Recomendación de ${esc(d.coordinadorNombre)}:</b> ${esc(d.recomendacion)}</p>` : ""}
-      <p>Revise el comparativo completo y seleccione la opción que prefiera desde este enlace:</p>
-      <p><a href="${esc(d.urlComparativa)}">${esc(d.urlComparativa)}</a></p>
-      <p>Su selección queda registrada y nos llega de vuelta para continuar con la orden.</p>
-      <p>Portal de Compras BIA</p>`,
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: "Su comparativo está listo",
+        etiqueta: d.numeroReferencia ?? "Comparativo",
+        preheader: "Revise las opciones y elija la que prefiera.",
+        contenido:
+          parrafo(saludo(d.solicitanteNombre)) +
+          parrafo("Ya tenemos las cotizaciones para su solicitud y preparamos el comparativo.") +
+          tablaDatos([
+            ["Referencia", d.numeroReferencia ?? ""],
+            ["Cotizaciones", d.cantidadCotizaciones !== undefined ? String(d.cantidadCotizaciones) : ""],
+          ]) +
+          (d.recomendacion
+            ? destacado(
+                `<strong>Recomendación de ${esc(d.coordinadorNombre ?? "Compras")}:</strong> ${esc(d.recomendacion)}`
+              )
+            : "") +
+          parrafo("Revise el comparativo completo y seleccione la opción que prefiera:") +
+          boton(d.urlComparativa ?? "", "Ver comparativa y decidir") +
+          parrafoFinal(
+            "Su selección queda registrada y nos llega de vuelta para continuar con la orden."
+          ),
+      }),
   },
+
   // 4 — Decisión registrada (coordinador + admin)
   "4": {
     asunto: (d: DatosCorreo) => `Decisión registrada — ${esc(d.numeroReferencia)}`,
-    cuerpo: (d: DatosCorreo) => `
-      <p>Hola ${esc(d.coordinadorNombre)},</p>
-      <p>${esc(d.solicitanteNombre)} seleccionó una opción para la solicitud ${esc(d.numeroReferencia)}.</p>
-      <table cellpadding="6" cellspacing="0" style="font-size:13px">
-        <tr><td><b>Proveedor</b></td><td>${esc(d.proveedorSeleccionado)}</td></tr>
-        <tr><td><b>Valor neto</b></td><td>${esc(d.valorNeto)}</td></tr>
-        <tr><td><b>Total</b></td><td>${esc(d.valorTotal)}</td></tr>
-        <tr><td><b>Plazo</b></td><td>${esc(d.plazoEntrega)}</td></tr>
-        <tr><td><b>Fecha</b></td><td>${esc(d.fechaDecision)}</td></tr>
-        <tr><td><b>Tiempo de ciclo</b></td><td>${esc(d.tiempoCiclo)}</td></tr>
-      </table>
-      <p>${
-        d.ningunaOpcionAceptada
-          ? "La solicitud <b>vuelve a Compras</b>: no se cerró. Evalúe por qué ninguna opción le sirve y decida si se re-cotiza o si necesita información adicional del solicitante."
-          : "La solicitud queda cerrada en el portal. Puede continuar con la orden de compra."
-      }</p>
-      <p>Portal de Compras BIA</p>`,
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: d.ningunaOpcionAceptada ? "La solicitud vuelve a Compras" : "Decisión registrada",
+        etiqueta: d.numeroReferencia ?? "Decisión",
+        preheader: d.ningunaOpcionAceptada
+          ? "El solicitante indicó que ninguna opción le sirve."
+          : `Se eligió ${d.proveedorSeleccionado ?? "una opción"}.`,
+        contenido:
+          parrafo(saludo(d.coordinadorNombre)) +
+          parrafo(
+            d.ningunaOpcionAceptada
+              ? `${esc(d.solicitanteNombre ?? "El solicitante")} indicó que ninguna opción le sirve para la solicitud ${esc(d.numeroReferencia)}.`
+              : `${esc(d.solicitanteNombre ?? "El solicitante")} seleccionó una opción para la solicitud ${esc(d.numeroReferencia)}.`
+          ) +
+          (d.ningunaOpcionAceptada
+            ? ""
+            : tablaDatos([
+                ["Proveedor", d.proveedorSeleccionado ?? ""],
+                ["Valor neto", d.valorNeto ?? ""],
+                ["Total", d.valorTotal ?? ""],
+                ["Plazo", d.plazoEntrega ?? ""],
+                ["Fecha", d.fechaDecision ?? ""],
+                ["Tiempo de ciclo", d.tiempoCiclo ?? ""],
+              ])) +
+          (d.ningunaOpcionAceptada
+            ? destacado(
+                "La solicitud <strong>vuelve a Compras</strong>: no se cerró. Evalúe por qué ninguna opción le sirve y decida si se re-cotiza o si necesita información adicional del solicitante.",
+                "aviso"
+              )
+            : destacado("La solicitud queda cerrada en el portal. Puede continuar con la orden de compra.")) +
+          boton(d.urlDetalle ?? "", "Ver la solicitud") +
+          parrafoFinal("Este aviso también llegó a administración."),
+      }),
   },
+
   // 5 — Alerta de solicitud sin movimiento (configurable)
   "5": {
     asunto: (d: DatosCorreo) => `Solicitud sin movimiento — ${esc(d.numeroReferencia)}`,
-    cuerpo: (d: DatosCorreo) => `
-      <p>Hola ${esc(d.coordinadorNombre)},</p>
-      <p>La solicitud ${esc(d.numeroReferencia)} lleva ${d.diasSinMovimiento ?? "—"} días en estado "${esc(d.estadoActual)}" sin cambios.</p>
-      <table cellpadding="6" cellspacing="0" style="font-size:13px">
-        <tr><td><b>Necesidad</b></td><td>${esc(d.titulo)}</td></tr>
-        <tr><td><b>Solicitante</b></td><td>${esc(d.solicitanteNombre)}</td></tr>
-        <tr><td><b>Requerida para</b></td><td>${esc(d.fechaRequerida)}</td></tr>
-      </table>
-      <p><a href="${esc(d.urlDetalle)}">Ver solicitud</a></p>
-      <p>Portal de Compras BIA</p>`,
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: "Solicitud sin movimiento",
+        etiqueta: d.numeroReferencia ?? "Alerta",
+        preheader: `Lleva ${d.diasSinMovimiento ?? "varios"} días sin cambios.`,
+        contenido:
+          parrafo(saludo(d.coordinadorNombre)) +
+          destacado(
+            `La solicitud ${esc(d.numeroReferencia)} lleva <strong>${d.diasSinMovimiento ?? "—"} días</strong> en estado «${esc(d.estadoActual)}» sin cambios.`,
+            "aviso"
+          ) +
+          tablaDatos([
+            ["Necesidad", d.titulo ?? ""],
+            ["Solicitante", d.solicitanteNombre ?? ""],
+            ["Requerida para", d.fechaRequerida ?? ""],
+          ]) +
+          boton(d.urlDetalle ?? "", "Ver la solicitud") +
+          parrafoFinal("Si ya se está gestionando, no hace falta hacer nada."),
+      }),
   },
+
   // 6 — Compras necesita información del solicitante (spec 010, RF-59)
   "6": {
     asunto: (d: DatosCorreo) =>
-      `Necesitamos un dato tuyo — ${esc(d.numeroReferencia ?? "")}`.trim(),
-    cuerpo: (d: DatosCorreo) => `
-      <p>Hola ${esc(d.solicitanteNombre)},</p>
-      <p>Para seguir con <b>${esc(d.titulo)}</b> (${esc(d.numeroReferencia ?? "")}),
-      Compras necesita que confirmes ${d.preguntas && d.preguntas.length === 1 ? "un dato" : "algunos datos"}:</p>
-      <ul>
-        ${(d.preguntas ?? []).map((p) => `<li>${esc(p.pregunta)}</li>`).join("")}
-      </ul>
-      <p><a href="${esc(d.urlDetalle)}">Responder ahora</a></p>
-      <p>Su respuesta vuelve directo al coordinador de Compras que está viendo su solicitud.</p>
-      <p>Portal de Compras BIA</p>`,
+      `Necesitamos un dato suyo — ${esc(d.numeroReferencia ?? "")}`.trim(),
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: "Compras necesita un dato suyo",
+        etiqueta: d.numeroReferencia ?? "Acción requerida",
+        preheader: "Su respuesta permite continuar con la solicitud.",
+        contenido:
+          parrafo(saludo(d.solicitanteNombre)) +
+          parrafo(
+            `Para seguir con <strong>${esc(d.titulo)}</strong> (${esc(d.numeroReferencia ?? "")}), Compras necesita que confirme ${
+              d.preguntas && d.preguntas.length === 1 ? "un dato" : "algunos datos"
+            }:`
+          ) +
+          lista((d.preguntas ?? []).map((p) => p.pregunta)) +
+          boton(d.urlDetalle ?? "", "Responder ahora") +
+          parrafoFinal(
+            "Su respuesta vuelve directamente al coordinador de Compras que está viendo su solicitud."
+          ),
+      }),
   },
+
   // 7 — El solicitante respondió (spec 010, RF-60)
   "7": {
     asunto: (d: DatosCorreo) =>
       `${esc(d.solicitanteNombre ?? "El solicitante")} respondió — ${esc(d.numeroReferencia ?? "")}`.trim(),
-    cuerpo: (d: DatosCorreo) => `
-      <p>Hola ${esc(d.coordinadorNombre)},</p>
-      <p>${esc(d.solicitanteNombre)} respondió las preguntas de la ronda ${d.ronda ?? 1}
-      sobre ${esc(d.titulo)} (${esc(d.numeroReferencia ?? "")}):</p>
-      <table cellpadding="6" cellspacing="0" style="font-size:13px">
-        ${(d.preguntas ?? [])
-          .map(
-            (p) => `<tr><td><b>${esc(p.pregunta)}</b></td><td>${esc(p.respuesta) || "<i>sin responder</i>"}</td></tr>`
-          )
-          .join("")}
-      </table>
-      <p><a href="${esc(d.urlDetalle)}">Ver la solicitud</a></p>
-      <p>Portal de Compras BIA</p>`,
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: "El solicitante respondió",
+        etiqueta: d.numeroReferencia ?? "Respuesta",
+        preheader: `Ronda ${d.ronda ?? 1} de preguntas respondida.`,
+        contenido:
+          parrafo(saludo(d.coordinadorNombre)) +
+          parrafo(
+            `${esc(d.solicitanteNombre)} respondió las preguntas de la ronda ${d.ronda ?? 1} sobre ${esc(d.titulo)} (${esc(d.numeroReferencia ?? "")}):`
+          ) +
+          tablaDatos(
+            (d.preguntas ?? []).map((p) => [p.pregunta, p.respuesta || "sin responder"])
+          ) +
+          boton(d.urlDetalle ?? "", "Ver la solicitud") +
+          parrafoFinal("Puede responder con una nueva ronda si falta algún dato."),
+      }),
   },
+
   // 8 — Recordatorio: el solicitante no respondió (spec 010, RF-62)
   "8": {
     asunto: (d: DatosCorreo) =>
       `Sin respuesta hace ${d.diasEsperando ?? 3} días — ${esc(d.numeroReferencia ?? "")}`.trim(),
-    cuerpo: (d: DatosCorreo) => `
-      <p>Hola ${esc(d.coordinadorNombre)},</p>
-      <p>Le pediste información a ${esc(d.solicitanteNombre)} hace ${d.diasEsperando ?? 3} días
-      sobre ${esc(d.titulo)} (${esc(d.numeroReferencia ?? "")}) y todavía no respondió.</p>
-      <table cellpadding="6" cellspacing="0" style="font-size:13px">
-        ${(d.preguntas ?? []).map((p) => `<tr><td><b>${esc(p.pregunta)}</b></td><td>—</td></tr>`).join("")}
-      </table>
-      <p><a href="${esc(d.urlDetalle)}">Ver la solicitud</a></p>
-      <p>Portal de Compras BIA</p>`,
+    cuerpo: (d: DatosCorreo) =>
+      layoutCorreo({
+        titulo: "El solicitante no ha respondido",
+        etiqueta: d.numeroReferencia ?? "Recordatorio",
+        preheader: `Lleva ${d.diasEsperando ?? 3} días esperando respuesta.`,
+        contenido:
+          parrafo(saludo(d.coordinadorNombre)) +
+          destacado(
+            `Le pidió información a ${esc(d.solicitanteNombre)} hace <strong>${d.diasEsperando ?? 3} días</strong> sobre ${esc(d.titulo)} (${esc(d.numeroReferencia ?? "")}) y todavía no ha respondido.`,
+            "aviso"
+          ) +
+          tablaDatos((d.preguntas ?? []).map((p) => [p.pregunta, "—"])) +
+          boton(d.urlDetalle ?? "", "Ver la solicitud") +
+          parrafoFinal("Puede insistir por otro medio o seguir con lo que ya tiene."),
+      }),
   },
 } as const;
 

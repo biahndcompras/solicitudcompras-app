@@ -26,6 +26,11 @@ vi.mock("@/lib/api-client", () => ({
     listarCotizaciones: (...a: unknown[]) => listarCotizaciones(...a),
     generarComparativa: (...a: unknown[]) => generarComparativa(...a),
     transicionar: (...a: unknown[]) => transicionar(...a),
+    // El detalle embebe el bloque de documentos adjuntos (4.12.1).
+    listarAdjuntos: vi.fn().mockResolvedValue({ adjuntos: [] }),
+    subirAdjunto: vi.fn(),
+    eliminarAdjunto: vi.fn(),
+    urlAdjunto: () => "#",
   },
 }));
 

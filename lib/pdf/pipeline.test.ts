@@ -3,8 +3,9 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { pipelineEnvioACompras } from "./pipeline";
+import { urlDeTests } from "@/lib/db/test-url";
 
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
+const DATABASE_URL = urlDeTests() ?? "";
 const describeDb = DATABASE_URL ? describe : describe.skip;
 
 describeDb("pipeline envío a Compras", () => {

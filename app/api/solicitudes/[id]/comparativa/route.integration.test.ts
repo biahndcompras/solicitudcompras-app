@@ -13,8 +13,9 @@ vi.mock("@/lib/ai/orchestrator", () => ({ comparativa: async () => null }));
 
 import { POST } from "./route";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
+import { urlDeTests } from "@/lib/db/test-url";
 
-const describeDb = process.env.DATABASE_URL ? describe : describe.skip;
+const describeDb = urlDeTests() ? describe : describe.skip;
 
 describeDb("comparativa · integración con datos reales (4.10.8)", () => {
   beforeAll(() => {

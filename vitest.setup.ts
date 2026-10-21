@@ -1,6 +1,22 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
+import { apuntaALaBaseReal, urlDeTests } from "@/lib/db/test-url";
+
+// La suite escribe de verdad en la base. Si DATABASE_URL apunta al piloto (Supabase) y no hay
+// TEST_DATABASE_URL, se corta la conexión acá: los tests de integración se omiten y ningún
+// camino puede escribir en la base real por accidente.
+{
+  const urlTests = urlDeTests();
+  if (urlTests) {
+    process.env.DATABASE_URL = urlTests;
+  } else if (apuntaALaBaseReal()) {
+    console.warn(
+      "[tests] DATABASE_URL apunta a una base remota y no hay TEST_DATABASE_URL: se desactivan los tests de integración."
+    );
+    process.env.DATABASE_URL = "";
+  }
+}
 
 // En Node 22+ el `localStorage` global experimental pisa al de jsdom y lanza
 // ("localStorage is not available because --localstorage-file was not provided").

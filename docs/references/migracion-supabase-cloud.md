@@ -51,28 +51,29 @@ Hay **168 solicitudes** en local (126 son de prueba: correos `@bia.hn` y `qa.*`)
 |---|---|
 | Las migraciones crean esquema **y** datos semilla | ✅ catálogo, plantillas y equipo vienen incluidos |
 | Dependencias de Supabase en el esquema | Solo `010`, que inserta los usuarios de auth. El resto es SQL estándar |
-| RLS / policies | **Ninguna.** No hace falta configurar seguridad por fila (consistente con Q2: los coordinadores se ven entre ellos) |
+| RLS / policies | **Sí, la 020.** Es **deny-all** (sin políticas) para cerrar PostgREST: la app accede con `pg` como dueño y no usa PostgREST. No confundir con 4.4.3 (políticas por fila), que sigue pendiente. Ver B5 |
 | Tipos enumerados, `bytea`, `jsonb` | Todo estándar de Postgres 16 |
 | Idempotencia | La tabla `_migraciones` evita re-aplicar. En una base nueva corren una vez en orden |
 
-## ⚠️ El riesgo que hay que decidir antes
+## ✅ El riesgo de los tests ya está cerrado (2026-10-21)
 
-**Los tests de integración escriben en la base.** Crean solicitudes, cotizaciones y
-comparativas de verdad, y borran cosas.
+**Los tests de integración escriben en la base.** Si `DATABASE_URL` apunta a Supabase Cloud,
+`npm test` escribiría en la base del piloto.
 
-Si `DATABASE_URL` apunta a Supabase Cloud, entonces **`npm test` escribe en la base del
-piloto**. Hoy eso es inofensivo porque la base es local; en la nube no lo es.
+**Ya está resuelto en código** (opción 1 del plan original):
 
-Tres salidas:
+- `lib/db/test-url.ts` decide contra qué base corren: `TEST_DATABASE_URL` manda; si no existe,
+  solo se acepta `DATABASE_URL` cuando el host es **local**.
+- `vitest.setup.ts`, `vitest.global-setup.ts` y los 6 tests de integración usan ese helper.
+- Si `DATABASE_URL` es remota y no hay `TEST_DATABASE_URL`, la suite **omite** los tests de
+  integración y **corta** `process.env.DATABASE_URL` antes de que algo pueda conectar.
 
-1. **Base de test aparte** (recomendado): un segundo proyecto Supabase gratuito, o un schema
-   separado, solo para tests. `DATABASE_URL` para la app, `TEST_DATABASE_URL` para la suite.
-   Es trabajo: hay que tocar los tests de integración para que usen esa variable.
-2. **Correr los tests solo contra local**: la app apunta a la nube y los tests siguen usando
-   `localhost`. Simple, pero hay que acordarse cada vez.
-3. **Aceptarlo durante el piloto**: los tests ensucian la base real. **No lo recomiendo**: en
-   `TASKS.md` 4.10.13 ya está anotado que la suite deja filas vivas que el botón de alertas
-   toma como reales y manda correos por ellas.
+Verificado: con `DATABASE_URL` remota (falsa) los 39 tests de integración se **omiten**; con
+`TEST_DATABASE_URL` local, los 39 pasan contra la base de tests.
+
+**Lo único que falta hacer:** crear la base de tests (local `bia_test`, o un proyecto Supabase
+aparte) y poner su URL en `TEST_DATABASE_URL`. No hace falta para apuntar la app a la nube,
+pero sí para correr integración después de migrar.
 
 ## Procedimiento, una vez decidido
 
@@ -103,6 +104,8 @@ psql "$DATABASE_URL" -c "SELECT count(*) FROM usuario"          # los del equipo
 
 - **Rotar la contraseña de Postgres** (`TASKS.md` B1): si se resetea al armar la URL, queda
   resuelto en el mismo movimiento.
-- **El OCR**: `/api/convertir` depende de Python, que no existe en serverless → degrada a
-  carga manual. Es el otro bloqueante de producción (2.2 del assessment de 009), y **migrar
-  la base no lo arregla**.
+- **RLS (migración 020)**: al aplicar el esquema hay que incluirla. Sin ella, PostgREST deja
+  toda la base `public` accesible con la `anon` key (fue el hallazgo B5). Ya se aplicó a mano
+  en el proyecto; el archivo tiene que quedar registrado en `_migraciones`.
+- ~~El OCR~~: ✅ resuelto el 2026-10-17. `/api/convertir` ya no usa Python; convierte con un
+  modelo multimodal de OpenRouter.

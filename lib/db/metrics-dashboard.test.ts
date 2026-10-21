@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { PostgresRepositorio } from "./postgres-repo";
 import type { Pool } from "pg";
+import { urlDeTests } from "@/lib/db/test-url";
 
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
+const DATABASE_URL = urlDeTests() ?? "";
 const describeDb = DATABASE_URL ? describe : describe.skip;
 
 // Mock de pool realista: distingue por SQL y devuelve filas coherentes para

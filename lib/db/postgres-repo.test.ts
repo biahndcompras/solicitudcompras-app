@@ -2,8 +2,9 @@
 // Requiere DATABASE_URL (PostgreSQL migrado 001–006). Si no está, los tests se omiten.
 import { describe, it, expect, beforeAll } from "vitest";
 import { PostgresRepositorio } from "./postgres-repo";
+import { urlDeTests } from "@/lib/db/test-url";
 
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
+const DATABASE_URL = urlDeTests() ?? "";
 
 const describeDb = DATABASE_URL ? describe : describe.skip;
 

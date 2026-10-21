@@ -19,6 +19,7 @@
 // Se registra como `globalSetup`, así corre UNA vez por suite (no por archivo, que sería 58
 // veces). `setup()` barre los residuos acumulados y el `teardown` borra los de esta corrida.
 import type { TestProject } from "vitest/node";
+import { urlDeTests } from "@/lib/db/test-url";
 
 const PATRON = "%@bia.hn";
 
@@ -53,7 +54,8 @@ async function limpiar(client: import("pg").Client) {
 }
 
 export async function setup(_project: TestProject) {
-  const DATABASE_URL = process.env.DATABASE_URL ?? "";
+  // Nunca contra la base del piloto: solo TEST_DATABASE_URL o una local.
+  const DATABASE_URL = urlDeTests() ?? "";
   // Sin base configurada no hay nada que limpiar (los tests de integración se omiten solos).
   if (!DATABASE_URL) return;
 

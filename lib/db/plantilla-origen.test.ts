@@ -11,8 +11,9 @@
 // Requiere DATABASE_URL. Si no está, se omite.
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { PostgresRepositorio } from "./postgres-repo";
+import { urlDeTests } from "@/lib/db/test-url";
 
-const DATABASE_URL = process.env.DATABASE_URL ?? "";
+const DATABASE_URL = urlDeTests() ?? "";
 const describeDb = DATABASE_URL ? describe : describe.skip;
 
 const EMAIL = "plantilla-origen-test@bia.hn";

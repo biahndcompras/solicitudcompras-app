@@ -45,3 +45,18 @@ WHERE s.informacion_preguntas IS NOT NULL
   AND (s.informacion_preguntas->>'ronda') ~ '^[0-9]+$'
   AND jsonb_typeof(s.informacion_preguntas->'preguntas') = 'array'
 ON CONFLICT (solicitud_id, ronda) DO NOTHING;
+
+-- Mismo cierre que la 020: la tabla nace con RLS deny-all (sin políticas) y sin acceso para
+-- `anon`/`authenticated`. La app se conecta como dueño por el pooler y no se ve afectada
+-- (RLS no aplica al dueño); PostgREST queda cerrado igual que el resto de las 18 tablas.
+ALTER TABLE public.ronda_preguntas ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    REVOKE ALL ON public.ronda_preguntas FROM anon;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+    REVOKE ALL ON public.ronda_preguntas FROM authenticated;
+  END IF;
+END $$;

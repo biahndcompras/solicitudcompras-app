@@ -54,6 +54,7 @@ function filaSolicitud(f: Record<string, unknown>): Solicitud {
     // RF-55 (4.4.1): la plantilla de origen. El tipo y la columna ya existían; faltaba
     // persistirla y leerla. Sin esto la solicitud no podría "conservar su versión de origen".
     plantillaId: (f.plantilla_id as string) ?? undefined,
+    llevaBranding: Boolean(f.lleva_branding),
     notificacionFallida: Boolean(f.notificacion_fallida),
     informacionPendiente: Boolean(f.informacion_pendiente),
     informacionPreguntas: (f.informacion_preguntas as PreguntaAlSolicitante | null) ?? undefined,
@@ -143,9 +144,9 @@ export class PostgresRepositorio implements Repositorio {
       `WITH nueva AS (
          INSERT INTO solicitud (titulo, solicitante_email, solicitante_nombre, estado,
            area_solicitante, descripcion, categoria, tipo, subtipo, fecha_requerida, idempotency_key,
-           clasificacion_corregida, plantilla_id)
+           clasificacion_corregida, plantilla_id, lleva_branding)
          VALUES ($1,$2,$3,$4,$5,$6,$7,
-           $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11, $12, $13::uuid)
+           $8::tipo_solicitud, $9::subtipo_solicitud, NULLIF($10,'')::date, $11, $12, $13::uuid, $14)
          ON CONFLICT (solicitante_email, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
          RETURNING *
        ), evento AS (
@@ -174,6 +175,7 @@ export class PostgresRepositorio implements Repositorio {
         // como la fila de `plantilla` lleva `version`, queda registrada la versión de origen.
         // Nullable: si no hay plantilla para (tipo, subtipo, categoría), queda NULL.
         opciones?.plantillaId ?? null,
+        Boolean(opciones?.llevaBranding),
       ]
     );
     if (res.rows[0]) return filaSolicitud(res.rows[0]);

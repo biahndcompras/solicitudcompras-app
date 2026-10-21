@@ -131,6 +131,22 @@ export async function PATCH(
       enlace = { token: link.token, url: `/comparativa/${link.token}` };
     }
 
+    // B2 en el SERVIDOR (4.8.13). Antes solo lo bloqueaba el cliente: un PATCH directo
+    // mandaba a Compras una solicitud con marca y sin arte. El wizard sube el logo antes de
+    // transicionar, así que en el flujo normal `archivoLogoNombre` ya está.
+    if (body.hacia === "ENVIADA_A_COMPRAS") {
+      const actual = await repo.obtenerSolicitud(id);
+      if (actual?.llevaBranding && !actual.archivoLogoNombre) {
+        return NextResponse.json(
+          {
+            error:
+              "Esta solicitud lleva marca: adjunte el arte del producto (logo) antes de enviarla a Compras.",
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     // La transición es el HECHO DE NEGOCIO: el solicitante completó y Compras ya tiene la
     // solicitud. Por eso ocurre ANTES del PDF y de los correos. Antes este endpoint hacía
     // lo contrario (`await pipelineEnvioACompras` y `return 500` si fallaba): un pdfme que

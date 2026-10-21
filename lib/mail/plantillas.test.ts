@@ -101,3 +101,17 @@ describe("marco corporativo de los correos", () => {
     expect(html).toContain("BIA Compras");
   });
 });
+
+
+describe("correo 9 · documento nuevo (4.13.11)", () => {
+  it("trae Descargar con el enlace firmado y Ver la solicitud", () => {
+    const { html } = renderCorreo("9", {
+      ...BASE,
+      documentoNombre: "ficha.pdf",
+      urlDescarga: "https://compras.biahnd.website/api/solicitudes/s1/adjuntos/a1?token=abc",
+    });
+    expect(html).toContain("Descargar documento");
+    expect(html).toContain("adjuntos/a1?token=abc");
+    expect(html).toContain("Ver la solicitud");
+  });
+});

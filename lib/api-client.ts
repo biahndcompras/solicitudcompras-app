@@ -47,6 +47,8 @@ export const api = {
       /** RN-04: el solicitante corrigió el tipo sugerido por la IA. Alimenta la métrica de
        *  precisión del clasificador (doc 16); sin este campo el dato se perdía. */
       clasificacionCorregida?: boolean;
+      /** B2: si lleva marca, el servidor exige el arte antes de enviar. */
+      llevaBranding?: boolean;
       idempotencyKey?: string;
     },
     opts?: { signal?: AbortSignal }

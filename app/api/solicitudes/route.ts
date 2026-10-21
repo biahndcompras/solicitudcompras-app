@@ -76,6 +76,8 @@ const crearSchema = z.object({
   // clientes viejos no lo mandan → default false en la columna), pero si viene hay que
   // persistirlo: es el insumo de la métrica de precisión del clasificador (doc 16).
   clasificacionCorregida: z.boolean().optional(),
+  // B2: lleva marca → el servidor exige el logo antes de enviar.
+  llevaBranding: z.boolean().optional(),
   // No admite fechas pasadas: una solicitud no puede vencer antes de existir.
   fechaRequerida: z
     .string()
@@ -122,6 +124,7 @@ export async function POST(request: Request) {
         clasificacionCorregida: body.clasificacionCorregida,
         idempotencyKey: CLAVE_IDEMPOTENCIA_RE.test(clave) ? clave : undefined,
         plantillaId: plantilla?.id,
+        llevaBranding: body.llevaBranding,
       }
     );
     return NextResponse.json(solicitud, { status: 201 });

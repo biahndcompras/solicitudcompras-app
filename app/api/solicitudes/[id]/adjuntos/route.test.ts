@@ -29,6 +29,7 @@ vi.mock("@/lib/auth", () => ({ getSession: () => sesion() }));
 
 import { GET, POST } from "./route";
 import { DELETE, GET as DESCARGAR } from "./[adjuntoId]/route";
+import { firmarDescarga } from "@/lib/descargas/token";
 
 const ID = "22222222-2222-4222-8222-222222222222";
 const SOLICITUD = {
@@ -171,6 +172,26 @@ describe("descarga y borrado", () => {
     );
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Disposition")).toContain("ficha.pdf");
+  });
+
+  it("el token firmado permite descargar SIN sesión ni correo", async () => {
+    process.env.DOWNLOAD_SECRET = "secreto-de-prueba";
+    obtenerAdjunto.mockResolvedValue({ id: "a1", nombreArchivo: "ficha.pdf", mimeType: "application/pdf", contenido: PDF });
+    const token = firmarDescarga("a1", ID)!;
+    const res = await DESCARGAR(
+      pedir(`http://localhost/api/solicitudes/${ID}/adjuntos/a1?token=${encodeURIComponent(token)}`),
+      { params: paramsAdj }
+    );
+    expect(res.status).toBe(200);
+    delete process.env.DOWNLOAD_SECRET;
+  });
+
+  it("un token inválido NO descarga", async () => {
+    const res = await DESCARGAR(
+      pedir(`http://localhost/api/solicitudes/${ID}/adjuntos/a1?token=basura`),
+      { params: paramsAdj }
+    );
+    expect(res.status).toBe(401);
   });
 
   it("el solicitante NO borra un documento que subió Compras", async () => {

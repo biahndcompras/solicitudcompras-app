@@ -617,6 +617,7 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
               // decirlo en el alta. Es el insumo de la métrica de precisión del clasificador
               // (doc 16); antes viajaba en el borrador y moría en el cliente.
               clasificacionCorregida: estado.clasificacionCorregida,
+              llevaBranding: estado.llevaBranding,
               fechaRequerida: estado.fechaRequerida,
               idempotencyKey: claveEnvio,
             },

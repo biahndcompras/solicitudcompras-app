@@ -46,6 +46,8 @@ export type DatosCorreo = {
   /** Correo 9: documento adjunto nuevo. */
   documentoNombre?: string;
   subidoPor?: string;
+  /** Enlace firmado para descargar el documento desde el correo (4.13.11). */
+  urlDescarga?: string | null;
 };
 
 const saludo = (nombre?: string) => (nombre ? `Hola, ${esc(nombre)}:` : "Hola:");
@@ -278,7 +280,8 @@ export const PLANTILLAS_CORREO = {
             ["Documento", d.documentoNombre ?? ""],
             ["Adjuntado por", d.subidoPor ?? ""],
           ]) +
-          boton(d.urlDetalle ?? "", "Ver el documento") +
+          boton(d.urlDescarga ?? "", "Descargar documento") +
+          boton(d.urlDetalle ?? "", "Ver la solicitud") +
           parrafoFinal("El documento queda disponible dentro de la solicitud."),
       }),
   },

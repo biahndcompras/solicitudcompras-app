@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { getSession } from "@/lib/auth";
 import { guardRecursoDeSolicitud } from "@/lib/api-guard";
+import { urlDescargaAdjunto } from "@/lib/descargas/token";
 import {
   MAX_BYTES_DOCUMENTO,
   validarDocumentoAdjunto,
@@ -78,6 +79,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         numeroReferencia: solicitud.numeroReferencia,
         titulo: solicitud.titulo,
         documentoNombre: archivo.name,
+        // Enlace firmado: el botón del correo baja el archivo sin pedir sesión.
+        urlDescarga: urlDescargaAdjunto(base, id, adjunto.id),
       };
       if (esSolicitante) {
         const destinatario = await destinatarioCoordinador(solicitud.coordinadorId);

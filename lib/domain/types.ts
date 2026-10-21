@@ -108,6 +108,8 @@ export type Solicitud = {
   motivoCancelacion?: string;
   notificacionFallida: boolean;
   archivoLogoNombre?: string;
+  /** B2: si lleva marca, el servidor exige el arte adjunto antes de enviar. */
+  llevaBranding?: boolean;
   /** Ronda de preguntas abierta al solicitante (spec 010). No es un estado: la solicitud
    *  sigue en su estado real, esto solo dice que encima hay algo que la está esperando. */
   informacionPendiente?: boolean;

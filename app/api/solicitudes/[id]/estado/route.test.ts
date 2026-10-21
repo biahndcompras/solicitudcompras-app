@@ -200,3 +200,32 @@ describe("B3 en el servidor · la recomendación humana es obligatoria (RN-01)",
     expect(guardarRecomendacionComprador).not.toHaveBeenCalled();
   });
 });
+
+// 4.8.13 / B2 — la regla "producto con marca sin arte no avanza" también en el servidor.
+// Antes solo la bloqueaba el cliente: un PATCH directo se la saltaba.
+describe("B2 en el servidor · marca sin logo no se envía", () => {
+  it("responde 409 y NO transiciona si lleva marca y no hay arte", async () => {
+    obtenerSolicitud.mockResolvedValue({ ...SOLICITUD, llevaBranding: true });
+    const res = await pedir("ENVIADA_A_COMPRAS");
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: expect.stringMatching(/arte/i) });
+    expect(transicionarEstado).not.toHaveBeenCalled();
+  });
+
+  it("con el arte adjunto sí transiciona", async () => {
+    obtenerSolicitud.mockResolvedValue({
+      ...SOLICITUD,
+      llevaBranding: true,
+      archivoLogoNombre: "logo.png",
+    });
+    const res = await pedir("ENVIADA_A_COMPRAS");
+    expect(res.status).toBe(200);
+    expect(transicionarEstado).toHaveBeenCalledTimes(1);
+  });
+
+  it("sin marca no exige arte", async () => {
+    obtenerSolicitud.mockResolvedValue({ ...SOLICITUD, llevaBranding: false });
+    const res = await pedir("ENVIADA_A_COMPRAS");
+    expect(res.status).toBe(200);
+  });
+});

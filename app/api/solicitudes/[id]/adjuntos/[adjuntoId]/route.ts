@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { getSession } from "@/lib/auth";
 import { guardRecursoDeSolicitud } from "@/lib/api-guard";
+import { verificarDescarga } from "@/lib/descargas/token";
 
 const repo = new PostgresRepositorio();
 
@@ -14,8 +15,19 @@ export async function GET(
     const { id, adjuntoId } = await params;
     const solicitud = await repo.obtenerSolicitud(id);
     if (!solicitud) return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
-    const auth = await guardRecursoDeSolicitud(request, solicitud);
-    if (!auth.autorizado) return auth.negada;
+
+    // 4.13.11: el enlace del correo trae un token firmado y caducable. Si es válido para
+    // ESTE adjunto de ESTA solicitud, no hace falta sesión ni correo. Si no, se cae a la
+    // regla de siempre (Compras o el dueño).
+    const token = new URL(request.url).searchParams.get("token");
+    if (token) {
+      if (!verificarDescarga(token, adjuntoId, id)) {
+        return NextResponse.json({ error: "Enlace de descarga inválido o vencido" }, { status: 401 });
+      }
+    } else {
+      const auth = await guardRecursoDeSolicitud(request, solicitud);
+      if (!auth.autorizado) return auth.negada;
+    }
 
     const adjunto = await repo.obtenerAdjunto(id, adjuntoId);
     if (!adjunto || !adjunto.contenido) {

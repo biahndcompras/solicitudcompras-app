@@ -10,6 +10,8 @@ const repo = vi.hoisted(() => ({
   listarCampoCatalogo: vi.fn(),
   obtenerDecisionPorSolicitud: vi.fn(),
   listarCotizaciones: vi.fn(),
+  listarRondasPreguntas: vi.fn(),
+  listarCamposDePlantillaPorId: vi.fn(),
 }));
 
 vi.mock("@/lib/db/postgres-repo", () => ({
@@ -19,6 +21,8 @@ vi.mock("@/lib/db/postgres-repo", () => ({
     listarCampoCatalogo = repo.listarCampoCatalogo;
     obtenerDecisionPorSolicitud = repo.obtenerDecisionPorSolicitud;
     listarCotizaciones = repo.listarCotizaciones;
+    listarRondasPreguntas = repo.listarRondasPreguntas;
+    listarCamposDePlantillaPorId = repo.listarCamposDePlantillaPorId;
   },
 }));
 
@@ -56,10 +60,14 @@ beforeEach(() => {
   repo.listarCampoCatalogo.mockReset();
   repo.obtenerDecisionPorSolicitud.mockReset();
   repo.listarCotizaciones.mockReset();
+  repo.listarRondasPreguntas.mockReset();
+  repo.listarCamposDePlantillaPorId.mockReset();
   repo.listarRespuestas.mockResolvedValue([]);
   repo.listarCampoCatalogo.mockResolvedValue([]);
   repo.obtenerDecisionPorSolicitud.mockResolvedValue(undefined);
   repo.listarCotizaciones.mockResolvedValue([]);
+  repo.listarRondasPreguntas.mockResolvedValue([]);
+  repo.listarCamposDePlantillaPorId.mockResolvedValue([]);
 });
 
 async function renderizar(s: Solicitud) {

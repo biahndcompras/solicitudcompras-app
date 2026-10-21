@@ -16,6 +16,7 @@ import type {
   PreguntaAlSolicitante,
   RespuestaCampo,
   RespuestaDelSolicitante,
+  RondaPreguntas,
   Solicitud,
   Usuario,
 } from "@/lib/domain/types";
@@ -215,6 +216,55 @@ export class PostgresRepositorio implements Repositorio {
       valor: f.valor ?? undefined,
       valorNumerico: f.valor_numerico ?? undefined,
       origen: f.origen,
+    }));
+  }
+
+  /** Historial completo de rondas de preguntas, en orden (4.13.20). */
+  async listarRondasPreguntas(solicitudId: string): Promise<RondaPreguntas[]> {
+    const res = await this.pg.query(
+      `SELECT * FROM ronda_preguntas WHERE solicitud_id = $1 ORDER BY ronda`,
+      [solicitudId]
+    );
+    return res.rows.map((f) => ({
+      id: String(f.id),
+      solicitudId: String(f.solicitud_id),
+      ronda: Number(f.ronda),
+      preguntas: (f.preguntas as { campoKey: string; pregunta: string }[]) ?? [],
+      respuestas: (f.respuestas as Record<string, string> | null) ?? undefined,
+      pedidaPor: f.pedida_por ?? undefined,
+      pedidaEn: new Date(f.pedida_en).toISOString(),
+      respondidaEn: f.respondida_en ? new Date(f.respondida_en).toISOString() : undefined,
+    }));
+  }
+
+  /**
+   * Campos de UNA plantilla concreta (la congelada en la solicitud, RF-55).
+   *
+   * `listarCamposDePlantilla` resuelve por tipo/subtipo/categoría y devuelve la plantilla
+   * VIGENTE: si el admin la edita después, el detalle mostraría preguntas que el solicitante
+   * nunca vio. Acá se lee por `plantilla_id` y se respeta el `label_override`.
+   */
+  async listarCamposDePlantillaPorId(plantillaId: string): Promise<CampoCatalogo[]> {
+    const res = await this.pg.query(
+      `SELECT cc.*, COALESCE(pc.label_override, cc.label) AS label_efectiva
+         FROM plantilla_campo pc
+         JOIN campo_catalogo cc ON cc.id = pc.campo_id
+        WHERE pc.plantilla_id = $1
+        ORDER BY pc.orden, cc.orden`,
+      [plantillaId]
+    );
+    return res.rows.map((f) => ({
+      campoKey: String(f.campo_key),
+      label: String(f.label_efectiva),
+      ayuda: f.ayuda ?? undefined,
+      tipoDato: f.tipo_dato,
+      catalogoOpciones: f.catalogo_opciones ?? undefined,
+      obligatorio: Boolean(f.obligatorio),
+      origen: f.origen,
+      seccionPdf: f.seccion_pdf ?? undefined,
+      orden: Number(f.orden),
+      validacion: f.validacion ?? undefined,
+      activo: Boolean(f.activo),
     }));
   }
 
@@ -958,13 +1008,27 @@ export class PostgresRepositorio implements Repositorio {
           WHERE id = $1`,
         [input.solicitudId, JSON.stringify(preguntas)]
       );
+      // El historial (4.13.20): sin esta fila, la ronda se pierde cuando se abre la
+      // siguiente. El upsert cubre el caso de un número de ronda repetido.
       await client.query(
-        `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota)
-         VALUES ($1,'pregunta_solicitante','coordinador',$2,$3)`,
+        `INSERT INTO ronda_preguntas (solicitud_id, ronda, preguntas, pedida_por, pedida_en)
+         VALUES ($1,$2,$3::jsonb,$4,now())
+         ON CONFLICT (solicitud_id, ronda) DO UPDATE SET
+           preguntas = EXCLUDED.preguntas,
+           pedida_por = EXCLUDED.pedida_por,
+           pedida_en = EXCLUDED.pedida_en,
+           respuestas = NULL,
+           respondida_en = NULL`,
+        [input.solicitudId, ronda, JSON.stringify(input.preguntas), input.pedidaPor ?? null]
+      );
+      await client.query(
+        `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota, metadata)
+         VALUES ($1,'pregunta_solicitante','coordinador',$2,$3,$4::jsonb)`,
         [
           input.solicitudId,
           input.pedidaPor ?? null,
           `Ronda ${ronda}: ${input.preguntas.length} pregunta(s) al solicitante`,
+          JSON.stringify({ ronda, preguntas: input.preguntas }),
         ]
       );
       await client.query("COMMIT");
@@ -1036,13 +1100,31 @@ export class PostgresRepositorio implements Repositorio {
           WHERE id = $1`,
         [input.solicitudId, JSON.stringify(respuesta)]
       );
+      // La respuesta se guarda en el historial de la ronda. El upsert crea la fila si la
+      // ronda nació antes de existir la tabla (backfill incompleto), con sus preguntas.
       await client.query(
-        `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota)
-         VALUES ($1,'respuesta_solicitante','solicitante',$2,$3)`,
+        `INSERT INTO ronda_preguntas (solicitud_id, ronda, preguntas, respuestas, pedida_por, pedida_en, respondida_en)
+         VALUES ($1,$2,$3::jsonb,$4::jsonb,$5,COALESCE($6::timestamptz, now()),now())
+         ON CONFLICT (solicitud_id, ronda) DO UPDATE SET
+           respuestas = EXCLUDED.respuestas,
+           respondida_en = EXCLUDED.respondida_en`,
+        [
+          input.solicitudId,
+          ronda,
+          JSON.stringify(actual.informacionPreguntas?.preguntas ?? []),
+          JSON.stringify(respuestasValidas),
+          actual.informacionPreguntas?.pedidaPor ?? null,
+          actual.informacionPreguntas?.pedidaEn ?? null,
+        ]
+      );
+      await client.query(
+        `INSERT INTO evento_trazabilidad (solicitud_id, tipo_evento, actor_tipo, actor_identificador, nota, metadata)
+         VALUES ($1,'respuesta_solicitante','solicitante',$2,$3,$4::jsonb)`,
         [
           input.solicitudId,
           input.respondidoPor ?? null,
           `Ronda ${ronda} respondida: ${claves.length} campo(s)`,
+          JSON.stringify({ ronda, respuestas: respuestasValidas }),
         ]
       );
       await client.query("COMMIT");
@@ -1255,6 +1337,7 @@ export class PostgresRepositorio implements Repositorio {
       actorTipo: f.actor_tipo ?? "sistema",
       actorIdentificador: f.actor_identificador ?? undefined,
       nota: f.nota ?? undefined,
+      metadata: (f.metadata as Record<string, unknown> | null) ?? undefined,
       timestamp: new Date(f.timestamp).toISOString(),
     }));
   }

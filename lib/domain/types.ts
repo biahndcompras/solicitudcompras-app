@@ -134,6 +134,24 @@ export type RespuestaDelSolicitante = {
   respuestas: Record<string, string>;
 };
 
+/**
+ * Una ronda de preguntas al solicitante, tal como se le mostró.
+ *
+ * Antes el historial vivía solo en columnas de `solicitud`: cada ronda nueva sobrescribía la
+ * anterior y el coordinador perdía el contexto. Ahora cada ronda es una fila (4.13.20).
+ */
+export type RondaPreguntas = {
+  id: string;
+  solicitudId: string;
+  ronda: number;
+  preguntas: { campoKey: string; pregunta: string }[];
+  /** Sin respuestas mientras la ronda está abierta. */
+  respuestas?: Record<string, string>;
+  pedidaPor?: string;
+  pedidaEn: string;
+  respondidaEn?: string;
+};
+
 export type RespuestaCampo = {
   id: string;
   solicitudId: string;
@@ -251,6 +269,8 @@ export type EventoTrazabilidad = {
   actorTipo: "solicitante" | "coordinador" | "admin" | "sistema";
   actorIdentificador?: string;
   nota?: string;
+  /** Payload completo cuando el resumen no alcanza (rondas de preguntas, por ejemplo). */
+  metadata?: Record<string, unknown>;
   timestamp: string;
 };
 

@@ -227,6 +227,43 @@ describeDb("preguntas al solicitante (spec 010) · el ciclo se repite", () => {
     expect(tras?.informacionPreguntas?.ronda).toBe(2);
   });
 
+  it("el historial guarda TODAS las rondas: la segunda no pisa a la primera", async () => {
+    const { repo, id } = await solicitudViva(`historial.${Date.now()}@bia.hn`);
+    await repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS, pedidaPor: "c1@b.co" });
+    await repo.responderInformacion({ solicitudId: id, respuestas: { materiales: "Acero" }, respondidoPor: "s@b.co" });
+    await repo.pedirInformacion({
+      solicitudId: id,
+      preguntas: [{ campoKey: "plazo_entrega", pregunta: "¿Para cuándo?" }],
+      pedidaPor: "c2@b.co",
+    });
+
+    const rondas = await repo.listarRondasPreguntas(id);
+
+    expect(rondas).toHaveLength(2);
+    // La ronda 1 conserva su pregunta y su respuesta aunque ya se haya abierto la 2.
+    expect(rondas[0].ronda).toBe(1);
+    expect(rondas[0].preguntas[0].pregunta).toContain("material");
+    expect(rondas[0].respuestas?.materiales).toBe("Acero");
+    expect(rondas[0].respondidaEn).toBeTruthy();
+    // La 2 sigue abierta.
+    expect(rondas[1].ronda).toBe(2);
+    expect(rondas[1].preguntas[0].pregunta).toContain("cuándo");
+    expect(rondas[1].respuestas).toBeUndefined();
+  });
+
+  it("el evento de cada ronda guarda el texto completo (traza autocontenida)", async () => {
+    const { repo, id } = await solicitudViva(`metadata.${Date.now()}@bia.hn`);
+    await repo.pedirInformacion({ solicitudId: id, preguntas: PREGUNTAS, pedidaPor: "c@b.co" });
+    await repo.responderInformacion({ solicitudId: id, respuestas: { materiales: "Acero" } });
+
+    const eventos = await repo.listarEventos(id);
+    const pregunta = eventos.find((e) => e.tipoEvento === "pregunta_solicitante");
+    const respuesta = eventos.find((e) => e.tipoEvento === "respuesta_solicitante");
+
+    expect((pregunta?.metadata as { preguntas?: { pregunta: string }[] })?.preguntas?.[0]?.pregunta).toContain("material");
+    expect((respuesta?.metadata as { respuestas?: Record<string, string> })?.respuestas?.materiales).toBe("Acero");
+  });
+
   it("una solicitud cerrada no admite preguntas", async () => {
     const repo = new PostgresRepositorio();
     const email = `cerrada.${Date.now()}@bia.hn`;

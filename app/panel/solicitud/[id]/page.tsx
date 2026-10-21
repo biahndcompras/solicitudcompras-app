@@ -5,6 +5,7 @@ import { Badge, type BadgeTone } from "@/components/Badge";
 import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
 import { formatoFechaLegible } from "@/lib/domain/semaforo";
 import type { Decision } from "@/lib/domain/types";
+import { armarFormularioOriginal, completarRondas } from "@/lib/domain/formulario";
 
 const repo = new PostgresRepositorio();
 
@@ -21,6 +22,13 @@ export default async function SolicitudDetallePage({
   // Campos que el solicitante respondió: durante el wizard y al contestar preguntas de
   // Compras. Antes solo existían dentro del PDF.
   const respuestas = await repo.listarRespuestas(id);
+  const rondas = completarRondas(await repo.listarRondasPreguntas(id), solicitud);
+  // El cuestionario original se lee de la plantilla CONGELADA de la solicitud (RF-55), no de
+  // la vigente: si el admin la edita, el detalle no debe mostrar preguntas que no se hicieron.
+  const camposPlantilla = solicitud.plantillaId
+    ? await repo.listarCamposDePlantillaPorId(solicitud.plantillaId)
+    : [];
+  const formulario = armarFormularioOriginal(camposPlantilla, respuestas);
   const campos = (await repo.listarCampoCatalogo(true))
     .filter((c) => c.activo && c.origen === "assessment")
     .map((c) => ({ campoKey: c.campoKey, label: c.label }));
@@ -74,7 +82,7 @@ export default async function SolicitudDetallePage({
           </div>
         </div>
         <div className="px-6 md:px-10 pb-10">
-          <DetalleSolicitud solicitud={solicitud} decision={decision ?? undefined} proveedorElegido={proveedorElegido} campos={campos} respuestas={respuestas} />
+          <DetalleSolicitud solicitud={solicitud} decision={decision ?? undefined} proveedorElegido={proveedorElegido} campos={campos} formulario={formulario} rondas={rondas} />
         </div>
       </div>
     </main>

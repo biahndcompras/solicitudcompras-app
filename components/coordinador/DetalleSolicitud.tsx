@@ -9,10 +9,12 @@ import { Recomendacion } from "./Recomendacion";
 import { Modal } from "./Modal";
 import { PedirInformacion, type CampoParaPreguntar } from "./PedirInformacion";
 import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
+import { FormularioYRespuestas } from "@/components/shared/FormularioYRespuestas";
+import type { PreguntaOriginal } from "@/lib/domain/formulario";
 import { api } from "@/lib/api-client";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { formatoFechaLegible, fechaInput } from "@/lib/domain/semaforo";
-import type { Cotizacion, Comparativa, Decision, Solicitud } from "@/lib/domain/types";
+import type { Cotizacion, Comparativa, Decision, RondaPreguntas, Solicitud } from "@/lib/domain/types";
 
 type Etapa = 7 | 8 | 9;
 
@@ -32,11 +34,13 @@ type DetalleSolicitudProps = {
   proveedorElegido?: string;
   /** Campos del catálogo, para atar una pregunta a un campo (opcional al preguntar). */
   campos?: CampoParaPreguntar[];
-  /** Lo que el solicitante respondió, como valores de campo. */
-  respuestas?: { campoKey: string; campoLabel: string; valor?: string }[];
+  /** Formulario original (plantilla congelada + assessment) con sus respuestas. */
+  formulario?: PreguntaOriginal[];
+  /** Historial completo de rondas de preguntas (4.13.20). */
+  rondas?: RondaPreguntas[];
 };
 
-export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos = [], respuestas = [] }: DetalleSolicitudProps) {
+export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos = [], formulario = [], rondas = [] }: DetalleSolicitudProps) {
   const router = useRouter();
   const terminal = ESTADOS_TERMINALES.includes(solicitud.estado);
   const [etapa, setEtapa] = useState<Etapa>(7);
@@ -223,8 +227,6 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
   // botón no debe ofrecer algo que va a fallar.
   const rondaAbierta = solicitud.informacionPendiente === true;
   const puedePedirInfo = !terminal && !rondaAbierta;
-  const ronda = solicitud.informacionPreguntas;
-  const respuesta = solicitud.informacionRespuesta;
   const indiceEtapa = ETAPAS.findIndex((e) => e.n === etapa);
 
   return (
@@ -250,68 +252,6 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
                 ? <>El solicitante eligió <span className="font-semibold">{proveedorElegido ?? "una opción"}</span>{solicitud.fechaCierre ? <> · {new Date(solicitud.fechaCierre).toLocaleDateString("es-HN")}</> : null}.</>
                 : "El ciclo terminó; no hay acciones pendientes para Compras."}
             </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Ronda de preguntas al solicitante (spec 010). Muestra las dos mitades del ciclo:
-          lo que Compras preguntó y lo que le respondieron. Sin este bloque el coordinador
-          pide información y no puede leer la respuesta en ningún lado. */}
-      {ronda ? (
-        <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50/60 p-5">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-sky-600 shrink-0">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
-              </svg>
-              <span className="text-sm font-semibold text-sky-900">
-                Preguntas al solicitante · ronda {ronda.ronda}
-              </span>
-            </div>
-            <span
-              className={
-                "shrink-0 inline-flex items-center text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded-full " +
-                (rondaAbierta ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800")
-              }
-            >
-              {rondaAbierta ? "Esperando respuesta" : "Respondida"}
-            </span>
-          </div>
-
-          <ul className="space-y-2">
-            {ronda.preguntas.map((p) => {
-              const r = respuesta?.respuestas?.[p.campoKey];
-              return (
-                <li key={p.campoKey} className="rounded-xl bg-white border border-sky-100 px-3 py-2.5">
-                  <span className="block text-xs font-semibold text-slate-800">{p.pregunta}</span>
-                  {rondaAbierta ? (
-                    <span className="block text-xs text-slate-400 mt-0.5">Sin responder todavía</span>
-                  ) : (
-                    <span className="block text-xs text-slate-600 mt-0.5">
-                      {r || <em className="text-slate-400">no lo sé</em>}
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
-
-      {/* Lo que el solicitante respondió, como campos. Antes esto solo existía dentro del PDF
-          que se manda a los proveedores: el coordinador tenía que abrirlo para verlo. */}
-      {respuestas.length > 0 ? (
-        <div className="mb-6 bg-white rounded-2xl border border-slate-200 p-5">
-          <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-3 font-semibold">
-            Respuestas del solicitante ({respuestas.length})
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
-            {respuestas.map((r) => (
-              <div key={r.campoKey} className="min-w-0">
-                <span className="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">{r.campoLabel}</span>
-                <span className="text-xs text-slate-700 break-words">{r.valor || <em className="text-slate-400">no especificado</em>}</span>
-              </div>
-            ))}
           </div>
         </div>
       ) : null}
@@ -617,6 +557,10 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
 
           {/* Documentos adjuntos (4.4.12): Compras sube y también ve lo que subió el solicitante. */}
           <DocumentosAdjuntos solicitudId={solicitud.id} />
+
+          {/* Formulario original + historial de rondas: el contexto completo para el
+              coordinador, al final de la columna derecha (4.13.20). */}
+          <FormularioYRespuestas preguntas={formulario} rondas={rondas} rondaAbierta={rondaAbierta} />
         </aside>
       </div>
 

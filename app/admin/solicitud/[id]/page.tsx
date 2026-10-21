@@ -6,6 +6,8 @@ import { SemParoBadge } from "@/components/Semaforo";
 import { CancelarSolicitudButton } from "@/components/CancelarSolicitudButton";
 import { ReasignarCoordinador } from "@/components/ReasignarCoordinador";
 import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
+import { FormularioYRespuestas } from "@/components/shared/FormularioYRespuestas";
+import { armarFormularioOriginal, completarRondas } from "@/lib/domain/formulario";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { duracionAtencion } from "@/lib/domain/semaforo";
@@ -34,6 +36,15 @@ export default async function AdminSolicitudDetallePage({
       repo.obtenerComparativaPorSolicitudId(id),
       repo.obtenerDecisionPorSolicitud(id),
     ]);
+
+  // Formulario original + historial de rondas (4.13.20). La plantilla se lee congelada
+  // (`plantilla_id` de la solicitud) para no mostrar preguntas que el solicitante no vio.
+  const [rondasGuardadas, camposPlantilla] = await Promise.all([
+    repo.listarRondasPreguntas(id),
+    s.plantillaId ? repo.listarCamposDePlantillaPorId(s.plantillaId) : Promise.resolve([]),
+  ]);
+  const rondas = completarRondas(rondasGuardadas, s);
+  const formulario = armarFormularioOriginal(camposPlantilla, respuestas);
 
   // El admin ve TODO: lo que respondió el solicitante, las cotizaciones con precios, la
   // comparativa, la sugerencia del sistema y lo que el solicitante decidió.
@@ -86,24 +97,6 @@ export default async function AdminSolicitudDetallePage({
         <div className="lg:col-span-2 space-y-4">
           {/* Documentos adjuntos (4.4.12): el admin ve y gestiona lo mismo que Compras. */}
           <DocumentosAdjuntos solicitudId={s.id} />
-
-          {respuestas.length > 0 ? (
-            <section className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">
-                Respuestas del solicitante ({respuestas.length})
-              </h3>
-              <dl className="divide-y divide-slate-100">
-                {respuestas.map((r) => (
-                  <div key={r.id} className="py-2.5 flex items-start justify-between gap-6">
-                    <dt className="text-[12px] text-slate-500">{r.campoLabel}</dt>
-                    <dd className="text-[12px] font-medium text-slate-900 text-right max-w-[60%]">
-                      {r.valor ?? (r.valorNumerico !== undefined ? String(r.valorNumerico) : "no especificado")}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          ) : null}
 
           {cotizaciones.length > 0 ? (
             <section className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 overflow-x-auto">
@@ -275,6 +268,8 @@ export default async function AdminSolicitudDetallePage({
               </div>
             </div>
           </div>
+
+          <FormularioYRespuestas preguntas={formulario} rondas={rondas} rondaAbierta={s.informacionPendiente === true} />
         </aside>
       </div>
     </AdminShell>

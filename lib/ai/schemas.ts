@@ -131,10 +131,16 @@ export const ExtraerCotizacionOutputSchema = z.object({
   especificacionesOfertadas: z.record(z.string(), z.string()).default({}),
   observacionesFiscales: z.string().nullable().optional(),
   ilegible: z.boolean().optional(),
+  // Guardrail 4.13.17: ¿el documento es realmente una cotización? Si el modelo no lo dice,
+  // se asume `true` (fail-open): el guardrail no debe bloquear una cotización válida por una
+  // omisión del modelo.
+  esCotizacion: z.boolean().optional(),
+  motivoNoCotizacion: z.string().nullable().optional(),
   confianzaPorCampo: z.record(z.string(), z.number()).default({}),
 }).transform((d) => ({
   ...d,
   ilegible: d.ilegible ?? false,
+  esCotizacion: d.esCotizacion ?? true,
 }));
 
 export type ExtraerCotizacionInput = z.infer<typeof ExtraerCotizacionInputSchema>;

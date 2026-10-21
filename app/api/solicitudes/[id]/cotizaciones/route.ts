@@ -22,7 +22,7 @@ export async function GET(
 
 const schema = z.object({
   proveedorNombre: z.string().min(1),
-  formatoOriginal: z.enum(["pdf", "docx", "imagen", "manual"]),
+  formatoOriginal: z.enum(["pdf", "docx", "pptx", "imagen", "manual"]),
   valorNeto: z.number().nullable().optional(),
   moneda: z.string().optional(),
   impuestosDesglosados: z.boolean().nullable().optional(),
@@ -71,18 +71,51 @@ export async function POST(
       body = schema.parse(await request.json());
     }
 
+    // Guardrail (4.13.17): ANTES de guardar, si hay texto extraído se pregunta a la IA si el
+    // documento ES una cotización. Un contrato, una factura o un catálogo sin precios se
+    // rechazan con un mensaje claro, en vez de crear una cotización vacía que ensucie la
+    // comparativa. Si la IA no está o falla, se sigue con el alta manual (no bloquea).
+    let extraida: Awaited<ReturnType<typeof import("@/lib/ai/orchestrator")["extraerCotizacion"]>> = null;
+    if (body.markdownExtraido) {
+      try {
+        const { extraerCotizacion } = await import("@/lib/ai/orchestrator");
+        extraida = await extraerCotizacion({
+          markdown: body.markdownExtraido,
+          especificacionesSolicitadas: {},
+        });
+        if (extraida && extraida.esCotizacion === false) {
+          return NextResponse.json(
+            {
+              error:
+                "Este documento no parece una cotización. Suba la cotización del proveedor: debe ofrecer productos o servicios con precios y condiciones.",
+            },
+            { status: 422 }
+          );
+        }
+      } catch {
+        // Sin IA: se guarda con lo que haya; la extracción no debe bloquear el trabajo.
+      }
+    }
+
     const cotizacion = await repo.guardarCotizacion({
       solicitudId: id,
-      proveedorNombre: body.proveedorNombre,
+      proveedorNombre: extraida?.proveedorNombre ?? body.proveedorNombre,
+      proveedorIdentificacionFiscal: extraida?.proveedorIdentificacionFiscal ?? undefined,
+      proveedorContacto: extraida?.proveedorContacto ?? undefined,
       formatoOriginal: body.formatoOriginal,
-      valorNeto: body.valorNeto ?? undefined,
-      moneda: body.moneda,
-      impuestosDesglosados: body.impuestosDesglosados ?? undefined,
-      montoIsv: body.montoIsv ?? undefined,
-      valorTotal: body.valorTotal ?? undefined,
-      plazoEntrega: body.plazoEntrega,
-      especificacionesOfertadas: body.especificacionesOfertadas,
-      confianzaExtraccion: body.confianzaExtraccion,
+      valorNeto: extraida?.valorNeto ?? body.valorNeto ?? undefined,
+      moneda: extraida?.moneda ?? body.moneda,
+      impuestosDesglosados: extraida?.impuestosDesglosados ?? body.impuestosDesglosados ?? undefined,
+      montoIsv: extraida?.montoIsv ?? body.montoIsv ?? undefined,
+      montoOtrosImpuestos: extraida?.montoOtrosImpuestos ?? undefined,
+      valorTotal: extraida?.valorTotal ?? body.valorTotal ?? undefined,
+      plazoEntrega: extraida?.plazoEntrega ?? body.plazoEntrega,
+      formaPago: extraida?.formaPago ?? undefined,
+      vigenciaOferta: extraida?.vigenciaOferta ?? undefined,
+      garantia: extraida?.garantia ?? undefined,
+      especificacionesOfertadas: extraida?.especificacionesOfertadas ?? body.especificacionesOfertadas,
+      observacionesFiscales: extraida?.observacionesFiscales ?? undefined,
+      confianzaExtraccion: extraida?.confianzaPorCampo ?? body.confianzaExtraccion,
       editadaManualmente: false,
       fechaCarga: new Date().toISOString(),
       // 2.2: persistir el archivo original para adjuntarlo al envío de comparativa.
@@ -91,48 +124,10 @@ export async function POST(
       archivoBytea,
     });
 
-    // Si se incluyó markdown extraído, ejecutar extracción IA y actualizar.
-    if (body.markdownExtraido) {
-      try {
-        const { extraerCotizacion } = await import("@/lib/ai/orchestrator");
-        const extraida = await extraerCotizacion({
-          markdown: body.markdownExtraido,
-          especificacionesSolicitadas: {},
-        });
-        if (extraida) {
-          await repo.actualizarCotizacion(cotizacion.id, {
-            proveedorNombre: extraida.proveedorNombre ?? cotizacion.proveedorNombre,
-            proveedorIdentificacionFiscal: extraida.proveedorIdentificacionFiscal ?? undefined,
-            proveedorContacto: extraida.proveedorContacto ?? undefined,
-            valorNeto: extraida.valorNeto ?? undefined,
-            moneda: extraida.moneda ?? undefined,
-            impuestosDesglosados: extraida.impuestosDesglosados ?? undefined,
-            montoIsv: extraida.montoIsv ?? undefined,
-            montoOtrosImpuestos: extraida.montoOtrosImpuestos ?? undefined,
-            valorTotal: extraida.valorTotal ?? undefined,
-            plazoEntrega: extraida.plazoEntrega ?? undefined,
-            formaPago: extraida.formaPago ?? undefined,
-            vigenciaOferta: extraida.vigenciaOferta ?? undefined,
-            garantia: extraida.garantia ?? undefined,
-            especificacionesOfertadas: extraida.especificacionesOfertadas,
-            observacionesFiscales: extraida.observacionesFiscales ?? undefined,
-            confianzaExtraccion: extraida.confianzaPorCampo,
-            fechaCarga: new Date().toISOString(),
-          });
-          // Validación fiscal tras extraer (asíncrona, no bloqueante).
-          void validarCotizacion(cotizacion.id, extraida).catch(() => undefined);
-        }
-      } catch {
-        // Si la extracción IA falla, se guarda con los datos originales (no bloqueante).
-      }
-    }
+    // Validación fiscal tras extraer (asíncrona, no bloqueante).
+    if (extraida) void validarCotizacion(cotizacion.id, extraida).catch(() => undefined);
 
-    // Releer para devolver datos actualizados.
-    const actualizada = body.markdownExtraido
-      ? (await repo.listarCotizaciones(id)).find((c) => c.id === cotizacion.id) ?? cotizacion
-      : cotizacion;
-
-    return NextResponse.json(actualizada, { status: 201 });
+    return NextResponse.json(cotizacion, { status: 201 });
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: "Datos inválidos", detalles: e.issues }, { status: 400 });

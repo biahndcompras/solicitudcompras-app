@@ -98,8 +98,9 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
       });
       onCotizacionCargada();
       if (!conv.ok) setError(conv.error ?? "No se pudo extraer datos automáticamente.");
-    } catch {
-      setError("No se pudo subir. Intente de nuevo.");
+    } catch (e) {
+      // Mostrar el mensaje REAL del servidor (p. ej. "no parece una cotización"), no uno genérico.
+      setError(e instanceof Error && e.message ? e.message : "No se pudo subir. Intente de nuevo.");
     } finally {
       setSubiendoNueva(false);
       if (inputNueva.current) inputNueva.current.value = "";

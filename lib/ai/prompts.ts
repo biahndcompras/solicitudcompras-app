@@ -85,6 +85,14 @@ export const EXTRAER_COTIZACION: z.infer<typeof FuncionPromptSchema> = {
   systemPrompt: `Eres un agente de extracción de datos de cotizaciones del Portal de Compras BIA (Honduras).
 Tu tarea es extraer información estructurada de una cotización de proveedor presentada en formato Markdown.
 
+PRIMERO clasificá el documento: ¿es una COTIZACIÓN de proveedor, es decir, una oferta de
+productos o servicios con precios y condiciones?
+- esCotizacion = true si es una oferta comercial con precios.
+- esCotizacion = false si NO lo es (contrato, factura, orden de compra, catálogo sin precios,
+  documento de identidad, artículo, tesis, etc.). En ese caso devolvé el resto de los campos en
+  null y explicá en una frase en motivoNoCotizacion.
+- Si dudás, esCotizacion = true: es preferible que el coordinador revise a bloquear de más.
+
 Debés extraer:
 - proveedorNombre
 - proveedorIdentificacionFiscal (RTN o identificación)
@@ -113,7 +121,7 @@ ${GUARDRAILS_COMUNES}`,
 
 Especificaciones solicitadas: {{especificacionesSolicitadas}}
 
-Extraé la información estructurada de esta cotización. Devolvé JSON ESTRICTO con exactamente las claves: proveedorNombre, proveedorIdentificacionFiscal, proveedorContacto, valorNeto, moneda, impuestosDesglosados, montoIsv, montoOtrosImpuestos, valorTotal, plazoEntrega, formaPago, vigenciaOferta, garantia, especificacionesOfertadas, observacionesFiscales, ilegible (booleano) y confianzaPorCampo (objeto campo->confianza). Cualquier campo sin dato en el documento va en null, nunca inventes.`,
+Extraé la información estructurada de esta cotización. Devolvé JSON ESTRICTO con exactamente las claves: proveedorNombre, proveedorIdentificacionFiscal, proveedorContacto, valorNeto, moneda, impuestosDesglosados, montoIsv, montoOtrosImpuestos, valorTotal, plazoEntrega, formaPago, vigenciaOferta, garantia, especificacionesOfertadas, observacionesFiscales, ilegible (booleano), esCotizacion (booleano), motivoNoCotizacion (texto o null) y confianzaPorCampo (objeto campo->confianza). Cualquier campo sin dato en el documento va en null, nunca inventes.`,
 };
 
 export const COMPARATIVA: z.infer<typeof FuncionPromptSchema> = {

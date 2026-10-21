@@ -37,7 +37,11 @@ const datos = {
 };
 
 describe("envio de correo", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Los tests controlan el modo pruebas; no se hereda de .env.local.
+    delete process.env.MAIL_DRY_RUN;
+  });
 
   it("registra como enviado cuando Resend responde ok", async () => {
     vi.mocked(enviarConResend).mockResolvedValue({ ok: true, id: "email_1" });
@@ -120,5 +124,30 @@ describe("correos del ciclo de preguntas (6, 7 y 8)", () => {
 
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
+  });
+});
+
+
+describe("modo pruebas de correo (desarrollo)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("con MAIL_DRY_RUN NO llama a Resend y registra el correo como simulado", async () => {
+    process.env.MAIL_DRY_RUN = "1";
+    const repo = mockRepo();
+    const c = await enviarCorreo({ repo, tipoCorreo: "1", solicitudId: "s1", destinatario: "carlos@bia.com", datos });
+    expect(enviarConResend).not.toHaveBeenCalled();
+    expect(c.estadoEnvio).toBe("simulado");
+    expect(c.errorDetalle).toContain("MAIL_DRY_RUN");
+    delete process.env.MAIL_DRY_RUN;
+  });
+
+  it("sin la variable, sí envía (producción)", async () => {
+    delete process.env.MAIL_DRY_RUN;
+    vi.mocked(enviarConResend).mockResolvedValue({ ok: true, id: "email_9" });
+    const c = await enviarCorreo({ repo: mockRepo(), tipoCorreo: "1", solicitudId: "s1", destinatario: "carlos@bia.com", datos });
+    expect(enviarConResend).toHaveBeenCalledTimes(1);
+    expect(c.estadoEnvio).toBe("enviado");
   });
 });

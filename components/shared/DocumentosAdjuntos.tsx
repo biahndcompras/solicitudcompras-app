@@ -9,7 +9,7 @@ import { api } from "@/lib/api-client";
 import type { Adjunto } from "@/lib/domain/types";
 
 const ACEPTA = ".pdf,.docx,.doc,.pptx,.ppt,.png,.jpg,.jpeg";
-const MAX_MB = 10;
+const MAX_MB = 4;
 
 function fecha(iso?: string): string {
   if (!iso) return "";
@@ -56,7 +56,7 @@ export function DocumentosAdjuntos({
         if (vivo) setAdjuntos(lista);
       })
       .catch(() => {
-        if (vivo) setError("No se pudieron cargar los documentos.");
+        if (vivo) setError("No se pudieron cargar los documentos. Reintente en unos segundos.");
       })
       .finally(() => {
         if (vivo) setCargando(false);
@@ -132,9 +132,16 @@ export function DocumentosAdjuntos({
       </div>
 
       {error ? (
-        <p role="alert" className="mt-3 text-[12px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-          {error}
-        </p>
+        <div role="alert" className="mt-3 text-[12px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => { setCargando(true); setRecarga((n) => n + 1); }}
+            className="shrink-0 font-semibold underline underline-offset-2 hover:text-rose-900"
+          >
+            Reintentar
+          </button>
+        </div>
       ) : null}
 
       <div className="mt-4" aria-live="polite">

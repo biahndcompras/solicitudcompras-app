@@ -46,9 +46,13 @@ export function ComparativaView({ solicitudId, solicitud, comparativa, cotizacio
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
             Descargar Excel
           </a>
-          <button type="button" onClick={onContinuar} className="bg-sky-500 text-white text-xs px-6 py-3 rounded-full font-medium hover:bg-sky-600 transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20">
-            Ver recomendación →
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <button
+            type="button"
+            onClick={onContinuar}
+            className="bg-sky-500 text-white text-xs px-6 py-3 rounded-full font-medium hover:bg-sky-600 transition-all inline-flex items-center gap-2 whitespace-nowrap shadow-lg shadow-sky-500/20"
+          >
+            Ver recomendación
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </div>
       </div>

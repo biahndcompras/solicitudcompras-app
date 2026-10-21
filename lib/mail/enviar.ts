@@ -18,6 +18,25 @@ export async function enviarCorreo(opts: {
   const { repo, tipoCorreo, solicitudId, destinatario, datos, adjuntoPdf, adjuntos, reintentos = 2 } = opts;
   const { asunto, html } = renderCorreo(tipoCorreo, datos);
 
+  // Modo pruebas (desarrollo): NO se envía nada. Se registra como "simulado" para que el
+  // historial lo muestre y los llamadores no lo cuenten como enviado. Sin esto, un envío de
+  // prueba desde local podía llegarle a un coordinador real.
+  const dryRun = ["1", "true", "yes", "si", "sí"].includes(
+    String(process.env.MAIL_DRY_RUN ?? "").trim().toLowerCase()
+  );
+  if (dryRun) {
+    console.warn(`[mail] MODO PRUEBAS: no se envía el correo ${tipoCorreo} a ${destinatario} («${asunto}»)`);
+    return repo.registrarCorreo({
+      solicitudId,
+      tipoCorreo: String(tipoCorreo),
+      destinatario,
+      asunto,
+      estadoEnvio: "simulado",
+      intentos: 0,
+      errorDetalle: "MAIL_DRY_RUN: no se envió (modo pruebas)",
+    });
+  }
+
   let intento = 0;
   let error: string | undefined;
 

@@ -106,7 +106,7 @@ export function validarArchivoAdjunto(
 // El coordinador/admin y el solicitante pueden adjuntar documentos (no solo las cotizaciones).
 // Igual que con el logo, el servidor valida **extensión + contenido**: el `Content-Type` que
 // declara el navegador no es una frontera de seguridad (se salta con curl).
-export const MAX_BYTES_DOCUMENTO = 10 * 1024 * 1024;
+export const MAX_BYTES_DOCUMENTO = 4 * 1024 * 1024;
 export const MAX_MB_DOCUMENTO = MAX_BYTES_DOCUMENTO / (1024 * 1024);
 export const EXTENSIONES_DOCUMENTO = [".pdf", ".docx", ".doc", ".pptx", ".ppt", ".png", ".jpg", ".jpeg"] as const;
 

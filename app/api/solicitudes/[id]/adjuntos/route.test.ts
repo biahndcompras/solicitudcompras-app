@@ -45,11 +45,11 @@ const SOLICITUD = {
 };
 
 // Un `File` real (la ruta exige `instanceof`) con los bytes que le pasemos.
-function archivo(nombre: string, contenido: Uint8Array, type = ""): File {
+function archivo(nombre: string, contenido: Uint8Array, type = "", tamano?: number): File {
   const f = Object.create(File.prototype) as File;
   Object.defineProperties(f, {
     name: { value: nombre },
-    size: { value: contenido.byteLength },
+    size: { value: tamano ?? contenido.byteLength },
     type: { value: type },
     arrayBuffer: {
       value: async () => contenido.buffer.slice(contenido.byteOffset, contenido.byteOffset + contenido.byteLength),
@@ -145,6 +145,18 @@ describe("POST /api/solicitudes/[id]/adjuntos", () => {
     expect(enviarCorreo).toHaveBeenCalledWith(
       expect.objectContaining({ tipoCorreo: "9", destinatario: "maria@bia.hn" })
     );
+  });
+});
+
+describe("límite de tamaño", () => {
+  it("rechaza un archivo de más de 4 MB sin leerlo entero", async () => {
+    const grande = archivo("grande.pdf", new Uint8Array(10), "application/pdf", 5 * 1024 * 1024);
+    const res = await POST(
+      pedir(`http://localhost/api/solicitudes/${ID}/adjuntos?email=maria%40bia.hn`, grande),
+      { params }
+    );
+    expect(res.status).toBe(413);
+    expect(crearAdjunto).not.toHaveBeenCalled();
   });
 });
 

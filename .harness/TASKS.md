@@ -270,8 +270,9 @@ implementa hasta cerrarla (ver la nota de cada fila).
 
 | # | Tarea | Bloqueo / decisión pendiente |
 |---|---|---|
-| 4.13.1 | **Panel de coordinadores: "doble icono de flecha" y botones muy altos** | No lo pude reproducir en el código (`/admin/coordinadores` no tiene flechas; `/panel` tiene una sola). **Falta**: URL exacta + captura |
-| 4.13.2 | **Los documentos no se cargan en ninguna vista** | Causa probable: el dev apunta a **Supabase (vacío)** y los datos están en local. **Falta**: confirmar en qué base se probó. Si es eso, no es un bug |
+| ~~4.13.0~~ | ~~Modo pruebas de correo (desarrollo)~~ | ✅ **RESUELTO 2026-10-21** | Con `MAIL_DRY_RUN=1` **no se envía nada**: se registra `estado_envio = "simulado"` y un aviso en el log. Así un envío desde local nunca llega a un coordinador real. **No está en Vercel**: producción envía normal. Verificado: el correo quedó `simulado` |
+| ~~4.13.1~~ | ~~"Doble flecha" y botón alto~~ | ✅ **RESUELTO 2026-10-21** | Era el botón **`Ver recomendación →`** de la comparativa: el carácter `→` **más** un icono de flecha. Se quitó el carácter y se agregó `whitespace-nowrap`. Verificado: 1 línea, 40 px |
+| ~~4.13.2~~ | ~~Los documentos no se cargan~~ | ✅ **RESUELTO 2026-10-21** | La subida **funcionaba**; el error rojo era de la **carga de la lista** (y al probar contra Supabase vacío no había nada). Se bajó el tope a **4 MB** (Vercel corta ~4,5 MB y devolvía un 413 sin mensaje), se muestra el error real (incluido el 413) y se agregó **Reintentar** en la lista. Verificado subiendo un PDF desde el coordinador |
 | 4.13.3 | **Cotizaciones y respuestas del solicitante en el detalle del ADMIN** | Confirmado: el detalle del admin **no** muestra cotizaciones ni respuestas (solo el timeline). Decidir si el admin ve **precios** (sí, es su rol) |
 | 4.13.4 | **Respuestas del solicitante en el detalle del COORDINADOR** | El componente **ya las renderiza** (`DetalleSolicitud` → "Respuestas del solicitante"). Verificar contra una solicitud con datos; si no aparece, es un bug de datos |
 | 4.13.5 | **Rediseño completo del dashboard admin** (premium, no básico) | Usar **impeccable**. Decidir si se adopta **shadcn/ui** (hoy no está instalado; Tailwind v4) y si la migración es solo del dashboard o de todo el admin |

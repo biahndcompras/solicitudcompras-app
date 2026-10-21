@@ -182,6 +182,18 @@ describe("envío · el techo de espera cancela de verdad", () => {
 });
 
 describe("pipeline · no decide si la solicitud se envió", () => {
+  // Estos tests son sobre el pipeline (que no espere correos), no sobre el PDF. El generador
+  // real tarda ~2 s (embebe la tipografía) y hacía que el test rozara el límite de 5 s.
+  beforeEach(() => {
+    vi.doMock("@/lib/pdf/generador", () => ({
+      generarDocumento: vi.fn(async () => ({
+        buffer: new Uint8Array([1, 2, 3]),
+        tipo: "RFQ",
+        referencia: "RFQ-2026-1",
+      })),
+    }));
+  });
+
   const repoBase = {
     listarCoordinadores: vi.fn().mockResolvedValue([{ id: "c-1", nombre: "Compras", categoriasAsignadas: ["mercadeo"] }]),
     asignarCoordinador: vi.fn().mockResolvedValue(undefined),

@@ -292,8 +292,15 @@ export const api = {
       body: form,
     }).then(async (r) => {
       if (!r.ok) {
-        const detalle = await r.json().catch(() => ({ error: "No se pudo subir el documento" }));
-        throw new Error(detalle.error ?? "No se pudo subir el documento");
+        const detalle = await r.json().catch(() => null);
+        // Vercel corta los cuerpos grandes ANTES de la función y responde 413 sin JSON.
+        if (r.status === 413) {
+          throw new Error("El archivo es demasiado grande. El máximo es 4 MB.");
+        }
+        throw new Error(
+          detalle?.error ??
+            `No se pudo subir el documento (error ${r.status}). Reintente o use otro archivo.`
+        );
       }
       return r.json();
     });

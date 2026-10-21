@@ -271,7 +271,7 @@ export type DocumentoGenerado = {
   fechaGeneracion: string;
 };
 
-export type EstadoCorreo = "enviado" | "fallido" | "reintentando";
+export type EstadoCorreo = "enviado" | "fallido" | "reintentando" | "simulado";
 
 export type CorreoEnviado = {
   id: string;

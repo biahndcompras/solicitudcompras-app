@@ -1,10 +1,17 @@
 ---
-estado: listo-para-ejecutar
-requiere: connection string de Supabase (pooler) + decision sobre los datos
+estado: ejecutado-2026-10-21
+requiere: nada (ejecutado en limpio; ver "Resultado" abajo)
 fecha: 2026-10-14
 ---
 
 # Migración de datos a Supabase Cloud
+
+> **Ejecutado el 2026-10-21 — esquema limpio.** Se hizo `DROP SCHEMA public CASCADE` y se
+> corrieron las **21 migraciones** contra el pooler. Resultado: 18 tablas, **RLS 18/18**, 7
+> usuarios del equipo, 24 campos de catálogo y 3 plantillas. PostgREST quedó cerrado (lectura y
+> escritura anónimas → 401). Verificado con la app real: login, dashboard y un alta de solicitud
+> (escrita y borrada). La suite usa `TEST_DATABASE_URL` (base local), no la del piloto.
+> **Lo que falta es de despliegue**: cargar `DATABASE_URL` y las claves en Vercel.
 
 Hoy el sistema es **híbrido**: la autenticación ya vive en Supabase Cloud
 (`bgfsjaetvuwhrmipojnh.supabase.co`), pero **los datos siguen en Postgres local**

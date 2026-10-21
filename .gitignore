@@ -33,6 +33,8 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+# .env.production no lleva secretos (solo la URL pública que se inyecta en el build)
+!.env.production
 
 # markdown conversion venv (uv)
 .venv-md/
@@ -64,3 +66,8 @@ qa/**/*.pdf
 # 33 MB de material comercial confidencial: la misma categoría que `documentacion inicial/`.
 # Se consultan desde el disco; no se versionan.
 /docs/doc-references/
+
+# Imágenes de origen y previews (no se versionan; el logo de runtime sí: public/bia-logo.png)
+docs/bia-logo-card*.png
+docs/formato-referencia.png
+docs/muestras-pdf/*.png

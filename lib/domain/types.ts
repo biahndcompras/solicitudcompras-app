@@ -37,7 +37,7 @@ export type TipoDatoCampo =
 export type OrigenCampo = "plantilla" | "assessment";
 
 export type TipoAdjunto = "logo" | "imagen_referencia" | "anexo" | "otro";
-export type FormatoCotizacion = "pdf" | "docx" | "imagen" | "manual";
+export type FormatoCotizacion = "pdf" | "docx" | "pptx" | "imagen" | "manual";
 export type RolUsuario = "coordinador" | "admin";
 
 export type TipoEvento =

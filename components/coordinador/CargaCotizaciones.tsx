@@ -40,9 +40,9 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
   const [borradorEdit, setBorradorEdit] = useState<Partial<Cotizacion> | null>(null);
   const [borrandoId, setBorrandoId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [faseSubida, setFaseSubida] = useState<string | null>(null);
+  const [subiendoNueva, setSubiendoNueva] = useState(false);
+  const inputNueva = useRef<HTMLInputElement | null>(null);
   const [confirmarGenerar, setConfirmarGenerar] = useState(false);
-  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const count = cotizaciones.length;
 
@@ -78,18 +78,20 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
     }
   }
 
-  // Sube el archivo real → conversión a Markdown (IA multimodal) → extracción IA. Nunca bloquea.
-  async function onFileSeleccionado(idx: number, e: React.ChangeEvent<HTMLInputElement>) {
+  // Sube un archivo y CREA una cotización con lo que la IA extraiga (4.13.16, opción B).
+  // Antes el botón vivía dentro de cada tarjeta y duplicaba; y sin cotizaciones no había
+  // ninguna forma de subir un archivo: solo el alta manual.
+  async function onArchivoNueva(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    const c = cotizaciones[idx];
-    if (!file || !c) return;
-    setFaseSubida(c.id ?? `${idx}`);
+    if (!file) return;
+    setSubiendoNueva(true);
     setError(null);
     try {
       const conv = await api.convertirDocumento(file);
       await api.cargarCotizacionConArchivo({
         solicitudId,
-        proveedorNombre: c.proveedorNombre,
+        // Si la IA no reconoce el proveedor, el coordinador lo corrige con Editar.
+        proveedorNombre: "Proveedor por definir",
         formatoOriginal: extFormato(file.name),
         archivo: file,
         markdownExtraido: conv.ok ? conv.markdown : undefined,
@@ -99,9 +101,9 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
     } catch {
       setError("No se pudo subir. Intente de nuevo.");
     } finally {
-      setFaseSubida(null);
+      setSubiendoNueva(false);
+      if (inputNueva.current) inputNueva.current.value = "";
     }
-    if (fileInputs.current[c.id]?.value !== undefined) fileInputs.current[c.id]!.value = "";
   }
 
   async function guardarEdicion() {
@@ -171,15 +173,34 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
       ) : null}
 
       {!soloLectura ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
           <button
             type="button"
             onClick={() => { setMostrandoForm((v) => !v); setError(null); }}
-            className="w-full mb-5 border-2 border-dashed border-slate-300 rounded-2xl py-5 min-h-[44px] flex items-center justify-center gap-2 text-sm font-semibold text-sky-800 hover:border-sky-400 hover:text-sky-900 hover:bg-sky-50/40 transition-all"
+            className="border-2 border-dashed border-slate-300 rounded-2xl py-4 min-h-[44px] flex items-center justify-center gap-2 text-sm font-semibold text-sky-800 hover:border-sky-400 hover:text-sky-900 hover:bg-sky-50/40 transition-all"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
             {mostrandoForm ? "Cancelar" : "Agregar cotización manual"}
           </button>
-        ) : null}
+          <button
+            type="button"
+            onClick={() => inputNueva.current?.click()}
+            disabled={subiendoNueva}
+            className="border-2 border-dashed border-sky-300 rounded-2xl py-4 min-h-[44px] flex items-center justify-center gap-2 text-sm font-semibold text-sky-800 hover:border-sky-400 hover:text-sky-900 hover:bg-sky-50/40 transition-all disabled:opacity-60"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M12 3v12m0-12 4 4m-4-4-4 4"/></svg>
+            {subiendoNueva ? "Extrayendo datos…" : "Subir cotización desde archivo"}
+          </button>
+          <input
+            ref={inputNueva}
+            type="file"
+            hidden
+            aria-label="Subir cotización desde archivo"
+            accept=".pdf,.docx,.pptx,.png,.jpg,.jpeg"
+            onChange={onArchivoNueva}
+          />
+        </div>
+      ) : null}
 
       {mostrandoForm ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6 step-enter">
@@ -264,7 +285,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
       ) : null}
 
       <div className="space-y-4">
-        {cotizaciones.map((c, idx) => {
+        {cotizaciones.map((c) => {
           const esEditando = editandoId === c.id;
           const bajaConfianza = camposBajaConfianza(c);
           const observacionFiscal = c.observacionesFiscales;
@@ -332,41 +353,11 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
                     )
                   ) : null}
 
-                  {faseSubida === c.id ? (
-                    <div className="mt-3 inline-flex items-center gap-2 text-sm text-slate-500">
-                      <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
-                      Extrayendo datos con IA…
-                    </div>
-                  ) : null}
                 </div>
 
                 <div className="w-full sm:w-auto sm:shrink-0 flex flex-wrap items-center gap-2 sm:justify-end">
                   {!soloLectura ? (
                     <>
-                      <label
-                        htmlFor={`file-${c.id}`}
-                        className={"inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl border shadow-sm transition-colors cursor-pointer " + tonoAdjuntar(c)}
-                      >
-                        {c.formatoOriginal !== "manual" ? (
-                          <>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 13l4 4L19 7"/></svg>
-                            Con archivo
-                          </>
-                        ) : (
-                          <>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21.44 11.05a10 10 0 1 1-18.88 0A10 10 0 0 1 12 2a9.7 9.7 0 0 1 6.36 2.4M22 2l-2.5 4.5M16 6.5 22 2"/></svg>
-                            Adjuntar archivo
-                          </>
-                        )}
-                      </label>
-                      <input
-                        id={`file-${c.id}`}
-                        type="file"
-                        hidden
-                        ref={(el) => { fileInputs.current[c.id] = el; }}
-                        onChange={(e) => onFileSeleccionado(idx, e)}
-                        accept=".pdf,.docx,.pptx,.png,.jpg,.jpeg"
-                      />
                       {esEditando ? (
                         <button type="button" onClick={guardarEdicion} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
                           Guardar
@@ -427,7 +418,7 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
             ) : (
               <>
                 <div className="text-base font-semibold text-slate-900">Todavía no hay cotizaciones</div>
-                <div className="text-sm text-slate-500 mt-1">Agregue la primera con el botón de arriba, o adjunte el archivo de un proveedor.</div>
+                <div className="text-sm text-slate-500 mt-1">Agregue la primera a mano o súbala desde un archivo (PDF, imagen, Word o PowerPoint).</div>
               </>
             )}
           </div>
@@ -558,11 +549,6 @@ function tonoConfianza(v: number): string {
   return "bg-emerald-50 border-emerald-200 text-emerald-800";
 }
 
-function tonoAdjuntar(c: Cotizacion): string {
-  if (c.formatoOriginal !== "manual") return "text-green-800 bg-green-50/60 border-green-200";
-  return "text-slate-700 hover:text-slate-900 bg-white border-slate-200";
-}
-
 function camposBajaConfianza(c: Cotizacion): string[] {
   const conf = c.confianzaExtraccion ?? {};
   return Object.entries(conf)
@@ -593,9 +579,10 @@ function numeroFmt(n: number): string {
   return n.toLocaleString("es-HN", { maximumFractionDigits: 2 });
 }
 
-function extFormato(nombre: string): "pdf" | "docx" | "imagen" {
+function extFormato(nombre: string): "pdf" | "docx" | "pptx" | "imagen" {
   const ext = nombre.split(".").pop()?.toLowerCase() ?? "";
   if (ext === "pdf") return "pdf";
   if (ext === "doc" || ext === "docx") return "docx";
+  if (ext === "ppt" || ext === "pptx") return "pptx";
   return "imagen";
 }

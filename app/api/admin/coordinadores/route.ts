@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { guardApi } from "@/lib/api-guard";
-import { sincronizarUsuarioAuth } from "@/lib/supabase/admin";
+import { buscarUsuarioAuthPorEmail, eliminarUsuarioAuth, invitarUsuarioAuth } from "@/lib/supabase/admin";
+import { enviarConResend } from "@/lib/mail/cliente";
+import { invitacionCorreo } from "@/lib/mail/invitacion";
 import { CATEGORIAS } from "@/lib/domain/categorias";
 
 const repo = new PostgresRepositorio();
@@ -17,8 +19,9 @@ const categoriaSchema = z
 const crearSchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es obligatorio"),
   email: z.string().trim().email("Correo inválido"),
-  // La contraseña inicial la define el admin, igual que en `scripts/seed-auth.mjs`.
-  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+  // 4.13.9: la cuenta se crea por INVITACIÓN. No se define contraseña: la persona la elige
+  // al abrir el enlace que le llega por correo.
+  rol: z.enum(["coordinador", "admin"]).default("coordinador"),
   categoriasAsignadas: categoriaSchema,
 });
 
@@ -83,45 +86,75 @@ export async function POST(request: Request) {
       );
     }
 
+    // Si ya tiene cuenta de acceso, invitar fallaría con un mensaje crudo de Supabase.
     try {
-      await sincronizarUsuarioAuth({
-        email,
-        nombre: body.nombre.trim(),
-        rol: "coordinador",
-        password: body.password,
-      });
+      if (await buscarUsuarioAuthPorEmail(email)) {
+        return NextResponse.json(
+          { error: `El correo «${email}» ya tiene una cuenta de acceso. Cambie su rol o reactívela en lugar de invitarla de nuevo.` },
+          { status: 409 }
+        );
+      }
     } catch (e) {
-      console.warn(`[coordinadores] falló la creación de la cuenta de acceso de ${email}:`, e);
-      return NextResponse.json(
-        { error: "No se pudo crear la cuenta de acceso en el proveedor de autenticación." },
-        { status: 502 }
-      );
+      console.warn(`[coordinadores] no se pudo comprobar la cuenta de ${email}:`, e);
+      return NextResponse.json({ error: "No se pudo verificar la cuenta de acceso." }, { status: 502 });
     }
 
+    // 1) La fila local primero: es lo barato y se puede deshacer. Si la invitación falla,
+    //    se borra y un reintento arranca limpio.
     let usuario;
     try {
       usuario = await repo.crearUsuario({
         nombre: body.nombre.trim(),
         email,
-        rol: "coordinador",
-        categoriasAsignadas: body.categoriasAsignadas,
+        rol: body.rol,
+        // Los admins no tienen categorías asignadas.
+        categoriasAsignadas: body.rol === "admin" ? [] : body.categoriasAsignadas,
       });
     } catch (e) {
       if (esCorreoDuplicado(e)) {
-        return NextResponse.json(
-          { error: `Ya existe un coordinador con el correo «${email}».` },
-          { status: 409 }
-        );
+        return NextResponse.json({ error: `Ya existe una cuenta con el correo «${email}».` }, { status: 409 });
       }
-      console.error(`[coordinadores] cuenta de Auth creada pero falló el alta local de ${email}:`, e);
+      console.error(`[coordinadores] falló el alta local de ${email}:`, e);
+      return NextResponse.json({ error: "No se pudo guardar la cuenta." }, { status: 500 });
+    }
+
+    // 2) Invitación real de Supabase (genera el enlace) + envío con Resend (dominio
+    //    verificado y template corporativo). Si algo falla, se deshace todo.
+    let authId: string | undefined;
+    try {
+      const { id, actionLink } = await invitarUsuarioAuth({
+        email,
+        nombre: body.nombre.trim(),
+        rol: body.rol,
+      });
+      authId = id;
+
+      const dryRun = ["1", "true", "yes", "si", "sí"].includes(
+        String(process.env.MAIL_DRY_RUN ?? "").trim().toLowerCase()
+      );
+      if (!dryRun) {
+        const { asunto, html } = invitacionCorreo({
+          nombre: body.nombre.trim(),
+          email,
+          actionLink,
+          esAdmin: body.rol === "admin",
+        });
+        const envio = await enviarConResend({ to: email, subject: asunto, html });
+        if (!envio.ok) throw new Error(envio.error ?? "No se pudo enviar la invitación");
+      } else {
+        console.warn(`[coordinadores] MODO PRUEBAS: invitación de ${email} NO enviada`);
+      }
+    } catch (e) {
+      console.warn(`[coordinadores] falló la invitación de ${email}:`, e);
+      // Rollback: sin cuenta local ni de acceso, el reintento es limpio.
+      await repo.eliminarUsuario(usuario.id).catch(() => {});
+      if (authId) await eliminarUsuarioAuth(authId).catch(() => {});
       return NextResponse.json(
-        {
-          error:
-            "Se creó la cuenta de acceso, pero no se pudo guardar el coordinador. Vuelva a intentarlo: no se duplicará.",
-        },
-        { status: 500 }
+        { error: "No se pudo enviar la invitación por correo. Intente de nuevo." },
+        { status: 502 }
       );
     }
+
 
     // Nunca se devuelve la contraseña.
     return NextResponse.json(
@@ -129,6 +162,7 @@ export async function POST(request: Request) {
         id: usuario.id,
         nombre: usuario.nombre,
         email: usuario.email,
+        rol: usuario.rol,
         categoriasAsignadas: usuario.categoriasAsignadas,
         activo: usuario.activo,
       },

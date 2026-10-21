@@ -487,6 +487,22 @@ export class PostgresRepositorio implements Repositorio {
     }
   }
 
+  async eliminarUsuario(id: string): Promise<void> {
+    await this.pg.query("DELETE FROM usuario WHERE id = $1", [id]);
+  }
+
+  async listarEquipo(opciones: { incluirInactivos?: boolean } = {}): Promise<Usuario[]> {
+    const res = await this.pg.query(
+      `SELECT id, nombre, email, rol, categorias_asignadas, activo
+         FROM usuario
+        WHERE rol IN ('coordinador','admin')
+          AND ($1::boolean OR activo = true)
+        ORDER BY rol, nombre`
+      , [opciones.incluirInactivos === true]
+    );
+    return res.rows.map(filaUsuario);
+  }
+
   async listarCoordinadores(opciones?: { incluirInactivos?: boolean }): Promise<Usuario[]> {
     // Por defecto solo activos: la asignación, las alertas y los filtros no deben elegir a
     // alguien dado de baja. La administración pide incluirInactivos para poder reactivar.
@@ -545,7 +561,7 @@ export class PostgresRepositorio implements Repositorio {
 
   async actualizarUsuario(
     id: string,
-    cambios: { nombre?: string; categoriasAsignadas?: string[]; activo?: boolean }
+    cambios: { nombre?: string; rol?: "coordinador" | "admin"; categoriasAsignadas?: string[]; activo?: boolean }
   ): Promise<Usuario | null> {
     const sets: string[] = [];
     const vals: unknown[] = [];
@@ -553,6 +569,10 @@ export class PostgresRepositorio implements Repositorio {
     if (cambios.nombre !== undefined) {
       sets.push(`nombre = $${i++}`);
       vals.push(cambios.nombre.trim());
+    }
+    if (cambios.rol !== undefined) {
+      sets.push(`rol = $${i++}`);
+      vals.push(cambios.rol);
     }
     if (cambios.categoriasAsignadas !== undefined) {
       sets.push(`categorias_asignadas = $${i++}`);

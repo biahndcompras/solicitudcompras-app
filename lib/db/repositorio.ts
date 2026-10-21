@@ -45,6 +45,12 @@ export interface Repositorio {
   guardarRespuestas(solicitudId: string, respuestas: RespuestaCampo[]): Promise<void>;
   listarRespuestas(solicitudId: string): Promise<RespuestaCampo[]>;
 
+  /** Borra una fila local recién creada (rollback de un alta cuya invitación falló). */
+  eliminarUsuario(id: string): Promise<void>;
+
+  /** Coordinadores y admins (para administrar cuentas y roles desde el panel). */
+  listarEquipo(opciones?: { incluirInactivos?: boolean }): Promise<Usuario[]>;
+
   /** Documentos adjuntos (migración 021). */
   crearAdjunto(input: {
     solicitudId: string;
@@ -115,7 +121,7 @@ export interface Repositorio {
   /** Edición parcial: solo se pisa lo que llega. null si el id no existe. */
   actualizarUsuario(
     id: string,
-    cambios: { nombre?: string; categoriasAsignadas?: string[]; activo?: boolean }
+    cambios: { nombre?: string; rol?: "coordinador" | "admin"; categoriasAsignadas?: string[]; activo?: boolean }
   ): Promise<Usuario | null>;
 
   /** Tasa de ISV vigente desde `configuracion`; 0.15 solo si la clave falta o es inválida. */

@@ -1,21 +1,24 @@
 // Alta de coordinadores (RF-56, 4.4.2). Antes la ruta solo exportaba GET y no existía
 // forma de dar de alta. Estas pruebas fijan las reglas de negocio:
 //  - el correo duplicado es 409 (no 500) y NO toca Supabase,
-//  - la cuenta de acceso se crea vía service_role en el servidor,
-//  - la contraseña nunca vuelve en la respuesta.
+//  - la cuenta se crea por INVITACIÓN (Supabase manda el enlace; no hay contraseña),
+//  - el rol se puede elegir (coordinador o admin).
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const listarCoordinadores = vi.fn();
 const buscarUsuarioPorEmail = vi.fn();
 const crearUsuario = vi.fn();
+const eliminarUsuario = vi.fn();
 const guardApi = vi.fn();
-const sincronizarUsuarioAuth = vi.fn();
+const invitarUsuarioAuth = vi.fn();
+const buscarUsuarioAuthPorEmail = vi.fn();
 
 vi.mock("@/lib/db/postgres-repo", () => ({
   PostgresRepositorio: class {
     listarCoordinadores = (...a: unknown[]) => listarCoordinadores(...a);
     buscarUsuarioPorEmail = (...a: unknown[]) => buscarUsuarioPorEmail(...a);
     crearUsuario = (...a: unknown[]) => crearUsuario(...a);
+    eliminarUsuario = (...a: unknown[]) => eliminarUsuario(...a);
   },
 }));
 
@@ -24,7 +27,14 @@ vi.mock("@/lib/api-guard", () => ({
 }));
 
 vi.mock("@/lib/supabase/admin", () => ({
-  sincronizarUsuarioAuth: (...a: unknown[]) => sincronizarUsuarioAuth(...a),
+  invitarUsuarioAuth: (...a: unknown[]) => invitarUsuarioAuth(...a),
+  buscarUsuarioAuthPorEmail: (...a: unknown[]) => buscarUsuarioAuthPorEmail(...a),
+  eliminarUsuarioAuth: vi.fn().mockResolvedValue(undefined),
+}));
+
+const enviarConResend = vi.fn();
+vi.mock("@/lib/mail/cliente", () => ({
+  enviarConResend: (...a: unknown[]) => enviarConResend(...a),
 }));
 
 import { GET, POST } from "./route";
@@ -32,7 +42,7 @@ import { GET, POST } from "./route";
 const VALIDO = {
   nombre: "Ana López",
   email: "ana@biabrands.co",
-  password: "Secreta123!",
+  rol: "coordinador",
   categoriasAsignadas: ["tecnologia"],
 };
 
@@ -60,7 +70,10 @@ beforeEach(() => {
   buscarUsuarioPorEmail.mockReset().mockResolvedValue(null);
   crearUsuario.mockReset().mockResolvedValue(USUARIO_CREADO);
   guardApi.mockReset().mockResolvedValue({ sesion: { rol: "admin", email: "admin@biafoods.co" } });
-  sincronizarUsuarioAuth.mockReset().mockResolvedValue({ id: "auth-1", creado: true });
+  invitarUsuarioAuth.mockReset().mockResolvedValue({ id: "auth-1", actionLink: "https://supabase.test/invite" });
+  buscarUsuarioAuthPorEmail.mockReset().mockResolvedValue(null);
+  eliminarUsuario.mockReset().mockResolvedValue(undefined);
+  enviarConResend.mockReset().mockResolvedValue({ ok: true, id: "email-1" });
 });
 
 describe("guardApi · /api/admin/coordinadores (4.8.5)", () => {
@@ -71,7 +84,7 @@ describe("guardApi · /api/admin/coordinadores (4.8.5)", () => {
 
     expect(res.status).toBe(403);
     expect(guardApi).toHaveBeenCalledWith(["admin"]);
-    expect(sincronizarUsuarioAuth).not.toHaveBeenCalled();
+    expect(invitarUsuarioAuth).not.toHaveBeenCalled();
     expect(crearUsuario).not.toHaveBeenCalled();
   });
 
@@ -88,12 +101,11 @@ describe("POST /api/admin/coordinadores · alta (RF-56)", () => {
 
     expect(res.status).toBe(201);
     // La llamada a Supabase lleva la contraseña inicial y el rol de coordinador.
-    expect(sincronizarUsuarioAuth).toHaveBeenCalledWith(
+    expect(invitarUsuarioAuth).toHaveBeenCalledWith(
       expect.objectContaining({
         email: "ana@biabrands.co",
         nombre: "Ana López",
         rol: "coordinador",
-        password: "Secreta123!",
       })
     );
     expect(crearUsuario).toHaveBeenCalledWith(
@@ -103,9 +115,12 @@ describe("POST /api/admin/coordinadores · alta (RF-56)", () => {
         categoriasAsignadas: ["tecnologia"],
       })
     );
+    expect(enviarConResend).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "ana@biabrands.co" })
+    );
     const body = await res.json();
     expect(body).not.toHaveProperty("password");
-    expect(JSON.stringify(body)).not.toContain("Secreta123!");
+    expect(body.rol).toBe("coordinador");
   });
 
   it("normaliza el correo a minúsculas", async () => {
@@ -123,17 +138,19 @@ describe("POST /api/admin/coordinadores · alta (RF-56)", () => {
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.error).toMatch(/ya existe/i);
-    expect(sincronizarUsuarioAuth).not.toHaveBeenCalled();
+    expect(invitarUsuarioAuth).not.toHaveBeenCalled();
     expect(crearUsuario).not.toHaveBeenCalled();
   });
 
-  it("si Supabase falla, es 502 y NO se crea la fila local", async () => {
-    sincronizarUsuarioAuth.mockRejectedValue(new Error("supabase caído"));
+  it("si la invitación falla, es 502 y se deshace la fila local", async () => {
+    invitarUsuarioAuth.mockRejectedValue(new Error("supabase caído"));
 
     const res = await crear();
 
     expect(res.status).toBe(502);
-    expect(crearUsuario).not.toHaveBeenCalled();
+    // La fila local se crea primero y se deshace: el reintento arranca limpio.
+    expect(crearUsuario).toHaveBeenCalledTimes(1);
+    expect(eliminarUsuario).toHaveBeenCalledWith("u-nueva");
   });
 
   it("si la fila local choca por correo duplicado, es 409 y explica qué hacer", async () => {
@@ -153,10 +170,32 @@ describe("POST /api/admin/coordinadores · alta (RF-56)", () => {
     expect(crearUsuario).not.toHaveBeenCalled();
   });
 
-  it("rechaza el alta sin contraseña", async () => {
-    const res = await crear({ password: "" });
+  it("rechaza el alta sin nombre", async () => {
+    const res = await crear({ nombre: "   " });
 
     expect(res.status).toBe(400);
-    expect(sincronizarUsuarioAuth).not.toHaveBeenCalled();
+    expect(invitarUsuarioAuth).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("POST /api/admin/coordinadores · roles e invitación (4.13.9)", () => {
+  it("puede crear un ADMIN y no le asigna categorías", async () => {
+    const res = await crear({ rol: "admin", categoriasAsignadas: ["tecnologia"] });
+    expect(res.status).toBe(201);
+    expect(invitarUsuarioAuth).toHaveBeenCalledWith(
+      expect.objectContaining({ rol: "admin" })
+    );
+    expect(crearUsuario).toHaveBeenCalledWith(
+      expect.objectContaining({ rol: "admin", categoriasAsignadas: [] })
+    );
+  });
+
+  it("si el correo ya tiene cuenta de acceso, es 409 y no invita", async () => {
+    buscarUsuarioAuthPorEmail.mockResolvedValue({ id: "auth-existente" });
+    const res = await crear();
+    expect(res.status).toBe(409);
+    expect(invitarUsuarioAuth).not.toHaveBeenCalled();
+    expect(crearUsuario).not.toHaveBeenCalled();
   });
 });

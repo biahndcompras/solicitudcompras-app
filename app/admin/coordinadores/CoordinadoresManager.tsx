@@ -8,8 +8,8 @@ import { cn } from "@/lib/design/cn";
 
 type Props = { inicial: Usuario[] };
 
-type Formulario = { nombre: string; email: string; password: string; categorias: string[] };
-const VACIO: Formulario = { nombre: "", email: "", password: "", categorias: [] };
+type Formulario = { nombre: string; email: string; rol: "coordinador" | "admin"; categorias: string[] };
+const VACIO: Formulario = { nombre: "", email: "", rol: "coordinador", categorias: [] };
 
 export function CoordinadoresManager({ inicial }: Props) {
   const router = useRouter();
@@ -33,7 +33,7 @@ export function CoordinadoresManager({ inicial }: Props) {
 
   function abrirEditar(c: Usuario) {
     setEditando(c);
-    setForm({ nombre: c.nombre, email: c.email, password: "", categorias: c.categoriasAsignadas });
+    setForm({ nombre: c.nombre, email: c.email, rol: c.rol === "admin" ? "admin" : "coordinador", categorias: c.categoriasAsignadas });
     setMensaje(null);
     setMostrandoForm(true);
   }
@@ -57,7 +57,7 @@ export function CoordinadoresManager({ inicial }: Props) {
     if (guardando) return;
     const nombre = form.nombre.trim();
     if (!nombre) return;
-    if (!editando && (!form.email.trim() || form.password.length < 8)) return;
+    if (!editando && !form.email.trim()) return;
 
     setGuardando(true);
     setMensaje(null);
@@ -67,7 +67,11 @@ export function CoordinadoresManager({ inicial }: Props) {
         ? await fetch(`/api/admin/coordinadores/${encodeURIComponent(editandoAhora.id)}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre, categoriasAsignadas: form.categorias }),
+            body: JSON.stringify({
+              nombre,
+              rol: form.rol,
+              categoriasAsignadas: form.rol === "coordinador" ? form.categorias : [],
+            }),
           })
         : await fetch("/api/admin/coordinadores", {
             method: "POST",
@@ -75,8 +79,8 @@ export function CoordinadoresManager({ inicial }: Props) {
             body: JSON.stringify({
               nombre,
               email: form.email.trim(),
-              password: form.password,
-              categoriasAsignadas: form.categorias,
+              rol: form.rol,
+              categoriasAsignadas: form.rol === "coordinador" ? form.categorias : [],
             }),
           });
 
@@ -87,7 +91,7 @@ export function CoordinadoresManager({ inicial }: Props) {
       }
       setMensaje({
         tipo: "ok",
-        texto: editandoAhora ? `Coordinador «${nombre}» actualizado.` : `Coordinador «${nombre}» creado.`,
+        texto: editandoAhora ? `Cuenta de «${nombre}» actualizada.` : `Invitación enviada a «${nombre}».`,
       });
       cerrarForm();
       router.refresh();
@@ -135,10 +139,7 @@ export function CoordinadoresManager({ inicial }: Props) {
     }
   }
 
-  const puedeGuardar =
-    form.nombre.trim().length > 0 &&
-    (editando !== null || (form.email.trim().length > 0 && form.password.length >= 8)) &&
-    !guardando;
+  const puedeGuardar = form.nombre.trim().length > 0 && (editando !== null || form.email.trim().length > 0) && !guardando;
 
   return (
     <div className="mt-8">
@@ -171,14 +172,14 @@ export function CoordinadoresManager({ inicial }: Props) {
           onClick={() => (mostrandoForm ? cerrarForm() : abrirNuevo())}
           className="bg-sky-600 text-white text-[12px] font-semibold px-3 py-2 rounded-lg hover:bg-sky-700 transition-colors"
         >
-          {mostrandoForm ? "Cancelar" : "Nuevo coordinador"}
+          {mostrandoForm ? "Cancelar" : "Nueva cuenta"}
         </button>
       </div>
 
       {mostrandoForm && (
         <div className="bg-white rounded-lg border border-slate-200 p-5 mb-5">
           <div className="text-[14px] font-semibold text-slate-900 mb-4">
-            {editando ? `Editar a «${editando.nombre}»` : "Nuevo coordinador"}
+            {editando ? `Editar a «${editando.nombre}»` : "Nueva cuenta"}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="block">
@@ -206,21 +207,23 @@ export function CoordinadoresManager({ inicial }: Props) {
                 </span>
               )}
             </label>
-            {!editando && (
-              <label className="block md:col-span-2">
-                <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Contraseña inicial</span>
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="Mínimo 8 caracteres"
-                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-                <span className="block text-[11px] text-slate-500 mt-1">
-                  La define usted y se entrega al coordinador. No se vuelve a mostrar.
-                </span>
-              </label>
-            )}
+            <label className="block md:col-span-2">
+              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Rol</span>
+              <select
+                value={form.rol}
+                onChange={(e) => setForm({ ...form, rol: e.target.value === "admin" ? "admin" : "coordinador" })}
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="coordinador">Coordinador de Compras</option>
+                <option value="admin">Administrador</option>
+              </select>
+              <span className="block text-[11px] text-slate-500 mt-1">
+                {editando
+                  ? "Cambiar el rol actualiza el acceso. No puede quitarse el suyo ni dejar el sistema sin administradores."
+                  : "La cuenta se crea por invitación: la persona define su contraseña al abrir el enlace del correo."}
+              </span>
+            </label>
+            {form.rol === "coordinador" ? (
             <div className="md:col-span-2">
               <span className="block text-[12px] font-medium text-slate-700 mb-2">Categorías asignadas</span>
               <div className="flex flex-wrap gap-x-5 gap-y-2">
@@ -240,6 +243,7 @@ export function CoordinadoresManager({ inicial }: Props) {
                 Sin categorías, el coordinador aplica a todas.
               </span>
             </div>
+            ) : null}
           </div>
           <div className="mt-5 flex flex-wrap justify-end gap-2">
             <button
@@ -255,7 +259,7 @@ export function CoordinadoresManager({ inicial }: Props) {
               disabled={!puedeGuardar}
               className="bg-slate-900 text-white text-[13px] px-4 py-2 rounded-lg font-semibold hover:bg-slate-800 disabled:opacity-40 transition-colors"
             >
-              {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Crear coordinador"}
+              {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Enviar invitación"}
             </button>
           </div>
         </div>
@@ -267,6 +271,7 @@ export function CoordinadoresManager({ inicial }: Props) {
             <tr className="text-[11px] uppercase tracking-wide text-slate-500">
               <th scope="col" className="px-4 py-2.5 font-semibold">Nombre</th>
               <th scope="col" className="px-4 py-2.5 font-semibold">Correo</th>
+              <th scope="col" className="px-4 py-2.5 font-semibold">Rol</th>
               <th scope="col" className="px-4 py-2.5 font-semibold">Categorías</th>
               <th scope="col" className="px-4 py-2.5 font-semibold">Estado</th>
               <th scope="col" className="px-4 py-2.5 font-semibold text-right">Acciones</th>
@@ -275,8 +280,8 @@ export function CoordinadoresManager({ inicial }: Props) {
           <tbody className="divide-y divide-slate-100 text-[12.5px]">
             {lista.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-[13px] text-slate-500">
-                  Todavía no hay coordinadores. Cree el primero.
+                <td colSpan={6} className="px-4 py-10 text-center text-[13px] text-slate-500">
+                  Todavía no hay cuentas. Cree la primera.
                 </td>
               </tr>
             ) : (
@@ -284,6 +289,11 @@ export function CoordinadoresManager({ inicial }: Props) {
                 <tr key={c.id} className="hover:bg-slate-50">
                   <td className="px-4 py-2.5 font-medium text-slate-900">{c.nombre}</td>
                   <td className="px-4 py-2.5 text-slate-600">{c.email}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase", c.rol === "admin" ? "bg-sky-100 text-sky-800" : "bg-slate-100 text-slate-700")}>
+                      {c.rol === "admin" ? "Admin" : "Coordinador"}
+                    </span>
+                  </td>
                   <td className="px-4 py-2.5 text-slate-600">
                     {c.categoriasAsignadas.length > 0
                       ? c.categoriasAsignadas.map((cat) => nombreCategoria(cat)).join(" · ")

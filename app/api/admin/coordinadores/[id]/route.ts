@@ -12,6 +12,7 @@ const CLAVES_CATEGORIA = new Set(CATEGORIAS.map((c) => c.clave));
 // Edición parcial: solo se pisa lo que llega.
 const patchSchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es obligatorio").optional(),
+  rol: z.enum(["coordinador", "admin"]).optional(),
   categoriasAsignadas: z
     .array(z.string())
     .refine((arr) => arr.every((c) => CLAVES_CATEGORIA.has(c)), "Categoría no reconocida en el catálogo")
@@ -19,17 +20,18 @@ const patchSchema = z.object({
   activo: z.boolean().optional(),
 });
 
-// PATCH: editar nombre y categorías, y desactivar/reactivar (RF-56).
-//
-// Desactivar NO es solo `activo = false`: hay que QUITAR el rol en Supabase Auth
-// (`app_metadata.rol`), porque `getSession()` lo usa para decidir el acceso. Sin eso, el
-// coordinador seguiría entrando por API y panel hasta que refrescara su token. Al reactivar se
-// devuelve el rol `coordinador`. Es el mecanismo que ya existe; no se inventa otro.
-//
-// Orden: primero Supabase (lo crítico al desactivar es quitar el rol), después la fila local.
-// Si falla Supabase, no se toca lo local y se devuelve 502. Si fallara lo local después de
-// Supabase: al desactivar, la persona ya perdió el acceso (fallo seguro); al reactivar, aún
-// tendría `activo = false` (403 en la bandeja). En ambos casos, reintentar lo repara.
+/**
+ * PATCH: editar nombre, categorías, ROL y activar/desactivar (RF-56, 4.13.10).
+ *
+ * Dos fronteras de seguridad:
+ *  · un admin **no puede cambiarse el rol a sí mismo**: se quedaría sin acceso al panel;
+ *  · **no se puede dejar el sistema sin ningún admin activo** (ni cambiando roles ni
+ *    desactivando al último).
+ *
+ * Desactivar NO es solo `activo = false`: hay que QUITAR el rol en Supabase Auth
+ * (`app_metadata.rol`), porque `getSession()` lo usa para decidir el acceso. Al reactivar se
+ * devuelve el rol que corresponda. Es el mecanismo que ya existe.
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -50,34 +52,68 @@ export async function PATCH(
   try {
     const { id } = await params;
     const existente = await repo.usuarioPorId(id);
-    // Solo coordinadores: no se desactiva a un admin desde esta pantalla.
-    if (!existente || existente.rol !== "coordinador") {
-      return NextResponse.json({ error: `No existe un coordinador con el id «${id}».` }, { status: 404 });
+    if (!existente || (existente.rol !== "coordinador" && existente.rol !== "admin")) {
+      return NextResponse.json({ error: `No existe una cuenta con el id «${id}».` }, { status: 404 });
     }
 
-    const cambios: { nombre?: string; categoriasAsignadas?: string[]; activo?: boolean } = {};
+    const cambiaRol = body.rol !== undefined && body.rol !== existente.rol;
+    const esUnoMismo = existente.email.toLowerCase() === auth.sesion.email.toLowerCase();
+
+    if (cambiaRol && esUnoMismo) {
+      return NextResponse.json(
+        { error: "No puede cambiar su propio rol: se quedaría sin acceso. Pídaselo a otro administrador." },
+        { status: 400 }
+      );
+    }
+
+    // ¿La operación deja el sistema sin admins activos?
+    const quitaAdmin =
+      existente.rol === "admin" &&
+      ((body.rol !== undefined && body.rol !== "admin") || body.activo === false);
+    if (quitaAdmin) {
+      const equipo = await repo.listarEquipo({ incluirInactivos: false });
+      const adminsActivos = equipo.filter((u) => u.rol === "admin").length;
+      if (adminsActivos <= 1) {
+        return NextResponse.json(
+          { error: "Debe quedar al menos un administrador activo. Cree o active otro antes de cambiar este." },
+          { status: 409 }
+        );
+      }
+    }
+
+    const cambios: {
+      nombre?: string;
+      rol?: "coordinador" | "admin";
+      categoriasAsignadas?: string[];
+      activo?: boolean;
+    } = {};
     if (body.nombre !== undefined) cambios.nombre = body.nombre.trim();
+    if (body.rol !== undefined) cambios.rol = body.rol;
     if (body.categoriasAsignadas !== undefined) cambios.categoriasAsignadas = body.categoriasAsignadas;
     if (body.activo !== undefined) cambios.activo = body.activo;
+    // Un admin no lleva categorías: si se promueve, se limpian para no dejar datos engañosos.
+    if (body.rol === "admin") cambios.categoriasAsignadas = [];
 
     if (Object.keys(cambios).length === 0) {
       return NextResponse.json({ error: "No hay cambios que aplicar." }, { status: 400 });
     }
 
-    // El rol de sesión debe reflejar la actividad pedida. Si el nombre cambió, también se
-    // sincroniza para que la cabecera del panel no quede con el nombre viejo.
-    if (body.nombre !== undefined || body.activo !== undefined) {
-      const activoFinal = body.activo ?? existente.activo;
+    const activoFinal = body.activo ?? existente.activo;
+    const rolFinal = body.rol ?? (existente.rol as "coordinador" | "admin");
+
+    // El rol de sesión debe reflejar el estado final. Sin esto, el cambio de rol no tendría
+    // efecto real: `getSession()` seguiría devolviendo el rol viejo.
+    if (body.nombre !== undefined || body.activo !== undefined || cambiaRol) {
       try {
         await sincronizarUsuarioAuth({
           email: existente.email,
           nombre: cambios.nombre ?? existente.nombre,
-          rol: activoFinal ? "coordinador" : null,
+          rol: activoFinal ? rolFinal : null,
         });
       } catch (e) {
         console.warn(`[coordinadores] falló la sincronización del acceso de ${existente.email}:`, e);
         return NextResponse.json(
-          { error: "No se pudo actualizar el acceso del coordinador en el proveedor de autenticación." },
+          { error: "No se pudo actualizar el acceso de la cuenta en el proveedor de autenticación." },
           { status: 502 }
         );
       }
@@ -85,17 +121,18 @@ export async function PATCH(
 
     const actualizado = await repo.actualizarUsuario(id, cambios);
     if (!actualizado) {
-      return NextResponse.json({ error: `No existe un coordinador con el id «${id}».` }, { status: 404 });
+      return NextResponse.json({ error: `No existe una cuenta con el id «${id}».` }, { status: 404 });
     }
 
     return NextResponse.json({
       id: actualizado.id,
       nombre: actualizado.nombre,
       email: actualizado.email,
+      rol: actualizado.rol,
       categoriasAsignadas: actualizado.categoriasAsignadas,
       activo: actualizado.activo,
     });
   } catch {
-    return NextResponse.json({ error: "No se pudo actualizar el coordinador" }, { status: 500 });
+    return NextResponse.json({ error: "No se pudo actualizar la cuenta" }, { status: 500 });
   }
 }

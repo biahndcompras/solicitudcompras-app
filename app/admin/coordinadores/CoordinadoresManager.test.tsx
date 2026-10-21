@@ -35,18 +35,17 @@ beforeEach(() => {
 });
 
 describe("CoordinadoresManager · alta (RF-56)", () => {
-  it("envía el alta con nombre, correo, contraseña y categorías del catálogo", async () => {
+  it("envía el alta con nombre, correo, rol y categorías del catálogo", async () => {
     const user = userEvent.setup();
     render(<CoordinadoresManager inicial={[]} />);
 
-    await user.click(screen.getByRole("button", { name: /nuevo coordinador/i }));
+    await user.click(screen.getByRole("button", { name: /nueva cuenta/i }));
 
     await user.type(screen.getByLabelText(/nombre/i), "Ana López");
-    await user.type(screen.getByLabelText(/correo/i), "ana@biabrands.co");
-    await user.type(screen.getByLabelText(/contraseña/i), "Secreta123!");
+    await user.type(screen.getByLabelText(/^correo$/i), "ana@biabrands.co");
     await user.click(screen.getByRole("checkbox", { name: "Tecnología" }));
 
-    await user.click(screen.getByRole("button", { name: /crear coordinador/i }));
+    await user.click(screen.getByRole("button", { name: /enviar invitación/i }));
 
     await waitFor(() => {
       const llamada = fetchMock.mock.calls.find(
@@ -58,9 +57,10 @@ describe("CoordinadoresManager · alta (RF-56)", () => {
       expect(body).toMatchObject({
         nombre: "Ana López",
         email: "ana@biabrands.co",
-        password: "Secreta123!",
+        rol: "coordinador",
         categoriasAsignadas: ["tecnologia"],
       });
+      expect(body).not.toHaveProperty("password");
     });
   });
 });

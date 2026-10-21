@@ -78,3 +78,48 @@ export async function sincronizarUsuarioAuth(input: {
   }
   return { id: data.user.id, creado: true };
 }
+
+
+/**
+ * Invita a una persona por correo (4.13.9). **No** se define contraseña: Supabase manda un
+ * enlace y la persona define la suya al primer ingreso, que es justo el requisito.
+ *
+ * El rol se escribe en `app_metadata` después del invite: `inviteUserByEmail` no lo acepta.
+ * Si el correo ya tiene cuenta, Supabase responde con error y se propaga tal cual.
+ */
+export async function invitarUsuarioAuth(input: {
+  email: string;
+  nombre: string;
+  rol: Exclude<RolAuth, null>;
+}): Promise<{ id: string; actionLink: string }> {
+  const admin = crearClienteAdmin();
+  const email = input.email.trim().toLowerCase();
+  const base = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/+$/, "");
+
+  // `generateLink` crea el usuario y devuelve el enlace de invitación, SIN mandar correo.
+  // El envío lo hace la app con Resend (dominio verificado y template corporativo): el correo
+  // propio de Supabase rechazaba direcciones válidas y no permite nuestro diseño.
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "invite",
+    email,
+    options: { data: { nombre: input.nombre }, redirectTo: `${base}/login/coordinador` },
+  });
+  if (error || !data?.user || !data.properties?.action_link) {
+    throw new Error(error?.message ?? "No se pudo generar la invitación");
+  }
+
+  const { error: errorRol } = await admin.auth.admin.updateUserById(data.user.id, {
+    user_metadata: { ...(data.user.user_metadata ?? {}), nombre: input.nombre },
+    app_metadata: { ...(data.user.app_metadata ?? {}), rol: input.rol },
+  });
+  if (errorRol) throw new Error(errorRol.message);
+
+  return { id: data.user.id, actionLink: data.properties.action_link };
+}
+
+/** Deshace una invitación que no se pudo entregar. */
+export async function eliminarUsuarioAuth(id: string): Promise<void> {
+  const admin = crearClienteAdmin();
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) throw new Error(error.message);
+}

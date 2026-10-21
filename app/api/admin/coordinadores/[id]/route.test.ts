@@ -1,18 +1,20 @@
 // Edición y baja/alta de un coordinador (RF-56, 4.4.2).
 // Lo más importante: desactivar DEBE quitar el rol en Supabase Auth (si no, el
 // coordinador sigue entrando por API y panel hasta que refresque la sesión).
-// La UI de coordinadores no debe apuntar a admins: 404 si el id no es coordinador.
+// Y las dos fronteras de 4.13.10: no cambiarse el rol a sí mismo y no dejar el sistema sin admins.
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const usuarioPorId = vi.fn();
 const actualizarUsuario = vi.fn();
 const guardApi = vi.fn();
 const sincronizarUsuarioAuth = vi.fn();
+const listarEquipo = vi.fn();
 
 vi.mock("@/lib/db/postgres-repo", () => ({
   PostgresRepositorio: class {
     usuarioPorId = (...a: unknown[]) => usuarioPorId(...a);
     actualizarUsuario = (...a: unknown[]) => actualizarUsuario(...a);
+    listarEquipo = (...a: unknown[]) => listarEquipo(...a);
   },
 }));
 
@@ -53,6 +55,7 @@ beforeEach(() => {
   );
   guardApi.mockReset().mockResolvedValue({ sesion: { rol: "admin", email: "admin@biafoods.co" } });
   sincronizarUsuarioAuth.mockReset().mockResolvedValue({ id: "auth-1", creado: false });
+  listarEquipo.mockReset().mockResolvedValue([{ ...COORDINADOR, rol: "admin" }]);
 });
 
 describe("guardApi · PATCH /api/admin/coordinadores/[id]", () => {
@@ -100,13 +103,45 @@ describe("PATCH · edición de nombre y categorías", () => {
     expect(actualizarUsuario).not.toHaveBeenCalled();
   });
 
-  it("404 si el id corresponde a un admin (no se desactiva a un admin desde aquí)", async () => {
-    usuarioPorId.mockResolvedValue({ ...COORDINADOR, rol: "admin" });
+  it("no permite cambiarse el rol a uno mismo", async () => {
+    usuarioPorId.mockResolvedValue({
+      ...COORDINADOR,
+      rol: "admin",
+      email: "admin@biafoods.co", // el de la sesión
+    });
 
-    const res = await patch("u-1", { activo: false });
+    const res = await patch("u-1", { rol: "coordinador" });
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: expect.stringMatching(/propio rol/i) });
     expect(sincronizarUsuarioAuth).not.toHaveBeenCalled();
+  });
+
+  it("no deja el sistema sin administradores activos", async () => {
+    usuarioPorId.mockResolvedValue({ ...COORDINADOR, rol: "admin", email: "otro-admin@biafoods.co" });
+    listarEquipo.mockResolvedValue([{ ...COORDINADOR, rol: "admin" }]); // solo ese
+
+    const res = await patch("u-1", { rol: "coordinador" });
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: expect.stringMatching(/al menos un administrador/i) });
+    expect(sincronizarUsuarioAuth).not.toHaveBeenCalled();
+  });
+
+  it("cambia el rol y lo refleja en Supabase Auth", async () => {
+    usuarioPorId.mockResolvedValue({ ...COORDINADOR, rol: "admin", email: "otro-admin@biafoods.co" });
+    listarEquipo.mockResolvedValue([
+      { ...COORDINADOR, rol: "admin", email: "otro-admin@biafoods.co" },
+      { ...COORDINADOR, id: "u-2", rol: "admin", email: "admin@biafoods.co" },
+    ]);
+
+    const res = await patch("u-1", { rol: "coordinador" });
+
+    expect(res.status).toBe(200);
+    expect(sincronizarUsuarioAuth).toHaveBeenCalledWith(
+      expect.objectContaining({ email: "otro-admin@biafoods.co", rol: "coordinador" })
+    );
+    expect(actualizarUsuario).toHaveBeenCalledWith("u-1", expect.objectContaining({ rol: "coordinador" }));
   });
 });
 

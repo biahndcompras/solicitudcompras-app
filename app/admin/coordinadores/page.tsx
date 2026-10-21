@@ -18,12 +18,17 @@ const DOTS = ["bg-emerald-400", "bg-sky-400", "bg-amber-400"];
 
 export default async function AdminCoordinadoresPage() {
   // Se traen también los inactivos: la pantalla de gestión necesita poder reactivarlos.
-  const [coordinadores, solicitudes] = await Promise.all([
-    repo.listarCoordinadores({ incluirInactivos: true }),
+  const [equipo, solicitudes] = await Promise.all([
+    repo.listarEquipo({ incluirInactivos: true }),
     repo.listarTodas(),
   ]);
 
+  // Las tarjetas de rendimiento son del equipo de coordinación; los admins se gestionan
+  // igual pero no tienen carga de solicitudes asignadas.
+  const coordinadores = equipo.filter((u) => u.rol === "coordinador");
   const activos = coordinadores.filter((c) => c.activo);
+  const admins = equipo.filter((u) => u.rol === "admin");
+  const adminsActivos = admins.filter((u) => u.activo).length;
 
   const stats = activos.map((c, i) => {
     const propias = solicitudes.filter((s) => s.coordinadorId === c.id);
@@ -54,6 +59,7 @@ export default async function AdminCoordinadoresPage() {
         <div className="text-[11px] text-slate-500">
           {activos.length} coordinadores activos
           {coordinadores.length > activos.length ? ` · ${coordinadores.length - activos.length} inactivos` : ""}
+          {` · ${adminsActivos} administrador${adminsActivos === 1 ? "" : "es"} activo${adminsActivos === 1 ? "" : "s"}`}
         </div>
       </div>
 
@@ -86,7 +92,7 @@ export default async function AdminCoordinadoresPage() {
         ))}
       </div>
 
-      <CoordinadoresManager inicial={coordinadores} />
+      <CoordinadoresManager inicial={equipo} />
     </AdminShell>
   );
 }

@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/ui-ext/AdminShell";
+import { getSession } from "@/lib/auth";
 
 /**
  * Perfil del administrador.
@@ -12,7 +13,20 @@ import { AdminShell } from "@/components/ui-ext/AdminShell";
  * Aquí la pantalla es de solo lectura y lo dice. Cuando exista
  * PATCH /api/admin/perfil, esta vista pasa a editable con su feedback.
  */
-export default function AdminAjustesPage() {
+const ROL_LEGIBLE: Record<string, string> = {
+  admin: "Administración",
+  coordinador: "Coordinación de Compras",
+  solicitante: "Solicitante",
+};
+
+export default async function AdminAjustesPage() {
+  // Datos reales de la sesión de Supabase (antes decía "Gestionado por el proveedor de
+  // identidad" en TODOS los campos, incluso en nombre y correo).
+  const sesion = await getSession();
+  const nombre = sesion?.nombre?.trim() || "—";
+  const correo = sesion?.email?.trim() || "—";
+  const rol = sesion?.rol ? ROL_LEGIBLE[sesion.rol] ?? sesion.rol : "—";
+
   return (
     <AdminShell title="Mi perfil" subtitle="Identidad y rol con el que entras al portal.">
       <div className="max-w-2xl">
@@ -23,25 +37,22 @@ export default function AdminAjustesPage() {
           <dl className="divide-y divide-slate-100 text-[13px]">
             <div className="px-5 py-3 flex items-center justify-between gap-4">
               <dt className="text-slate-500">Nombre</dt>
-              <dd className="font-medium text-slate-900 text-right">Gestionado por el proveedor de identidad</dd>
+              <dd className="font-medium text-slate-900 text-right">{nombre}</dd>
             </div>
             <div className="px-5 py-3 flex items-center justify-between gap-4">
               <dt className="text-slate-500">Correo</dt>
-              <dd className="font-medium text-slate-900 text-right">Gestionado por el proveedor de identidad</dd>
-            </div>
-            <div className="px-5 py-3 flex items-center justify-between gap-4">
-              <dt className="text-slate-500">Contraseña</dt>
-              <dd className="font-medium text-slate-900 text-right">Gestionada por el proveedor de identidad</dd>
+              <dd className="font-medium text-slate-900 text-right break-all">{correo}</dd>
             </div>
             <div className="px-5 py-3 flex items-center justify-between gap-4">
               <dt className="text-slate-500">Rol</dt>
-              <dd className="font-medium text-slate-900 text-right">Administración</dd>
+              <dd className="font-medium text-slate-900 text-right">{rol}</dd>
             </div>
           </dl>
         </div>
 
         <p className="mt-4 text-[12px] text-slate-500">
-          Su nombre, correo y contraseña se administran donde iniciaste sesión. El rol lo asigna BIA Compras.
+          Nombre, correo y rol se leen de su cuenta de acceso. Para cambiarlos, un administrador
+          debe gestionarlo desde Coordinadores. La contraseña se cambia desde el enlace de acceso.
         </p>
       </div>
     </AdminShell>

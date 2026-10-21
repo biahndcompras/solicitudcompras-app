@@ -9,6 +9,7 @@ import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { nombreCategoria } from "@/lib/domain/categorias";
 import { duracionAtencion } from "@/lib/domain/semaforo";
+import { formato } from "@/lib/domain/comparativa";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +24,22 @@ export default async function AdminSolicitudDetallePage({
   const s = await repo.obtenerSolicitud(id);
   if (!s) notFound();
 
-  const [coordinador, eventos, todosCoordinadores] = await Promise.all([
-    s.coordinadorId ? repo.listarCoordinadores().then((l) => l.find((u) => u.id === s.coordinadorId)) : Promise.resolve(undefined),
-    repo.listarEventos(id),
-    repo.listarCoordinadores(),
-  ]);
+  const [coordinador, eventos, todosCoordinadores, respuestas, cotizaciones, comparativa, decision] =
+    await Promise.all([
+      s.coordinadorId ? repo.listarCoordinadores().then((l) => l.find((u) => u.id === s.coordinadorId)) : Promise.resolve(undefined),
+      repo.listarEventos(id),
+      repo.listarCoordinadores(),
+      repo.listarRespuestas(id),
+      repo.listarCotizaciones(id),
+      repo.obtenerComparativaPorSolicitudId(id),
+      repo.obtenerDecisionPorSolicitud(id),
+    ]);
+
+  // El admin ve TODO: lo que respondió el solicitante, las cotizaciones con precios, la
+  // comparativa, la sugerencia del sistema y lo que el solicitante decidió.
+  const proveedorElegido = decision?.cotizacionSeleccionadaId
+    ? cotizaciones.find((c) => c.id === decision.cotizacionSeleccionadaId)?.proveedorNombre
+    : undefined;
 
   const timeline = (eventos.length ? eventos : []).map((ev) => ({
     titulo: tituloEvento(ev),
@@ -74,6 +86,124 @@ export default async function AdminSolicitudDetallePage({
         <div className="lg:col-span-2 space-y-4">
           {/* Documentos adjuntos (4.4.12): el admin ve y gestiona lo mismo que Compras. */}
           <DocumentosAdjuntos solicitudId={s.id} />
+
+          {respuestas.length > 0 ? (
+            <section className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4">
+                Respuestas del solicitante ({respuestas.length})
+              </h3>
+              <dl className="divide-y divide-slate-100">
+                {respuestas.map((r) => (
+                  <div key={r.id} className="py-2.5 flex items-start justify-between gap-6">
+                    <dt className="text-[12px] text-slate-500">{r.campoLabel}</dt>
+                    <dd className="text-[12px] font-medium text-slate-900 text-right max-w-[60%]">
+                      {r.valor ?? (r.valorNumerico !== undefined ? String(r.valorNumerico) : "no especificado")}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
+
+          {cotizaciones.length > 0 ? (
+            <section className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 overflow-x-auto">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4">
+                Cotizaciones ({cotizaciones.length})
+              </h3>
+              <table className="min-w-full text-left text-[12px]">
+                <thead>
+                  <tr className="text-[10px] uppercase tracking-wider text-slate-500">
+                    <th className="py-2 pr-4 font-semibold">Proveedor</th>
+                    <th className="py-2 pr-4 font-semibold">Neto</th>
+                    <th className="py-2 pr-4 font-semibold">ISV</th>
+                    <th className="py-2 pr-4 font-semibold">Total</th>
+                    <th className="py-2 pr-4 font-semibold">Entrega</th>
+                    <th className="py-2 font-semibold">Pago</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {cotizaciones.map((c) => (
+                    <tr key={c.id}>
+                      <td className="py-2.5 pr-4 font-medium text-slate-900">{c.proveedorNombre}</td>
+                      <td className="py-2.5 pr-4 text-slate-700">{c.valorNeto !== undefined ? `${c.moneda ?? "L"} ${formato(c.valorNeto)}` : "no especificado"}</td>
+                      <td className="py-2.5 pr-4 text-slate-700">{c.impuestosDesglosados === false ? "⚠ no especifica" : c.montoIsv !== undefined ? formato(c.montoIsv) : "no especificado"}</td>
+                      <td className="py-2.5 pr-4 font-semibold text-slate-900">{c.valorTotal !== undefined ? `${c.moneda ?? "L"} ${formato(c.valorTotal)}` : "no especificado"}</td>
+                      <td className="py-2.5 pr-4 text-slate-700">{c.plazoEntrega ?? "—"}</td>
+                      <td className="py-2.5 text-slate-700">{c.formaPago ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          ) : null}
+
+          {comparativa ? (
+            <section className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4">Comparativa y recomendación</h3>
+              {comparativa.discrepanciasDetectadas.length > 0 ? (
+                <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                  <div className="text-[11px] font-semibold text-amber-900">Observaciones de especificación</div>
+                  <ul className="mt-1 space-y-1">
+                    {comparativa.discrepanciasDetectadas.map((d, i) => (
+                      <li key={i} className="text-[12px] text-amber-800">{d.explicacion}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <div className="mb-4">
+                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
+                  Recomendación del coordinador
+                </div>
+                <p className="text-[12px] text-slate-800">{comparativa.recomendacionComprador ?? "Sin recomendación escrita."}</p>
+              </div>
+              {comparativa.sugerenciaIA ? (
+                <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
+                    Sugerencia del sistema
+                  </div>
+                  <p className="text-[12px] text-slate-700">{comparativa.sugerenciaIA}</p>
+                </div>
+              ) : null}
+              {Object.keys(comparativa.prosContras).length > 0 ? (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {cotizaciones
+                    .filter((c) => comparativa.prosContras[c.id])
+                    .map((c) => (
+                      <div key={c.id} className="rounded-xl border border-slate-200 p-3">
+                        <div className="text-[11px] font-semibold text-slate-900 mb-1">{c.proveedorNombre}</div>
+                        <ul className="text-[11px] text-emerald-700 space-y-0.5">
+                          {comparativa.prosContras[c.id].pros.map((p, i) => <li key={i}>✓ {p}</li>)}
+                        </ul>
+                        <ul className="text-[11px] text-rose-700 space-y-0.5 mt-1">
+                          {comparativa.prosContras[c.id].contras.map((p, i) => <li key={i}>✗ {p}</li>)}
+                        </ul>
+                      </div>
+                    ))}
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          {decision ? (
+            <section className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4">Decisión del solicitante</h3>
+              {decision.ningunaOpcion ? (
+                <p className="text-[12px] text-slate-800">
+                  <strong>Ninguna opción le sirvió.</strong> La solicitud vuelve a Compras.
+                </p>
+              ) : (
+                <p className="text-[12px] text-slate-800">
+                  Eligió: <strong>{proveedorElegido ?? "proveedor no identificado"}</strong>
+                </p>
+              )}
+              <p className="text-[11px] text-slate-500 mt-1">
+                {new Date(decision.fechaDecision).toLocaleString("es-HN", { dateStyle: "medium", timeStyle: "short" })} · {decision.decididoPorEmail}
+              </p>
+              {decision.comentario ? (
+                <p className="text-[12px] text-slate-700 mt-2">«{decision.comentario}»</p>
+              ) : null}
+            </section>
+          ) : null}
 
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
             <h3 className="text-sm font-semibold text-slate-900 mb-6">Línea de tiempo (Trazabilidad)</h3>

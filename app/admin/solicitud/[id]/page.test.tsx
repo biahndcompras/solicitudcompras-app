@@ -10,6 +10,11 @@ const repo = vi.hoisted(() => ({
   obtenerSolicitud: vi.fn(),
   listarCoordinadores: vi.fn(),
   listarEventos: vi.fn(),
+  // El detalle ahora también muestra respuestas, cotizaciones, comparativa y decisión.
+  listarRespuestas: vi.fn().mockResolvedValue([]),
+  listarCotizaciones: vi.fn().mockResolvedValue([]),
+  obtenerComparativaPorSolicitudId: vi.fn().mockResolvedValue(null),
+  obtenerDecisionPorSolicitud: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/lib/db/postgres-repo", () => ({
@@ -17,6 +22,10 @@ vi.mock("@/lib/db/postgres-repo", () => ({
     obtenerSolicitud = repo.obtenerSolicitud;
     listarCoordinadores = repo.listarCoordinadores;
     listarEventos = repo.listarEventos;
+    listarRespuestas = repo.listarRespuestas;
+    listarCotizaciones = repo.listarCotizaciones;
+    obtenerComparativaPorSolicitudId = repo.obtenerComparativaPorSolicitudId;
+    obtenerDecisionPorSolicitud = repo.obtenerDecisionPorSolicitud;
   },
 }));
 

@@ -47,6 +47,9 @@ export function VistaPublica({
   // "Ninguna me sirve" devuelve la solicitud a Compras: el enlace deja de invitar a decidir
   // (el servidor ya lo rechaza con 409, pero una pantalla que ofrece botones muertos miente).
   const [vuelveACompras, setVuelveACompras] = useState(false);
+  // Tras confirmar, el estado del servidor (prop) no cambia hasta recargar: sin esto la
+  // pantalla seguía ofreciendo "Elegir esta opción" y una segunda decisión daba 409.
+  const [decididaAhora, setDecididaAhora] = useState(false);
 
   const vencimiento = vencimientoEn(fechaExpiracion);
   // Un solo aviso de referencia de moneda (no repetido bajo cada tarjeta).
@@ -59,10 +62,11 @@ export function VistaPublica({
   const estadoConocido = estadoSolicitud != null;
   const enEspera = !estadoConocido || estadoSolicitud === "ENVIADA_A_SOLICITANTE";
   const devueltaACompras = vuelveACompras || estadoSolicitud === "EN_COTIZACION";
-  const yaDecidio = estadoSolicitud === "CERRADA_CON_DECISION";
-  const bloqueada = vuelveACompras || (estadoConocido && !enEspera);
-  const proveedorDecidido = decision?.cotizacionSeleccionadaId
-    ? cotizaciones.find((c) => c.id === decision.cotizacionSeleccionadaId)?.proveedorNombre
+  const yaDecidio = estadoSolicitud === "CERRADA_CON_DECISION" || decididaAhora;
+  const bloqueada = vuelveACompras || yaDecidio || (estadoConocido && !enEspera);
+  const idDecidido = decision?.cotizacionSeleccionadaId ?? (decididaAhora ? elegida : null);
+  const proveedorDecidido = idDecidido
+    ? cotizaciones.find((c) => c.id === idDecidido)?.proveedorNombre
     : undefined;
 
   async function enviarDecision(payload: { cotizacionId?: string; ningunaOpcion?: boolean; comentario?: string }) {
@@ -87,6 +91,7 @@ export function VistaPublica({
         });
         return true;
       }
+      setDecididaAhora(true);
       setMensaje({
         tipo: "ok",
         texto: "Su decisión fue registrada. Compras recibirá la notificación.",
@@ -343,7 +348,7 @@ export function VistaPublica({
         }
       >
         <p className="text-[13px] text-slate-500 leading-relaxed">
-          Estás por elegir <span className="font-semibold text-slate-900">{modal?.nombre}</span>. Esta acción registra tu
+          Está por elegir <span className="font-semibold text-slate-900">{modal?.nombre}</span>. Esta acción registra su
           decisión y notifica a Compras para avanzar.
         </p>
       </Modal>
@@ -360,7 +365,7 @@ function notaReferencia(havarias: boolean, cotizaciones: Cotizacion[]): string {
     return "Los importes se muestran en la moneda de cada proveedor (sin conversión).";
   }
   const monedas = nuevasMonedas(cotizaciones);
-  return `Comparás en ${monedas.join(" y ")}: cada total muestra además su equivalente orientativo.`;
+  return `Compare en ${monedas.join(" y ")}: cada total muestra además su equivalente orientativo.`;
 }
 
 function vencimientoEn(fechaExpiracion?: string | null): { texto: string; critico: boolean } | null {
@@ -369,14 +374,14 @@ function vencimientoEn(fechaExpiracion?: string | null): { texto: string; critic
   if (!Number.isFinite(ms)) return null;
   const diff = ms - Date.now();
   if (diff <= 0) {
-    return { critico: true, texto: "Este enlace expiró. Pedile a Compras uno nuevo para decidir." };
+    return { critico: true, texto: "Este enlace expiró. Pídale a Compras uno nuevo para decidir." };
   }
   const horas = diff / (1000 * 60 * 60);
   const fecha = new Date(ms).toLocaleString("es-HN", { dateStyle: "medium", timeStyle: "short" });
   if (horas < 48) {
     return {
       critico: true,
-      texto: `Este enlace vence el ${fecha} (en ${Math.max(1, Math.round(horas))} h). Decidí antes de esa hora o pedile a Compras un enlace nuevo.`,
+      texto: `Este enlace vence el ${fecha} (en ${Math.max(1, Math.round(horas))} h). Decida antes de esa hora o pídale a Compras un enlace nuevo.`,
     };
   }
   return { critico: false, texto: `Este enlace vence el ${fecha}.` };

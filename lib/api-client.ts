@@ -263,7 +263,7 @@ export const api = {
     });
   },
 
-  convertirDocumento(file: File): Promise<{ ok: boolean; markdown?: string; error?: string }> {
+  convertirDocumento(file: File): Promise<{ ok: boolean; markdown?: string; error?: string; status?: number }> {
     const form = new FormData();
     form.append("archivo", file);
     return fetch("/api/convertir", {
@@ -272,7 +272,9 @@ export const api = {
     }).then(async (r) => {
       if (!r.ok) {
         const detalle = await r.json().catch(() => ({ error: "Error de conversión" }));
-        return { ok: false, error: detalle.error ?? "Error de conversión" };
+        // `status` permite distinguir un rechazo del archivo (413/415/422: no crear nada) de
+        // un fallo transitorio de la IA (503: se sube el archivo y se carga a mano).
+        return { ok: false, error: detalle.error ?? "Error de conversión", status: r.status };
       }
       return r.json();
     });

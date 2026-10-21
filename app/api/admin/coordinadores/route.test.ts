@@ -66,6 +66,10 @@ const USUARIO_CREADO = {
 };
 
 beforeEach(() => {
+  // El resultado del alta no puede depender de si quien corre la suite tiene MAIL_DRY_RUN
+  // en su .env.local (en modo pruebas la invitación no se envía y el mock de Resend nunca
+  // se llama). Cada test decide el modo; el de dry-run lo activa explícitamente.
+  delete process.env.MAIL_DRY_RUN;
   listarCoordinadores.mockReset().mockResolvedValue([]);
   buscarUsuarioPorEmail.mockReset().mockResolvedValue(null);
   crearUsuario.mockReset().mockResolvedValue(USUARIO_CREADO);
@@ -121,6 +125,16 @@ describe("POST /api/admin/coordinadores · alta (RF-56)", () => {
     const body = await res.json();
     expect(body).not.toHaveProperty("password");
     expect(body.rol).toBe("coordinador");
+  });
+
+  it("con MAIL_DRY_RUN no envía la invitación y deja la cuenta creada", async () => {
+    process.env.MAIL_DRY_RUN = "1";
+
+    const res = await crear();
+
+    expect(res.status).toBe(201);
+    expect(invitarUsuarioAuth).toHaveBeenCalled();
+    expect(enviarConResend).not.toHaveBeenCalled();
   });
 
   it("normaliza el correo a minúsculas", async () => {

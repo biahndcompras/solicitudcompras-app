@@ -41,6 +41,13 @@ export async function POST(
       );
     }
 
+    // Doble decisión: el estado debería haberlo impedido, pero si existe una decisión
+    // previa (dato inconsistente o doble clic fuera de orden) el INSERT choca con el
+    // unique y devolvía 500. Mejor un 409 explícito que un error genérico.
+    if (await repo.obtenerDecisionPorSolicitud(comparativa.solicitudId)) {
+      return NextResponse.json({ error: "Esta solicitud ya fue decidida" }, { status: 409 });
+    }
+
     // Validar que la cotización elegida pertenezca a esta solicitud.
     if (!body.ningunaOpcion && body.cotizacionId) {
       const cotizaciones = await repo.listarCotizaciones(comparativa.solicitudId);
@@ -110,6 +117,8 @@ export async function POST(
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: "Datos inválidos", detalles: e.issues }, { status: 400 });
     }
+    // Sin esto, un fallo real de la decisión queda invisible (solo un 500 genérico).
+    console.error("[decision] error al registrar la decisión:", e);
     return NextResponse.json({ error: "Error al registrar la decisión" }, { status: 500 });
   }
 }
@@ -143,7 +152,7 @@ export async function GET(
     // volvió a Compras (EN_COTIZACION); la vista decide qué mostrar con esto.
     return NextResponse.json({
       estado: solicitud.estado,
-      puedeDecidir: solicitud.estado === "ENVIADA_A_SOLICITANTE",
+      puedeDecidir: solicitud.estado === "ENVIADA_A_SOLICITANTE" && decision === null,
       vuelveACompras: solicitud.estado === "EN_COTIZACION",
       decision: decision
         ? {

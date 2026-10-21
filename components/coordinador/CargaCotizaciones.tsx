@@ -88,6 +88,13 @@ export function CargaCotizaciones({ solicitudId, cotizaciones, onCotizacionCarga
     setError(null);
     try {
       const conv = await api.convertirDocumento(file);
+      // Si el archivo fue RECHAZADO (formato viejo, >4 MB o no es una cotización), no se crea
+      // nada: antes quedaba una cotización vacía "Proveedor por definir". Solo se degrada a
+      // carga manual cuando el fallo es transitorio (IA caída), para no perder el archivo.
+      if (!conv.ok && conv.status !== undefined && [400, 413, 415, 422].includes(conv.status)) {
+        setError(conv.error ?? "No se pudo leer el archivo.");
+        return;
+      }
       await api.cargarCotizacionConArchivo({
         solicitudId,
         // Si la IA no reconoce el proveedor, el coordinador lo corrige con Editar.

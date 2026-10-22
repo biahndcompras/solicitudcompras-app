@@ -219,14 +219,14 @@ export function Panel({
       aria-labelledby={id ? `${id}-title` : undefined}
       className={cx("flex min-w-0 flex-col gap-5 rounded-sm bg-canvas p-6 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]", className)}
     >
-      <header className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
+      <header className="flex flex-wrap items-start gap-4">
+        <div className="min-w-[140px] flex-1">
           <h2 id={id ? `${id}-title` : undefined} className="text-display-md text-ink">
             {title}
           </h2>
           {subtitle && <p className="mt-1 text-caption text-body">{subtitle}</p>}
         </div>
-        {action}
+        {action ? <div className="shrink-0">{action}</div> : null}
       </header>
       {children}
     </section>

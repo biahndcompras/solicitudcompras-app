@@ -7,37 +7,9 @@ import { useState } from "react";
 import { site } from "@/config/site";
 import { useSesion } from "@/lib/sesion-context";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Icon, type IconName } from "../ui/Icon";
+import { Icon } from "../ui/Icon";
 import { Avatar, Logo, cx } from "../ui/primitives";
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: IconName;
-}
-
-/**
- * Navegación del admin. Mismos ítems que el sidebar viejo (no se agrega ni se
- * quita funcionalidad); «Configuración» va en su grupo y «Mi perfil» abajo,
- * como «Settings» en la referencia.
- */
-export const navGroups: { label: string; items: NavItem[] }[] = [
-  {
-    label: "Gestión",
-    items: [
-      { href: "/admin", label: "Dashboard", icon: "dashboard" },
-      { href: "/admin/procesos", label: "Procesos", icon: "orders" },
-      { href: "/admin/coordinadores", label: "Coordinadores", icon: "staff" },
-    ],
-  },
-  {
-    label: "Configuración",
-    items: [
-      { href: "/admin/campos", label: "Campos", icon: "menu" },
-      { href: "/admin/configuracion", label: "Umbrales y alertas", icon: "settings" },
-    ],
-  },
-];
+import type { NavGroup, NavItem } from "./navigation";
 
 function iniciales(nombre: string): string {
   return nombre
@@ -83,17 +55,53 @@ function NavLink({
       )}
       <Icon name={item.icon} className="relative shrink-0 transition-transform duration-200 group-hover/nav:scale-110" />
       {!collapsed && <span className="relative flex-1 truncate text-body-md">{item.label}</span>}
+      {!collapsed && item.count !== undefined ? (
+        <span
+          className={cx(
+            "mono-label relative shrink-0 rounded-sm px-1.5",
+            active ? "bg-mint text-ink" : "bg-surface-dark-soft text-on-dark"
+          )}
+        >
+          {item.count}
+        </span>
+      ) : null}
+      {collapsed && item.count !== undefined ? (
+        <span className="absolute top-2 right-2 size-1.5 rounded-full bg-mint" aria-hidden />
+      ) : null}
     </Link>
   );
 }
 
-export function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boolean; onMobileClose: () => void }) {
+export function Sidebar({
+  mobileOpen,
+  onMobileClose,
+  nav,
+  portal,
+  homeHref,
+  profileHref,
+  profileLabel = "Mi perfil",
+}: {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+  nav: NavGroup[];
+  portal: { label: string; sub: string };
+  homeHref: string;
+  profileHref: string;
+  profileLabel?: string;
+}) {
   const [collapsed, setCollapsed] = useState(false);
   const [menu, setMenu] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const sesion = useSesion();
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+
+  // Solo el ítem MÁS específico queda activo: con un simple `startsWith`, /panel/cotizaciones
+  // marcaba también /panel y /admin/procesos marcaba /admin.
+  const hrefs = nav.flatMap((g) => g.items.map((i) => i.href));
+  const activeHref = hrefs
+    .filter((h) => pathname === h || pathname.startsWith(h + "/"))
+    .sort((a, b) => b.length - a.length)[0];
+  const isActive = (href: string) => href === activeHref;
 
   async function salir() {
     setMenu(false);
@@ -109,7 +117,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boolean; on
     return (
       <div className="on-dark flex h-full flex-col gap-1 overflow-y-auto px-4 py-6">
         <div className={cx("flex items-center", c ? "justify-center" : "justify-between")}>
-          <Link href="/admin" aria-label={`${site.fullName}, dashboard`}>
+          <Link href={homeHref} aria-label={`${site.fullName}, inicio`}>
             <Logo onDark compact={c} label={site.name} />
           </Link>
           {!c && (
@@ -135,17 +143,15 @@ export function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boolean; on
         )}
         <div className="h-6 shrink-0" />
         {!c && (
-          <div className="mb-5 flex items-center gap-3 rounded-sm bg-surface-dark-soft px-3 py-2.5">
-            <span className="flex-1">
-              <span className="eyebrow block text-on-dark-muted">Portal</span>
-              <span className="mt-1 block text-body-md font-medium text-on-dark">
-                {site.portalAdmin.label} · {site.portalAdmin.sub}
-              </span>
+          <div className="mb-5 rounded-sm bg-surface-dark-soft px-3 py-2.5">
+            <span className="eyebrow block text-on-dark-muted">Portal</span>
+            <span className="mt-1 block text-body-md font-medium text-on-dark">
+              {portal.label} · {portal.sub}
             </span>
           </div>
         )}
         <nav aria-label="Navegación principal" className="flex flex-col gap-1">
-          {navGroups.map((g, gi) => (
+          {nav.map((g, gi) => (
             <div key={g.label} className={cx("flex flex-col gap-1", gi > 0 && "mt-3")}>
               {!c && <p className="eyebrow px-3 py-2 text-on-dark-muted">{g.label}</p>}
               {g.items.map((item) => (
@@ -163,9 +169,9 @@ export function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boolean; on
         </nav>
         <div className="min-h-6 flex-1" />
         <NavLink
-          item={{ href: "/admin/ajustes", label: "Mi perfil", icon: "staff" }}
+          item={{ href: profileHref, label: profileLabel, icon: "staff" }}
           collapsed={c}
-          active={isActive("/admin/ajustes")}
+          active={isActive(profileHref)}
           onNavigate={isMobile ? onMobileClose : undefined}
           layoutId={lid}
         />
@@ -176,10 +182,10 @@ export function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boolean; on
             aria-expanded={menu}
             className={cx("flex w-full items-center gap-3 rounded-sm py-1 text-left hover:bg-surface-dark-soft/60", c ? "justify-center" : "px-3")}
           >
-            <Avatar initials={iniciales(sesion?.nombre ?? "Admin")} />
+            <Avatar initials={iniciales(sesion?.nombre ?? "Usuario")} />
             {!c && (
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-caption font-medium text-on-dark">{sesion?.nombre ?? "Admin"}</span>
+                <span className="block truncate text-caption font-medium text-on-dark">{sesion?.nombre ?? "Usuario"}</span>
                 <span className="block truncate text-caption text-on-dark-muted">
                   {sesion?.rol === "admin" ? "Administración" : "Coordinador"}
                 </span>
@@ -195,11 +201,11 @@ export function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boolean; on
                 className="absolute bottom-full left-0 mb-2 w-[216px] rounded-sm bg-canvas p-1 text-ink shadow-[var(--shadow-soft-drop)]"
               >
                 <Link
-                  href="/admin/ajustes"
+                  href={profileHref}
                   onClick={() => setMenu(false)}
                   className="flex items-center gap-2 rounded-xs px-3 py-2 text-body-md hover:bg-surface-soft"
                 >
-                  <Icon name="staff" size={16} /> Mi perfil
+                  <Icon name="staff" size={16} /> {profileLabel}
                 </Link>
                 <button
                   type="button"

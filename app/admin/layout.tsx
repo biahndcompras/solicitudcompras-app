@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/auth";
 import { SesionProvider } from "@/lib/sesion-context";
 import { AppShell } from "@/components/layout/AppShell";
+import { ADMIN_NAV, ADMIN_PORTAL } from "@/components/layout/navigation";
 
 export const metadata = {
   title: "Administración — Portal de Compras BIA",
@@ -16,7 +17,14 @@ export default async function AdminLayout({
 
   return (
     <SesionProvider value={{ nombre: sesion.nombre, email: sesion.email, rol: sesion.rol }}>
-      <AppShell>{children}</AppShell>
+      <AppShell
+        nav={ADMIN_NAV}
+        portal={ADMIN_PORTAL}
+        homeHref="/admin"
+        profileHref="/admin/ajustes"
+      >
+        {children}
+      </AppShell>
     </SesionProvider>
   );
 }

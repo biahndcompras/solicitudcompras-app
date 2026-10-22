@@ -113,7 +113,7 @@ export function DocumentosAdjuntos({
               }}
             />
             <Button variant="outline" size="sm" icon="upload" onClick={() => input.current?.click()} disabled={subiendo}>
-              {subiendo ? "Subiendo…" : "Adjuntar documento"}
+              {subiendo ? "Subiendo…" : "Adjuntar"}
             </Button>
           </>
         ) : null

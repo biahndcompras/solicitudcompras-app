@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { Providers } from "../providers/Providers";
 import { Sidebar } from "./Sidebar";
+import type { NavGroup } from "./navigation";
 
 const ShellCtx = createContext<{ openMenu: () => void }>({ openMenu: () => {} });
 export const useShell = () => useContext(ShellCtx);
@@ -12,10 +13,24 @@ export const useShell = () => useContext(ShellCtx);
 /**
  * Shell del sistema nuevo (DESIGN.md §4.1): sidebar + página animada.
  *
- * El scope `.bia-ds` hace que los tokens de la referencia (radios, fuentes,
- * success) apliquen solo acá; el shell viejo sigue con su tema hasta migrar.
+ * La navegación es un prop: el admin usa su menú de gestión y el coordinador
+ * usa las etapas del flujo con contadores (DESIGN.md §16).
  */
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  nav,
+  portal,
+  homeHref,
+  profileHref,
+  profileLabel,
+}: {
+  children: ReactNode;
+  nav: NavGroup[];
+  portal: { label: string; sub: string };
+  homeHref: string;
+  profileHref: string;
+  profileLabel?: string;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -23,7 +38,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     <ShellCtx.Provider value={{ openMenu: () => setMenuOpen(true) }}>
       <Providers>
         <div className="bia-ds flex min-h-dvh bg-canvas">
-          <Sidebar mobileOpen={menuOpen} onMobileClose={() => setMenuOpen(false)} />
+          <Sidebar
+            mobileOpen={menuOpen}
+            onMobileClose={() => setMenuOpen(false)}
+            nav={nav}
+            portal={portal}
+            homeHref={homeHref}
+            profileHref={profileHref}
+            profileLabel={profileLabel}
+          />
           <main className="relative min-w-0 flex-1 px-4 pt-6 pb-16 sm:px-8 sm:pt-8">
             <motion.div
               key={pathname}

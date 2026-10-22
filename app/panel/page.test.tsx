@@ -2,7 +2,7 @@
 // real con reintento (P1-5), estado vacío ramificado por búsqueda (P2-6), estado anunciado
 // en el único control de filtro (P2-8) y referencia honesta (P3-10).
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const listarSolicitudes = vi.fn();
@@ -35,6 +35,7 @@ vi.mock("next/link", () => ({
 }));
 
 import PanelPage from "./page";
+import { PanelBandeja } from "@/components/coordinador/PanelBandeja";
 import type { Solicitud } from "@/lib/domain/types";
 
 function sol(over: Partial<Solicitud> & { id: string }): Solicitud {
@@ -120,37 +121,27 @@ describe("Panel del coordinador", () => {
     expect(screen.queryByText(/Sin resultados para/)).toBeNull();
   });
 
-  it("P2-6 · un filtro sin coincidencias no se presenta como bandeja vacía", async () => {
-    const user = userEvent.setup();
-    render(<PanelPage />);
-    await screen.findByText("2 resultados");
-
-    await user.click(screen.getByRole("button", { name: "Esperando decisión" }));
+  it("P2-6 · una etapa sin coincidencias no se presenta como bandeja vacía", async () => {
+    render(<PanelBandeja etapa="decisiones" />);
     expect(await screen.findByText("No hay solicitudes en «Esperando decisión»")).toBeInTheDocument();
     expect(screen.queryByText("No tiene solicitudes asignadas")).toBeNull();
-
-    await user.click(screen.getByText("Ver todas", { selector: "button" }));
-    expect(await screen.findByText("2 resultados")).toBeInTheDocument();
+    // La salida es un enlace real de vuelta a la bandeja completa.
+    expect(screen.getByRole("link", { name: "Ver todas" })).toHaveAttribute("href", "/panel");
   });
 
-  it("P2-8 · los chips son el único filtro y anuncian su estado con aria-pressed", async () => {
-    const user = userEvent.setup();
-    render(<PanelPage />);
-    await screen.findByText("2 resultados");
+  it("P2-8 · la etapa activa se anuncia con aria-current y la cola muestra solo esa etapa", async () => {
+    render(<PanelBandeja etapa="comparativas" />);
+    expect(await screen.findByText("1 resultado")).toBeInTheDocument();
 
-    const grupo = screen.getByRole("button", { name: "Cerradas" });
-    expect(grupo).toHaveAttribute("aria-pressed", "false");
-    await user.click(grupo);
-    expect(grupo).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Todos" })).toHaveAttribute("aria-pressed", "false");
+    // El estado vive en la navegación de etapas (un solo control) y se anuncia.
+    expect(screen.getByRole("link", { name: /Comparativas/ })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /^Todas/ })).not.toHaveAttribute("aria-current");
 
-    // Las KPI son contadores puros: la etiqueta aparece dos veces (KPI + chip) pero
-    // solo el chip es un botón, así que el estado se codifica una sola vez.
-    expect(screen.getAllByText("Esperando cotizaciones")).toHaveLength(2);
-    expect(screen.getAllByRole("button", { name: "Esperando cotizaciones" })).toHaveLength(1);
-    // Y el filtro "Esperando cotizaciones" sobre RFQ-2026-0008 deja 1 fila.
-    await user.click(screen.getByRole("button", { name: "Esperando cotizaciones" }));
-    await waitFor(() => expect(screen.getByText("1 resultado")).toBeInTheDocument());
+    // Solo la solicitud en COMPARATIVA_LISTA está en esta etapa.
+    // La referencia aparece en la cola y en «Prioridad de hoy»: misma solicitud, dos
+    // contextos. Lo que importa es que la otra etapa no esté.
+    expect(screen.getAllByText("RFQ-2026-0008").length).toBeGreaterThan(0);
+    expect(screen.queryAllByText("RFQ-2026-0010")).toHaveLength(0);
   });
 
   it("P3-10 · sin numero_referencia muestra «Sin referencia» y no inventa una", async () => {

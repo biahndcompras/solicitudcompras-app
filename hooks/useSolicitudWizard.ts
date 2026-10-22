@@ -741,7 +741,7 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
     if (s.paso === 2) {
       const out: string[] = [];
       if (!s.titulo.trim()) out.push("el título");
-      if (!s.tipoNecesidad) out.push("el tipo de necesidad");
+      if (!s.tipoNecesidad) out.push("la categoría");
       if (!s.fechaRequerida) out.push("la fecha requerida");
       else if (fechaEnPasado(s.fechaRequerida)) out.push("una fecha requerida de hoy en adelante (la elegida ya pasó)");
       if (!s.area.trim()) out.push("su área");
@@ -890,8 +890,8 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
 function resumenBorrador(e: WizardState): string {
   const partes: string[] = [];
   if (e.titulo.trim()) partes.push(`«${e.titulo.trim().slice(0, 60)}»`);
-  if (e.paso >= 3) partes.push("llegaste a clasificación");
-  else if (e.paso >= 2) partes.push("completaste la captura");
+  if (e.paso >= 3) partes.push("llegó a clasificación");
+  else if (e.paso >= 2) partes.push("completó la captura");
   return partes.join(" · ") || "sin datos capturados";
 }
 

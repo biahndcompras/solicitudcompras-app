@@ -66,7 +66,7 @@ describe("SolicitanteWizard", () => {
     const user = userEvent.setup();
     render(<SolicitanteWizard />);
     await user.type(screen.getByLabelText(/título de la solicitud/i), "Sombrillas");
-    await user.selectOptions(screen.getByLabelText(/tipo de necesidad/i), "mercadeo_publicidad");
+    await user.selectOptions(screen.getByLabelText(/categoría/i), "mercadeo_publicidad");
     await user.type(screen.getByLabelText(/descripción breve/i), "500 sombrillas con logo");
     fireEvent.change(screen.getByLabelText(/para cuándo lo necesita/i), {
       target: { value: "2020-01-01" },
@@ -79,7 +79,7 @@ describe("SolicitanteWizard", () => {
     const user = userEvent.setup();
     render(<SolicitanteWizard />);
     await user.type(screen.getByLabelText(/título de la solicitud/i), "Sombrillas");
-    await user.selectOptions(screen.getByLabelText(/tipo de necesidad/i), "mercadeo_publicidad");
+    await user.selectOptions(screen.getByLabelText(/categoría/i), "mercadeo_publicidad");
     const hoy = new Date(Date.now() + 7 * 86400000);
     const p = (n: number) => String(n).padStart(2, "0");
     fireEvent.change(screen.getByLabelText(/para cuándo lo necesita/i), {

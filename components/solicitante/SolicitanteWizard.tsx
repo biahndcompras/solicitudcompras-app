@@ -103,8 +103,8 @@ export function SolicitanteWizard() {
 
 
   return (
-    <div className="bia-ds min-h-dvh bg-canvas p-0 md:flex md:items-start md:justify-center md:p-8">
-      <main className="mx-auto flex w-full max-w-[1120px] flex-col overflow-hidden bg-canvas md:h-[82vh] md:min-h-[640px] md:flex-row md:rounded-sm md:shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+    <div className="bia-ds min-h-dvh bg-surface-soft p-0 md:flex md:items-start md:justify-center md:p-8">
+      <main className="mx-auto flex w-full max-w-[1120px] flex-col overflow-hidden border-y border-hairline bg-canvas md:min-h-[640px] md:flex-row md:rounded-sm md:border">
         {/* Barra compacta (<md). Vive como hija DIRECTA de <main>, no dentro del <aside>:
             `position: sticky` solo tiene recorrido dentro de su bloque contenedor, y dentro
             del <aside> ese bloque mide 120 px en móvil para una barra de 119 px: no había
@@ -251,7 +251,7 @@ export function SolicitanteWizard() {
             paso activo sea legible completo y el CTA quede siempre alcanzable. */}
         <section
           ref={refSeccion}
-          className="flex min-w-0 flex-1 flex-col bg-canvas p-5 md:overflow-y-auto md:p-8 no-scrollbar"
+          className="flex min-w-0 flex-1 flex-col bg-canvas p-5 md:p-8"
         >
           {/* El encabezado vive aquí, no en cada paso: es lo único que puede hacerse sticky
               y es lo que se perdía al bajar en el paso 5. `sticky` desde md: el scroller es
@@ -260,7 +260,7 @@ export function SolicitanteWizard() {
               El paso 6 no lo lleva: es una pantalla de celebración centrada, sin scroll. */}
           {estado.paso >= 2 && estado.paso <= 5 ? (
             <header
-              className="mb-5 shrink-0 border-b border-hairline bg-canvas/90 backdrop-blur-md md:sticky md:top-0 md:z-30 md:-mx-8 md:-mt-8 md:mb-5 md:border-b-0 md:px-8 md:pt-8 md:pb-4"
+              className="mb-5 shrink-0 border-b border-hairline pb-4"
             >
               <h1 className="mb-1 text-display-lg text-ink">{TITULOS_PASO[estado.paso]}</h1>
               <p className="text-sm text-body mb-0">{BAJADAS_PASO[estado.paso]}</p>
@@ -311,7 +311,7 @@ export function SolicitanteWizard() {
               <button
                 type="button"
                 onClick={descartarBorrador}
-                className="w-full min-h-[44px] rounded-sm border border-hairline px-4 text-sm font-semibold text-body hover:bg-surface-soft"
+                className="min-h-[44px] w-full rounded-sm border border-hairline bg-canvas px-4 text-caption font-medium text-ink hover:bg-surface-soft"
               >
                 Empezar de cero
               </button>
@@ -355,7 +355,7 @@ export function SolicitanteWizard() {
               <button
                 type="button"
                 onClick={() => setConfirmCancel(false)}
-                className="w-full min-h-[44px] rounded-sm border border-hairline px-4 text-sm font-semibold text-ink hover:bg-surface-soft"
+                className="min-h-[44px] w-full rounded-sm border border-hairline bg-canvas px-4 text-caption font-medium text-ink hover:bg-surface-soft"
               >
                 Seguir editando
               </button>
@@ -363,7 +363,7 @@ export function SolicitanteWizard() {
           }
         >
           <p className="text-caption leading-relaxed text-body">
-            Vas a perder los datos de esta solicitud como borrador y volver al inicio.
+            Va a perder los datos de esta solicitud como borrador y volver al inicio.
             Esta acción no se puede deshacer.
           </p>
         </Modal>
@@ -398,7 +398,7 @@ export function SolicitanteWizard() {
                   setGateEnvio(false);
                   enviarSolicitud();
                 }}
-                className="w-full min-h-[44px] rounded-sm border border-hairline px-4 text-sm font-semibold text-ink hover:bg-surface-soft"
+                className="min-h-[44px] w-full rounded-sm border border-hairline bg-canvas px-4 text-caption font-medium text-ink hover:bg-surface-soft"
               >
                 Enviar de todos modos
               </button>
@@ -459,12 +459,16 @@ function ResumenVivo({ estado }: { estado: WizardState }) {
           : "Por definir";
 
   return (
-    <div className="sticky top-28 flex flex-col gap-4 rounded-sm bg-canvas p-4 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+    <div className="sticky top-8 flex flex-col gap-4 rounded-sm bg-canvas p-4 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
       <p className="eyebrow text-body">Resumen</p>
       <p className="text-body-md font-medium text-ink">{estado.titulo?.trim() || "Sin título todavía"}</p>
-      <dl className="flex flex-col gap-2">
+      <dl className="divide-y divide-hairline">
         <FilaResumen label="Necesidad" valor={tipo} />
-        <FilaResumen label="Tipo de documento" valor={estado.paso >= 3 ? estado.clasificacion || "—" : "Por clasificar"} />
+        <FilaResumen
+          label="Categoría"
+          valor={estado.tipoNecesidad ? nombreCategoria(estado.tipoNecesidad) : "Por definir"}
+        />
+        <FilaResumen label="Tipo de solicitud" valor={estado.paso >= 3 ? estado.clasificacion || "—" : "Por clasificar"} />
         <FilaResumen
           label="Fecha requerida"
           valor={estado.fechaRequerida ? formatoFechaLegible(estado.fechaRequerida) : "Por definir"}
@@ -490,7 +494,7 @@ function ResumenVivo({ estado }: { estado: WizardState }) {
 
 function FilaResumen({ label, valor }: { label: string; valor: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3">
+    <div className="flex items-baseline justify-between gap-3 py-2">
       <dt className="text-caption text-body">{label}</dt>
       <dd className="truncate text-right text-caption font-medium text-ink">{valor}</dd>
     </div>
@@ -708,37 +712,38 @@ function PasoCaptura({
         </div>
       ) : null}
 
-      <div className="bg-canvas rounded-sm border border-hairline/60 p-4 md:p-5 mb-5 ">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mb-5 rounded-sm bg-canvas p-5 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="md:col-span-2">
-            <label htmlFor="titulo" className="block text-xs font-medium text-ink mb-1.5">Título de la solicitud</label>
-            <input id="titulo" type="text" value={estado.titulo} onChange={(e) => set("titulo", e.target.value)} placeholder="Ej. Sombrillas brandeadas — activación playa" maxLength={200} className="w-full min-h-[44px] bg-canvas border border-hairline rounded-sm px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-[var(--color-border-strong)]  focus:bg-canvas transition-all" />
+            <label htmlFor="titulo" className="mb-1.5 block text-caption font-medium text-ink">Título de la solicitud</label>
+            <input
+              id="titulo"
+              type="text"
+              value={estado.titulo}
+              onChange={(e) => set("titulo", e.target.value)}
+              placeholder="Ej. Sombrillas brandeadas — activación playa"
+              maxLength={200}
+              className="min-h-[44px] w-full rounded-sm bg-canvas px-4 py-2.5 text-body-md text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] outline-none transition-shadow focus:shadow-[inset_0_0_0_1px_#000]"
+            />
           </div>
+
           <div>
-            <label htmlFor="tipo-necesidad" className="block text-xs font-medium text-ink mb-1.5">Tipo de necesidad</label>
-            <select id="tipo-necesidad" value={estado.tipoNecesidad} onChange={(e) => set("tipoNecesidad", e.target.value)} className="w-full min-h-[44px] bg-canvas border border-hairline rounded-sm px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-[var(--color-border-strong)]  focus:bg-canvas transition-all cursor-pointer">
-              <option value="" disabled>Seleccione una opción</option>
+            <label htmlFor="tipo-necesidad" className="mb-1.5 block text-caption font-medium text-ink">Categoría</label>
+            <select
+              id="tipo-necesidad"
+              value={estado.tipoNecesidad}
+              onChange={(e) => set("tipoNecesidad", e.target.value)}
+              className="min-h-[44px] w-full cursor-pointer rounded-sm bg-canvas px-4 py-2.5 text-body-md text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] outline-none transition-shadow focus:shadow-[inset_0_0_0_1px_#000]"
+            >
+              <option value="" disabled>Seleccione…</option>
               {CATEGORIAS.map((c) => (
                 <option key={c.clave} value={c.clave}>{c.etiqueta}</option>
               ))}
             </select>
           </div>
+
           <div>
-            <span className="block text-sm font-semibold text-ink mb-2">¿Producto o servicio?</span>
-            <div className="grid grid-cols-2 gap-3">
-              {([["producto", "Producto", "Bien físico: materiales, empaques, artículos."], ["servicio", "Servicio", "Trabajo o actividad: logística, diseño, consultoría."]] as const).map(([val, label, ayuda]) => (
-                <label key={val} className="group cursor-pointer relative">
-                  <input type="radio" name="prod_serv" checked={estado.subtipo === val} onChange={() => set("subtipo", val)} className="peer sr-only" />
-                  <div className="py-3.5 px-3 rounded-sm border-2 border-hairline bg-surface-soft text-center transition-all peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-border-strong)] group-has-[:checked]:border-[var(--color-border-strong)] group-has-[:checked]:bg-surface-soft/50 group-has-[:checked]:ring-1 group-has-[:checked]:ring-[var(--color-border-strong)]">
-                    <div className={"text-sm font-bold " + (estado.subtipo === val ? "text-ink" : "text-ink")}>{label}</div>
-                    <div className="text-caption text-body mt-0.5 leading-snug">{ayuda}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label htmlFor="fecha-requerida" className="block text-xs font-medium text-ink mb-1.5">¿Para cuándo lo necesita?</label>
+            <label htmlFor="fecha-requerida" className="mb-1.5 block text-caption font-medium text-ink">¿Para cuándo lo necesita?</label>
             <input
               id="fecha-requerida"
               type="date"
@@ -747,22 +752,66 @@ function PasoCaptura({
               onChange={(e) => set("fechaRequerida", e.target.value)}
               aria-invalid={estado.fechaRequerida && fechaEnPasado(estado.fechaRequerida) ? true : undefined}
               aria-describedby={estado.fechaRequerida && fechaEnPasado(estado.fechaRequerida) ? "error-fecha-requerida" : undefined}
-              className="w-full min-h-[44px] bg-canvas border border-hairline rounded-sm px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-[var(--color-border-strong)]  focus:bg-canvas transition-all text-body"
+              className="min-h-[44px] w-full rounded-sm bg-canvas px-4 py-2.5 text-body-md text-body shadow-[inset_0_0_0_1px_var(--color-border-hairline)] outline-none transition-shadow focus:shadow-[inset_0_0_0_1px_#000]"
             />
             {estado.fechaRequerida && fechaEnPasado(estado.fechaRequerida) ? (
-              <p id="error-fecha-requerida" role="alert" className="text-caption text-critical mt-1.5 font-medium">
+              <p id="error-fecha-requerida" role="alert" className="mt-1.5 text-caption font-medium text-critical">
                 La fecha requerida ya pasó. Elija hoy o una fecha futura.
               </p>
             ) : estado.fechaRequerida && diasHasta(estado.fechaRequerida) < 5 ? (
-              <p className="text-caption text-body mt-1.5 font-medium">Este plazo es muy corto para cotizar. ¿Es una urgencia real?</p>
+              <p className="mt-1.5 text-caption text-body">Este plazo es muy corto para cotizar. ¿Es una urgencia real?</p>
             ) : null}
           </div>
+
+          <fieldset className="md:col-span-2">
+            <legend className="mb-2 block text-caption font-medium text-ink">¿Producto o servicio?</legend>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {([["producto", "Producto", "Bien físico: materiales, empaques, artículos."], ["servicio", "Servicio", "Trabajo o actividad: logística, diseño, consultoría."]] as const).map(([val, label, ayuda]) => {
+                const activo = estado.subtipo === val;
+                return (
+                  <label key={val} className="group relative cursor-pointer">
+                    <input
+                      type="radio"
+                      name="prod_serv"
+                      checked={activo}
+                      onChange={() => set("subtipo", val)}
+                      className="peer sr-only"
+                    />
+                    <div className="flex h-full items-start gap-3 rounded-sm bg-canvas p-4 shadow-[inset_0_0_0_1px_var(--color-border-hairline)] transition-shadow peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-border-strong)] group-has-[:checked]:shadow-[inset_0_0_0_2px_#000]">
+                      <span
+                        className={
+                          "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full " +
+                          (activo ? "bg-primary" : "shadow-[inset_0_0_0_1px_var(--color-border-hairline)]")
+                        }
+                        aria-hidden
+                      >
+                        {activo ? <span className="size-1.5 rounded-full bg-canvas" /> : null}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-body-md font-medium text-ink">{label}</span>
+                        <span className="mt-0.5 block text-caption text-body">{ayuda}</span>
+                      </span>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+
           <div className="md:col-span-2">
-            <label htmlFor="descripcion" className="block text-xs font-medium text-ink mb-1.5">Descripción breve <span className="text-critical">*</span></label>
-            <textarea id="descripcion" value={estado.descripcion} onChange={(e) => set("descripcion", e.target.value)} rows={3} placeholder="Añadí un poco más de contexto..." maxLength={5000} className="w-full bg-canvas border border-hairline rounded-sm px-4 py-3 text-sm font-medium focus:outline-none focus:border-[var(--color-border-strong)]  focus:bg-canvas transition-all resize-none" />
-            <p className="text-caption text-body mt-1 md:hidden">
-              {estado.descripcion.length}/5000 caracteres
-            </p>
+            <label htmlFor="descripcion" className="mb-1.5 block text-caption font-medium text-ink">
+              Descripción breve <span className="text-critical">*</span>
+            </label>
+            <textarea
+              id="descripcion"
+              value={estado.descripcion}
+              onChange={(e) => set("descripcion", e.target.value)}
+              rows={3}
+              placeholder="Añada un poco más de contexto…"
+              maxLength={5000}
+              className="w-full resize-none rounded-sm bg-canvas px-4 py-3 text-body-md text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] outline-none transition-shadow focus:shadow-[inset_0_0_0_1px_#000]"
+            />
+            <p className="mt-1 text-caption text-body md:hidden">{estado.descripcion.length}/5000 caracteres</p>
           </div>
         </div>
       </div>

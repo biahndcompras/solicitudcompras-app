@@ -92,7 +92,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-canvas-dark/60 p-4 backdrop-blur-sm sm:p-6"
       onClick={cerrable ? onClose : undefined}
     >
       <div
@@ -106,7 +106,7 @@ export function Modal({
           // scrolleaba (max-h + overflow-y-auto), así que con contenido largo las acciones
           // finales quedaban fuera de la vista sin ningún indicio, y sin padding propio
           // quedaban pegadas al borde inferior: [MEDIDO] hueco abajo/izq/der = 0 px.
-          "w-full sm:max-w-[480px] max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl outline-none step-enter",
+          "flex max-h-[calc(100dvh-2rem)] w-full flex-col rounded-sm bg-canvas shadow-[var(--shadow-soft-drop)] outline-none sm:max-w-[520px]",
           className
         )}
         onClick={(e) => e.stopPropagation()}
@@ -114,12 +114,12 @@ export function Modal({
         <div className="min-h-0 overflow-y-auto no-scrollbar">
           {eyebrow ? (
             <div className="px-6 pt-6 pb-2">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{eyebrow}</div>
+              <div className="eyebrow text-body">{eyebrow}</div>
             </div>
           ) : null}
-          <div className={cn("px-6", footer ? "pb-2" : "pb-6")}>
+          <div className={cn("px-6", eyebrow ? "" : "pt-6", footer ? "pb-2" : "pb-6")}>
             {title ? (
-              <h2 id={tituloId} className="mb-3 text-xl font-semibold tracking-tight text-slate-900">
+              <h2 id={tituloId} className="mb-3 text-display-md text-ink">
                 {title}
               </h2>
             ) : null}
@@ -128,12 +128,12 @@ export function Modal({
         </div>
         {/* El pie lleva su propio aire: `pb` respeta el safe-area del iPhone, y sin él el
             último botón queda con 0 px de aire contra el borde (y contra el home indicator). */}
-        <div className="shrink-0 px-6 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="shrink-0 border-t border-hairline bg-surface-soft px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           {footer ?? (
             <button
               type="button"
               onClick={onClose}
-              className="w-full min-h-[48px] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+              className="min-h-[48px] w-full rounded-sm border border-hairline bg-canvas px-4 py-3.5 text-caption font-medium text-ink hover:bg-surface-soft"
             >
               Cerrar
             </button>

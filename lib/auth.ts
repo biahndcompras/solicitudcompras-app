@@ -3,6 +3,7 @@
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { rutaPorRol } from "@/lib/roles";
 
 /**
  * Roles de SESIÓN. No confundir con `RolUsuario` (la tabla `usuario`), que solo tiene staff:
@@ -49,16 +50,16 @@ export async function getSession(): Promise<SesionAutenticada | null> {
 export async function requireAuth(roles: Rol[]): Promise<SesionAutenticada> {
   const sesion = await getSession();
   if (!sesion) {
-    redirect(`/login/${roles[0] ?? "coordinador"}`);
+    // Un solo login para todo el equipo (admin y coordinador).
+    redirect("/login");
   }
   if (!roles.includes(sesion.rol)) {
-    // Rol no permitido para esta ruta -> redirige a su portal o a login.
-    redirect(sesion.rol === "admin" ? "/admin" : "/panel");
+    // Rol no permitido: a SU portal. Un solicitante vuelve a la entrada pública (`/`) y
+    // nunca al panel — antes caía en `/panel`, que a su vez lo redirigía a `/panel`.
+    redirect(rutaPorRol(sesion.rol));
   }
   return sesion;
 }
 
-// Devuelve la ruta raíz correspondiente a un rol.
-export function rutaPorRol(rol: Rol): string {
-  return rol === "admin" ? "/admin" : "/panel";
-}
+// Se mantiene la exportación histórica; la implementación vive en `lib/roles.ts`.
+export { rutaPorRol };

@@ -402,9 +402,9 @@ export default function AdminCamposPage() {
                         <IconButton
                           icon="trash"
                           label="Eliminar"
+                          tone="critical"
                           onClick={() => pedirEliminar(c)}
                           disabled={ocupado === c.campoKey}
-                          className="text-critical"
                         />
                       </span>
                     </td>

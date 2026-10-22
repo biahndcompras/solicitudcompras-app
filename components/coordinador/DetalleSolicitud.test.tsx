@@ -76,13 +76,14 @@ describe("DetalleSolicitud · pasos", () => {
     // Sin jerga de numeración: el nombre accesible no empieza por "07 · ".
     expect(pasos[0]).toHaveTextContent("Cotizaciones");
     expect(screen.getByText("Paso 1 de 3")).toBeInTheDocument();
-    expect(pasos[0]).toHaveAttribute("aria-pressed", "true");
-    expect(pasos[1]).toHaveAttribute("aria-pressed", "false");
+    // El paso actual se anuncia con `aria-current="step"` (semántica de stepper), no como toggle.
+    expect(pasos[0]).toHaveAttribute("aria-current", "step");
+    expect(pasos[1]).not.toHaveAttribute("aria-current");
 
     const user = userEvent.setup();
     await user.click(pasos[2]);
     expect(screen.getByText("Paso 3 de 3")).toBeInTheDocument();
-    expect(pasos[2]).toHaveAttribute("aria-pressed", "true");
+    expect(pasos[2]).toHaveAttribute("aria-current", "step");
   });
 
   it("P2-7 · el paso de comparativa explica por qué está bloqueado", async () => {

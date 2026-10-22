@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { rutaPorRol } from "@/lib/roles";
 
 // Rutas públicas: solicitante + vista pública + login + assets.
 const PUBLICAS = [
@@ -77,15 +78,16 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith(prefix)) {
       if (!user) {
         const url = request.nextUrl.clone();
-        url.pathname = `/login/${rol}`;
+        url.pathname = "/login";
         url.searchParams.set("next", pathname);
         return NextResponse.redirect(url);
       }
       const userRol = user.app_metadata?.rol as string | undefined;
       if (userRol !== rol) {
-        // Rol incorrecto: redirige a su portal correspondiente.
-        const dest = userRol === "admin" ? "/admin" : "/panel";
-        if (pathname.startsWith(dest)) return response;
+        // Rol incorrecto: a SU portal. Un solicitante sale a `/` (no tiene panel); si
+        // cayera en `/panel` se produciría un bucle de redirecciones.
+        const dest = rutaPorRol(userRol);
+        if (pathname === dest) return response;
         return NextResponse.redirect(new URL(dest, request.url));
       }
       return response;
@@ -94,9 +96,7 @@ export async function middleware(request: NextRequest) {
 
   // Si está en /login y ya tiene sesión, redirigir a su portal.
   if (pathname.startsWith("/login") && user) {
-    const rol = user.app_metadata?.rol as string | undefined;
-    const dest = rol === "admin" ? "/admin" : "/panel";
-    return NextResponse.redirect(new URL(dest, request.url));
+    return NextResponse.redirect(new URL(rutaPorRol(user.app_metadata?.rol as string | undefined), request.url));
   }
 
   return response;

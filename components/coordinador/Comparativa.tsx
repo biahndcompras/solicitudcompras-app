@@ -2,6 +2,8 @@
 
 import type { Comparativa, SubtipoSolicitud } from "@/lib/domain/types";
 import { etiquetaSubtipo, formato } from "@/lib/domain/comparativa";
+import { Button, Panel } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/Icon";
 
 type CotizacionVista = {
   id: string;
@@ -32,115 +34,93 @@ export function ComparativaView({ solicitudId, solicitud, comparativa, cotizacio
   const urlExcel = `/api/solicitudes/${solicitudId}/comparativa/excel`;
 
   return (
-    <div className="step-enter">
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div>
-          <h3 className="text-lg font-semibold tracking-tight text-slate-900">08 · Comparativa generada</h3>
-          <p className="text-xs text-slate-500 mt-1">Moneda original por proveedor. Si no desglosa impuestos: «⚠ no especifica» (RN-06).</p>
-        </div>
-        <div className="flex items-center gap-2">
+    <Panel
+      title="Comparativa"
+      subtitle="Moneda original por proveedor. Si no desglosa impuestos: «no especifica» (RN-06)."
+      action={
+        <div className="flex flex-wrap items-center gap-2">
           <a
             href={urlExcel}
-            className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 text-xs px-5 py-3 rounded-full font-medium hover:bg-slate-50 transition-all"
+            className="mono-label inline-flex h-7 items-center gap-2 rounded-sm px-3.5 text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] transition-colors hover:bg-surface-soft"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-            Descargar Excel
+            <Icon name="download" size={14} />
+            Excel
           </a>
-          <button
-            type="button"
-            onClick={onContinuar}
-            className="bg-sky-500 text-white text-xs px-6 py-3 rounded-full font-medium hover:bg-sky-600 transition-all inline-flex items-center gap-2 whitespace-nowrap shadow-lg shadow-sky-500/20"
-          >
+          <Button onClick={onContinuar} icon="arrow-up-right">
             Ver recomendación
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
+          </Button>
         </div>
-      </div>
-
+      }
+    >
       {/* 4.2.2 — el glosario define la comparativa como "el producto/servicio a la izquierda y
           un proveedor por columna". Sin este bloque, quien la abre ve precios sin saber de qué. */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm px-5 py-4 mb-4">
-        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
-          {etiquetaSubtipo(solicitud.subtipo)}
-        </div>
-        <div className="text-sm font-semibold text-slate-900 mt-1">{solicitud.titulo}</div>
+      <div className="rounded-sm bg-surface-soft px-4 py-3">
+        <p className="eyebrow text-body">{etiquetaSubtipo(solicitud.subtipo)}</p>
+        <p className="mt-1 text-body-md text-ink">{solicitud.titulo}</p>
         {solicitud.descripcion ? (
-          <p className="text-xs text-slate-600 mt-1 whitespace-pre-line">{solicitud.descripcion}</p>
+          <p className="mt-1 whitespace-pre-line text-caption text-body">{solicitud.descripcion}</p>
         ) : null}
       </div>
 
       {hayDiscrepancia ? (
-        <div className="bg-amber-50 border border-amber-200/70 rounded-2xl p-4 mb-4">
-          <div className="text-xs font-semibold text-amber-900 flex items-center gap-2">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 20V9M10 20V4M16 20v-9M22 20H2"/></svg>
-            Observación de especificación
-          </div>
-          <div className="text-xs text-amber-800 mt-1">{comparativa.discrepanciasDetectadas[0]?.explicacion}</div>
+        <div className="rounded-sm px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-text-critical)]">
+          <p className="eyebrow text-critical">Observación de especificación</p>
+          <p className="mt-1 text-caption text-ink">{comparativa.discrepanciasDetectadas[0]?.explicacion}</p>
         </div>
       ) : null}
 
-      <div className="overflow-x-auto bg-white rounded-2xl border border-slate-200/60 shadow-sm">
-        <table className="min-w-full text-left">
-          <thead className="bg-slate-50/70">
-            <tr className="text-[10px] uppercase tracking-wider text-slate-500">
-              <th className="px-5 py-3 font-semibold">Concepto</th>
+      <div className="-mx-6 overflow-x-auto px-6">
+        <table className="w-full min-w-[680px] border-collapse">
+          <thead>
+            <tr className="bg-surface-soft text-left">
+              <th scope="col" className="eyebrow px-3 py-3 font-medium text-ink">
+                Concepto
+              </th>
               {cotizaciones.map((c) => (
-                <th key={c.id} className="px-5 py-3 font-semibold">{c.proveedorNombre}</th>
+                <th key={c.id} scope="col" className="eyebrow px-3 py-3 font-medium text-ink">
+                  {c.proveedorNombre}
+                </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-xs">
-            <tr>
-              <td className="px-5 py-4 font-semibold text-slate-900">Valor neto</td>
-              {cotizaciones.map((c) => (
-                <td key={c.id} className="px-5 py-4">{c.valorNeto !== undefined ? `${c.moneda ?? "L"} ${formato(c.valorNeto)}` : "no especificado"}</td>
-              ))}
-            </tr>
-            <tr>
-              <td className="px-5 py-4 font-semibold text-slate-900">Impuestos (ISV)</td>
-              {cotizaciones.map((c) => (
-                <td key={c.id} className="px-5 py-4">
-                  {c.impuestosDesglosados === true && c.montoIsv !== undefined ? (
+          <tbody>
+            {[
+              {
+                label: "Valor neto",
+                render: (c: CotizacionVista) =>
+                  c.valorNeto !== undefined ? `${c.moneda ?? "L"} ${formato(c.valorNeto)}` : "no especificado",
+              },
+              {
+                label: "Impuestos (ISV)",
+                render: (c: CotizacionVista) =>
+                  c.impuestosDesglosados === true && c.montoIsv !== undefined ? (
                     `${c.moneda ?? "L"} ${formato(c.montoIsv)}`
                   ) : (
-                    <span className="text-amber-700 font-semibold">⚠ no especifica</span>
-                  )}
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td className="px-5 py-4 font-semibold text-slate-900">Total</td>
-              {cotizaciones.map((c) => (
-                <td key={c.id} className="px-5 py-4 font-semibold">{c.valorTotal !== undefined ? `${c.moneda ?? "L"} ${formato(c.valorTotal)}` : "no especificado"}</td>
-              ))}
-            </tr>
-            <tr>
-              <td className="px-5 py-4 font-semibold text-slate-900">Entrega</td>
-              {cotizaciones.map((c) => (
-                <td key={c.id} className="px-5 py-4">{c.plazoEntrega ?? "—"}</td>
-              ))}
-            </tr>
-            <tr>
-              <td className="px-5 py-4 font-semibold text-slate-900">Forma de pago</td>
-              {cotizaciones.map((c) => (
-                <td key={c.id} className="px-5 py-4">{c.formaPago ?? "no especificado"}</td>
-              ))}
-            </tr>
-            <tr>
-              <td className="px-5 py-4 font-semibold text-slate-900">Garantía</td>
-              {cotizaciones.map((c) => (
-                <td key={c.id} className="px-5 py-4">{c.garantia ?? "no especificado"}</td>
-              ))}
-            </tr>
-            <tr>
-              <td className="px-5 py-4 font-semibold text-slate-900">Vigencia</td>
-              {cotizaciones.map((c) => (
-                <td key={c.id} className="px-5 py-4">{c.vigenciaOferta ?? "no especificado"}</td>
-              ))}
-            </tr>
+                    <span className="font-medium text-critical">⚠ no especifica</span>
+                  ),
+              },
+              {
+                label: "Total",
+                render: (c: CotizacionVista) =>
+                  c.valorTotal !== undefined ? `${c.moneda ?? "L"} ${formato(c.valorTotal)}` : "no especificado",
+              },
+              { label: "Entrega", render: (c: CotizacionVista) => c.plazoEntrega ?? "—" },
+              { label: "Forma de pago", render: (c: CotizacionVista) => c.formaPago ?? "no especificado" },
+              { label: "Garantía", render: (c: CotizacionVista) => c.garantia ?? "no especificado" },
+              { label: "Vigencia", render: (c: CotizacionVista) => c.vigenciaOferta ?? "no especificado" },
+            ].map((fila) => (
+              <tr key={fila.label} className="border-b border-hairline">
+                <td className="px-3 py-3 text-caption font-medium text-ink">{fila.label}</td>
+                {cotizaciones.map((c) => (
+                  <td key={c.id} className="px-3 py-3 text-caption text-ink">
+                    {fila.render(c)}
+                  </td>
+                ))}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </Panel>
   );
 }

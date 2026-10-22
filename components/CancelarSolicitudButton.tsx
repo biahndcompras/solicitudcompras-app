@@ -39,7 +39,7 @@ export function CancelarSolicitudButton({
 
   return (
     <span className="inline-flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={cancelar} disabled={cancelando} className="text-critical">
+      <Button variant="danger" size="sm" onClick={cancelar} disabled={cancelando}>
         {cancelando ? "Cancelando…" : "Cancelar solicitud"}
       </Button>
       {error ? <span className="text-caption text-critical">{error}</span> : null}

@@ -102,7 +102,7 @@ export async function invitarUsuarioAuth(input: {
   const { data, error } = await admin.auth.admin.generateLink({
     type: "invite",
     email,
-    options: { data: { nombre: input.nombre }, redirectTo: `${base}/login/coordinador` },
+    options: { data: { nombre: input.nombre }, redirectTo: `${base}/login` },
   });
   if (error || !data?.user || !data.properties?.action_link) {
     throw new Error(error?.message ?? "No se pudo generar la invitación");

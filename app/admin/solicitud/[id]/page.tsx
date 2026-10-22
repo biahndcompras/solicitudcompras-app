@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge, ButtonLink, Panel, type BadgeTone } from "@/components/ui/primitives";
+import { cn } from "@/lib/design/cn";
+import { SummaryStrip } from "@/components/ui/forms";
+import { Icon } from "@/components/ui/Icon";
 import { CancelarSolicitudButton } from "@/components/CancelarSolicitudButton";
 import { ReasignarCoordinador } from "@/components/ReasignarCoordinador";
 import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
@@ -8,7 +11,7 @@ import { FormularioYRespuestas } from "@/components/shared/FormularioYRespuestas
 import { armarFormularioOriginal, completarRondas, rondasDesdeEventos } from "@/lib/domain/formulario";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { nombreCategoria } from "@/lib/domain/categorias";
-import { duracionAtencion } from "@/lib/domain/semaforo";
+import { duracionAtencion, formatoFechaLegible } from "@/lib/domain/semaforo";
 import { formato } from "@/lib/domain/comparativa";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +72,9 @@ export default async function AdminSolicitudDetallePage({
       .filter(Boolean)
       .join(" · ") || "Por definir";
   const retraso = diasDeRetraso(s);
+  const cerrada = TERMINALES.includes(s.estado);
+  const etapaActual = etapaDe(s.estado);
+  const dur = duracionAtencion({ fechaCreacion: s.fechaCreacion, fechaCierre: s.fechaCierre });
 
   return (
     <>
@@ -100,6 +106,58 @@ export default async function AdminSolicitudDetallePage({
           </div>
         }
       />
+
+      <SummaryStrip
+        items={[
+          {
+            label: "Estado",
+            value: <Badge tone={tonoEstado(s.estado)}>{estadoLegible(s.estado)}</Badge>,
+            sub: s.fechaCierre ? "Ciclo cerrado" : "Ciclo en curso",
+          },
+          { label: "Tiempo de atención", value: dur.texto, sub: "desde la creación" },
+          {
+            label: "Entrega requerida",
+            value: s.fechaRequerida ? formatoFechaLegible(s.fechaRequerida) : "—",
+            sub: retraso !== null ? `Retrasada ${retraso} d` : "Dentro de plazo",
+          },
+          { label: "Coordinador", value: coordinador?.nombre ?? "Sin asignar", sub: coordinador?.email ?? "—" },
+        ]}
+      />
+
+      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-3" aria-label="Etapas del ciclo">
+        {PASOS.map((p, i) => {
+            const activo = !cerrada && i === etapaActual;
+            const completado = cerrada || i < etapaActual;
+            return (
+              <li key={p.n}>
+                <div
+                  aria-current={activo ? "step" : undefined}
+                  className={cn(
+                    "flex items-center gap-3 rounded-sm px-3 py-3",
+                    activo
+                      ? "bg-primary text-on-dark"
+                      : "text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)]"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mono-label grid size-6 shrink-0 place-items-center rounded-xs",
+                      activo ? "bg-mint text-ink" : "bg-surface-soft text-ink"
+                    )}
+                  >
+                    {completado && !activo ? <Icon name="check" size={13} /> : `0${p.n}`}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-caption font-medium">{p.label}</span>
+                    <span className="block text-caption opacity-70">
+                      {completado ? "Completado" : activo ? "Actual" : "Pendiente"}
+                    </span>
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+      </ol>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_388px]">
         <div className="flex min-w-0 flex-col gap-4">
@@ -299,6 +357,18 @@ export default async function AdminSolicitudDetallePage({
       </div>
     </>
   );
+}
+
+const PASOS = [
+  { n: 7, label: "Cotizaciones" },
+  { n: 8, label: "Comparativa" },
+  { n: 9, label: "Recomendación" },
+];
+
+function etapaDe(estado: string): number {
+  if (["ENVIADA_A_SOLICITANTE", "CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"].includes(estado)) return 2;
+  if (estado === "COMPARATIVA_LISTA") return 1;
+  return 0;
 }
 
 const TIPO_LEGIBLE: Record<string, string> = {

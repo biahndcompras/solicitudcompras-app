@@ -10,6 +10,9 @@ import { Modal } from "./Modal";
 import { PedirInformacion, type CampoParaPreguntar } from "./PedirInformacion";
 import { DocumentosAdjuntos } from "@/components/shared/DocumentosAdjuntos";
 import { FormularioYRespuestas } from "@/components/shared/FormularioYRespuestas";
+import { Icon } from "@/components/ui/Icon";
+import { Button, ButtonLink, Panel, cx } from "@/components/ui/primitives";
+import { TextField } from "@/components/ui/forms";
 import type { PreguntaOriginal } from "@/lib/domain/formulario";
 import { api } from "@/lib/api-client";
 import { nombreCategoria } from "@/lib/domain/categorias";
@@ -229,53 +232,68 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
   const puedePedirInfo = !terminal && !rondaAbierta;
   const indiceEtapa = ETAPAS.findIndex((e) => e.n === etapa);
 
+  const pasos = ETAPAS.map((t) => ({
+    ...t,
+    activo: etapa === t.n,
+    bloqueado: !tieneComparativa && t.n === 8,
+  }));
+
   return (
-    <div className="pt-2">
+    <div className="flex flex-col gap-6">
       {/* Banda de solicitud cerrada: muestra la decisión y congela el flujo */}
       {terminal ? (
-        <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-5 py-4 flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-          </div>
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-emerald-900">
-              {solicitud.estado === "CANCELADA"
-                ? "Solicitud cancelada"
-                : decision?.ningunaOpcion
-                  ? "Cerrada sin decisión — el solicitante no eligió ninguna opción"
-                  : solicitud.estado === "CERRADA_SIN_DECISION"
-                    ? "Cerrada sin decisión"
-                    : "Solicitud cerrada con decisión"}
-            </div>
-            <div className="text-xs text-emerald-800 mt-0.5">
-              {decision && !decision.ningunaOpcion
-                ? <>El solicitante eligió <span className="font-semibold">{proveedorElegido ?? "una opción"}</span>{solicitud.fechaCierre ? <> · {new Date(solicitud.fechaCierre).toLocaleDateString("es-HN")}</> : null}.</>
-                : "El ciclo terminó; no hay acciones pendientes para Compras."}
+        <div className="rounded-sm bg-canvas px-5 py-4 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+          <div className="flex items-start gap-3">
+            <span
+              className={cx(
+                "grid size-10 shrink-0 place-items-center rounded-sm",
+                decision && !decision.ningunaOpcion ? "bg-mint text-ink" : "bg-surface-soft text-ink"
+              )}
+            >
+              <Icon name={decision && !decision.ningunaOpcion ? "check-circle" : "info"} size={20} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-body-md font-medium text-ink">
+                {solicitud.estado === "CANCELADA"
+                  ? "Solicitud cancelada"
+                  : decision?.ningunaOpcion
+                    ? "Cerrada sin decisión — el solicitante no eligió ninguna opción"
+                    : solicitud.estado === "CERRADA_SIN_DECISION"
+                      ? "Cerrada sin decisión"
+                      : "Solicitud cerrada con decisión"}
+              </p>
+              <p className="mt-0.5 text-caption text-body">
+                {decision && !decision.ningunaOpcion ? (
+                  <>
+                    El solicitante eligió <span className="font-medium text-ink">{proveedorElegido ?? "una opción"}</span>
+                    {solicitud.fechaCierre ? <> · {new Date(solicitud.fechaCierre).toLocaleDateString("es-HN")}</> : null}.
+                  </>
+                ) : (
+                  "El ciclo terminó; no hay acciones pendientes para Compras."
+                )}
+              </p>
             </div>
           </div>
         </div>
       ) : null}
 
-      {/* Barra de acciones. Antes eran 7 controles en una sola fila sin wrap dentro de un
-          shell con `overflow-hidden`: a 390px "Cancelar solicitud" quedaba cortada y los
-          tres pasos desaparecían (P0-2). Ahora en <sm se apila en dos filas — Volver +
-          "⋯ más", y los pasos a ancho completo — y en sm+ conserva la fila actual. */}
-      <div className="mb-5 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Link href="/panel" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 bg-white/70 hover:bg-white transition-all">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
-            Volver al panel
-          </Link>
-          {terminal ? null : (
+      {/* Barra de acciones: navegación a la izquierda, acciones de la solicitud a la derecha.
+          En móvil las secundarias viven en «Más» para no empujar el contenido. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <ButtonLink href="/panel" variant="outline" icon="chevron-left">
+          Bandeja
+        </ButtonLink>
+        {terminal ? null : (
+          <>
             <div className="sm:hidden">
               <MenuMas>
                 {(cerrar) => (
-                  <div className="flex flex-col">
+                  <div className="flex flex-col p-1">
                     {puedePedirInfo ? (
                       <button
                         type="button"
                         onClick={() => { cerrar(); setPidiendoInfo(true); }}
-                        className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-semibold text-sky-800 hover:bg-sky-50 transition-colors"
+                        className="w-full rounded-xs px-3 py-2.5 text-left text-caption font-medium text-ink hover:bg-surface-soft"
                       >
                         Pedir información al solicitante
                       </button>
@@ -284,7 +302,7 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
                       <button
                         type="button"
                         onClick={() => { cerrar(); setConfirmarReabrir(true); }}
-                        className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-semibold text-amber-800 hover:bg-amber-50 transition-colors"
+                        className="w-full rounded-xs px-3 py-2.5 text-left text-caption font-medium text-ink hover:bg-surface-soft"
                       >
                         Reabrir cotizaciones
                       </button>
@@ -292,14 +310,14 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
                     <button
                       type="button"
                       onClick={() => { cerrar(); setEditando((v) => !v); }}
-                      className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                      className="w-full rounded-xs px-3 py-2.5 text-left text-caption font-medium text-ink hover:bg-surface-soft"
                     >
                       {editando ? "Cerrar edición" : "Editar datos"}
                     </button>
                     <button
                       type="button"
                       onClick={() => { cerrar(); setConfirmarCancelar(true); }}
-                      className="w-full text-left px-4 py-3 min-h-[44px] text-sm font-semibold text-rose-700 hover:bg-rose-50 transition-colors border-t border-slate-100"
+                      className="w-full rounded-xs px-3 py-2.5 text-left text-caption font-medium text-critical hover:bg-surface-soft"
                     >
                       Cancelar solicitud
                     </button>
@@ -307,259 +325,203 @@ export function DetalleSolicitud({ solicitud, decision, proveedorElegido, campos
                 )}
               </MenuMas>
             </div>
-          )}
-        </div>
 
-        {terminal ? null : (
-          <div className="hidden sm:flex items-center gap-2">
-            {puedePedirInfo ? (
-              <button
-                type="button"
-                onClick={() => setPidiendoInfo(true)}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-sky-700 hover:bg-sky-50 border border-sky-200 bg-white/70"
-              >
-                Pedir información
-              </button>
-            ) : null}
-            {puedeReabrir ? (
-              <button
-                type="button"
-                onClick={() => setConfirmarReabrir(true)}
-                disabled={reabriendo}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-amber-700 hover:bg-amber-50 border border-amber-200 bg-white/70 disabled:opacity-50"
-              >
-                {reabriendo ? "Reabriendo…" : "Reabrir cotizaciones"}
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setEditando((v) => !v)}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-slate-700 hover:bg-white border border-slate-200 bg-white/70"
-            >
-              {editando ? "Cerrar edición" : "Editar datos"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmarCancelar(true)}
-              disabled={cancelando}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors text-rose-600 hover:bg-rose-50 border border-rose-200 bg-white/70 disabled:opacity-50"
-            >
-              {cancelando ? "Cancelando…" : "Cancelar solicitud"}
-            </button>
-          </div>
+            <div className="hidden items-center gap-2 sm:flex">
+              {puedePedirInfo ? (
+                <Button variant="outline" onClick={() => setPidiendoInfo(true)}>
+                  Pedir información
+                </Button>
+              ) : null}
+              {puedeReabrir ? (
+                <Button variant="outline" onClick={() => setConfirmarReabrir(true)} disabled={reabriendo}>
+                  {reabriendo ? "Reabriendo…" : "Reabrir cotizaciones"}
+                </Button>
+              ) : null}
+              <Button variant="outline" onClick={() => setEditando((v) => !v)}>
+                {editando ? "Cerrar edición" : "Editar datos"}
+              </Button>
+              <Button variant="danger" onClick={() => setConfirmarCancelar(true)} disabled={cancelando}>
+                {cancelando ? "Cancelando…" : "Cancelar solicitud"}
+              </Button>
+            </div>
+          </>
         )}
       </div>
 
-      {/* P2-7: dónde estoy + a dónde voy. El número de paso queda como apoyo visual. */}
-      <div className="mb-6">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <div className="text-xs text-slate-500">
-            <span className="font-semibold text-slate-700">Paso {indiceEtapa + 1} de 3</span>
-            <span aria-hidden="true"> · </span>
-            {ETAPAS[indiceEtapa].label}
-          </div>
-          {!terminal && !tieneComparativa ? (
-            <div className="text-xs text-slate-500">Comparativa se habilita con 2 cotizaciones cargadas</div>
-          ) : null}
-        </div>
-        <div className="grid grid-cols-3 gap-2 sm:inline-flex sm:items-center">
-          {ETAPAS.map((t) => {
-            const activo = etapa === t.n;
-            return (
+      {/* Dónde estoy y a dónde voy (P2-7): el paso manda, el número es apoyo. */}
+      <div className="flex flex-col gap-2">
+        <p className="text-caption text-body">
+          <span className="font-medium text-ink">Paso {indiceEtapa + 1} de 3</span> · {ETAPAS[indiceEtapa].label}
+        </p>
+        <ol className="grid grid-cols-1 gap-2 sm:grid-cols-3" aria-label="Etapas de la solicitud">
+          {pasos.map((p, i) => (
+            <li key={p.n}>
               <button
-                key={t.n}
                 type="button"
-                aria-pressed={activo}
-                disabled={!tieneComparativa && t.n === 8}
-                onClick={() => setEtapa(t.n)}
-                className={
-                  "flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2 sm:px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold tracking-tight transition-colors border " +
-                  (activo
-                    ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                    : "text-slate-700 hover:bg-white/70 border-slate-200")
-                }
+                onClick={() => setEtapa(p.n)}
+                disabled={p.bloqueado}
+                aria-current={p.activo ? "step" : undefined}
+                className={cx(
+                  "flex w-full items-center gap-3 rounded-sm px-3 py-3 text-left transition-colors",
+                  p.activo
+                    ? "bg-primary text-on-dark"
+                    : "text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] hover:bg-surface-soft",
+                  p.bloqueado && "opacity-40"
+                )}
               >
-                <span className={"text-xs " + (activo ? "text-white/70" : "text-slate-400")}>0{t.n}</span>
-                <span>{t.label}</span>
+                <span
+                  className={cx(
+                    "mono-label grid size-6 shrink-0 place-items-center rounded-xs",
+                    p.activo ? "bg-mint text-ink" : "bg-surface-soft text-ink"
+                  )}
+                >
+                  0{p.n}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-caption font-medium">{p.label}</span>
+                  <span className="block text-caption opacity-70">Paso {i + 1}</span>
+                </span>
               </button>
-            );
-          })}
-        </div>
+            </li>
+          ))}
+        </ol>
+        {!terminal && !tieneComparativa ? (
+          <p className="text-caption text-body">Comparativa se habilita con 2 cotizaciones cargadas</p>
+        ) : null}
       </div>
 
       {editando && !terminal ? (
-        <div className="mb-6 bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
-          <div className="text-sm font-semibold text-slate-900 mb-4">Editar datos para re-cotizar (2.3)</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="block">
-              <span className="block text-xs font-medium text-slate-700 mb-1.5">Fecha requerida</span>
-              <input
-                type="date"
-                value={editFecha}
-                onChange={(e) => setEditFecha(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-              />
-            </label>
-            <label className="block">
-              <span className="block text-xs font-medium text-slate-700 mb-1.5">Descripción</span>
+        <Panel title="Editar datos para re-cotizar" subtitle="Los cambios quedan registrados en la trazabilidad.">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <TextField
+              label="Fecha requerida"
+              type="date"
+              value={editFecha}
+              onChange={(e) => setEditFecha(e.target.value)}
+            />
+            <div className="flex flex-col gap-1.5">
+              <span className="text-caption font-medium text-ink">Descripción</span>
               <textarea
                 value={editDesc}
                 onChange={(e) => setEditDesc(e.target.value)}
-                rows={2}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 resize-none"
+                rows={3}
+                className="w-full resize-none rounded-sm bg-canvas px-3 py-2 text-body-md text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] outline-none focus:shadow-[inset_0_0_0_1px_#000]"
               />
-            </label>
+            </div>
           </div>
-          <div className="mt-4 flex justify-end">
-            <button
-              type="button"
-              onClick={guardarEdicion}
-              disabled={guardandoEdicion}
-              className="bg-slate-900 text-white text-xs px-6 py-2.5 rounded-full font-medium hover:bg-slate-800 disabled:opacity-40"
-            >
+          <div className="flex justify-end">
+            <Button onClick={guardarEdicion} disabled={guardandoEdicion}>
               {guardandoEdicion ? "Guardando…" : "Guardar cambios"}
-            </button>
+            </Button>
           </div>
-        </div>
+        </Panel>
       ) : null}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8">
-          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-            <div className="p-6 md:p-8">
-              {errorEnvio ? (
-                <div className="mb-4 rounded-xl px-4 py-3 text-sm text-rose-700 bg-rose-50 border border-rose-200" role="alert">{errorEnvio}</div>
-              ) : null}
-              {errorCotizaciones && !cargando ? (
-                /* Un fallo de red no es una solicitud sin cotizaciones (P1-5). */
-                <div className="rounded-xl px-5 py-6 text-center border border-amber-200 bg-amber-50" role="alert">
-                  <div className="text-sm font-semibold text-slate-900">No pudimos cargar las cotizaciones</div>
-                  <div className="text-xs text-slate-600 mt-1">{errorCotizaciones}</div>
-                  <button
-                    type="button"
-                    onClick={reintentarCotizaciones}
-                    className="mt-4 inline-flex items-center gap-2 bg-slate-900 text-white text-xs font-semibold px-5 py-2.5 min-h-[44px] rounded-full hover:bg-slate-800 transition-colors"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-                    Reintentar
-                  </button>
-                </div>
-              ) : cargando ? (
-                <p className="text-sm text-slate-500">Cargando cotizaciones…</p>
-              ) : etapa === 7 ? (
-                <CargaCotizaciones
-                  solicitudId={solicitud.id}
-                  cotizaciones={cotizaciones}
-                  soloLectura={terminal}
-                  onCotizacionCargada={recargarCotizaciones}
-                  onGenerar={() => { setErrorComparativa(null); setEtapa(8); }}
-                />
-              ) : etapa === 8 ? (
-                comparativaData ? (
-                  <ComparativaView solicitudId={solicitud.id} solicitud={solicitud} comparativa={comparativaData} cotizaciones={cotizaciones} onContinuar={() => setEtapa(9)} />
-                ) : errorComparativa ? (
-                  <div className="rounded-xl px-5 py-6 text-center border border-amber-200 bg-amber-50" role="alert">
-                    <div className="text-sm font-semibold text-slate-900">No pudimos generar la comparativa</div>
-                    <div className="text-xs text-slate-600 mt-1">{errorComparativa}</div>
-                    <div className="text-xs text-slate-500 mt-1">Las {cotizaciones.length} cotizaciones siguen cargadas: puede reintentar sin volver a subirlas.</div>
-                    <button
-                      type="button"
-                      onClick={() => setErrorComparativa(null)}
-                      className="mt-4 inline-flex items-center gap-2 bg-slate-900 text-white text-xs font-semibold px-5 py-2.5 min-h-[44px] rounded-full hover:bg-slate-800 transition-colors"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-                      Reintentar
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500 flex items-center gap-2">
-                    {generandoComparativa ? (
-                      <>
-                        <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
-                        Generando comparativa…
-                      </>
-                    ) : (
-                      "Se necesitan al menos 2 cotizaciones cargadas para generar la comparativa."
-                    )}
-                  </p>
-                )
-              ) : (
-                <Recomendacion 
-                  cotizaciones={cotizaciones} 
-                  prosContras={comparativaData?.prosContras ?? {}} 
-                  sugerenciaIA={comparativaData?.sugerenciaIA} 
-                  cotizacionSugeridaId={comparativaData?.cotizacionSugeridaId} 
-                  enlace={enlaceEnviado} 
-                  onEnviar={enviarComparativa} 
-                />
-              )}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_388px]">
+        <div className="min-w-0">
+          {errorEnvio ? (
+            <p role="alert" className="mb-4 rounded-sm px-4 py-3 text-caption text-critical shadow-[inset_0_0_0_1px_var(--color-text-critical)]">
+              {errorEnvio}
+            </p>
+          ) : null}
+
+          {errorCotizaciones && !cargando ? (
+            <div role="alert" className="flex flex-col items-center gap-2 rounded-sm bg-canvas px-5 py-8 text-center shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+              <p className="text-body-lg text-ink">No pudimos cargar las cotizaciones</p>
+              <p className="text-caption text-body">{errorCotizaciones}</p>
+              <Button variant="outline" size="sm" icon="refresh" onClick={reintentarCotizaciones}>
+                Reintentar
+              </Button>
             </div>
-          </div>
+          ) : cargando ? (
+            <p className="text-caption text-body">Cargando cotizaciones…</p>
+          ) : etapa === 7 ? (
+            <CargaCotizaciones
+              solicitudId={solicitud.id}
+              cotizaciones={cotizaciones}
+              soloLectura={terminal}
+              onCotizacionCargada={recargarCotizaciones}
+              onGenerar={() => { setErrorComparativa(null); setEtapa(8); }}
+            />
+          ) : etapa === 8 ? (
+            comparativaData ? (
+              <ComparativaView
+                solicitudId={solicitud.id}
+                solicitud={solicitud}
+                comparativa={comparativaData}
+                cotizaciones={cotizaciones}
+                onContinuar={() => setEtapa(9)}
+              />
+            ) : errorComparativa ? (
+              <div role="alert" className="flex flex-col items-center gap-2 rounded-sm bg-canvas px-5 py-8 text-center shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+                <p className="text-body-lg text-ink">No pudimos generar la comparativa</p>
+                <p className="text-caption text-body">{errorComparativa}</p>
+                <p className="text-caption text-body">Las {cotizaciones.length} cotizaciones siguen cargadas: puede reintentar sin volver a subirlas.</p>
+                <Button variant="outline" size="sm" icon="refresh" onClick={() => setErrorComparativa(null)}>
+                  Reintentar
+                </Button>
+              </div>
+            ) : (
+              <p className="flex items-center gap-2 text-caption text-body">
+                {generandoComparativa ? "Generando comparativa…" : "Se necesitan al menos 2 cotizaciones cargadas para generar la comparativa."}
+              </p>
+            )
+          ) : (
+            <Recomendacion
+              cotizaciones={cotizaciones}
+              prosContras={comparativaData?.prosContras ?? {}}
+              sugerenciaIA={comparativaData?.sugerenciaIA}
+              cotizacionSugeridaId={comparativaData?.cotizacionSugeridaId}
+              enlace={enlaceEnviado}
+              onEnviar={enviarComparativa}
+            />
+          )}
         </div>
 
-        <aside className="lg:col-span-4 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-            <div className="p-5 flex items-center gap-3 border-b border-slate-100">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 flex items-center justify-center shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-700"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        <aside className="flex min-w-0 flex-col gap-4">
+          <Panel title="Solicitante" subtitle={solicitud.areaSolicitante ?? "Área por definir"}>
+            <p className="text-body-md text-ink">{solicitud.solicitanteNombre}</p>
+            <p className="text-caption text-body">{solicitud.solicitanteEmail}</p>
+            <p className="mt-3 whitespace-pre-line text-caption text-ink">{solicitud.descripcion || "Sin descripción."}</p>
+          </Panel>
+
+          <Panel title="Detalles">
+            <dl className="flex flex-col gap-3">
+              <div>
+                <dt className="eyebrow text-body">Categoría</dt>
+                <dd className="mt-1 text-caption text-ink">{nombreCategoria(solicitud.categoria)}</dd>
               </div>
               <div>
-                <div className="text-base font-semibold text-slate-900">{solicitud.solicitanteNombre}</div>
-                <div className="text-sm text-slate-500">{solicitud.areaSolicitante ?? "—"}</div>
+                <dt className="eyebrow text-body">Subtipo</dt>
+                <dd className="mt-1 text-caption text-ink">
+                  {solicitud.subtipo ? (solicitud.subtipo === "producto" ? "Producto" : "Servicio") : "Por definir"}
+                </dd>
               </div>
-            </div>
-            <div className="p-5 bg-slate-50/50">
-              <div className="text-sm text-slate-600 leading-relaxed">{solicitud.descripcion || "Sin descripción."}</div>
-              <div className="mt-3 flex items-center gap-2 text-slate-500">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-                <span className="text-sm font-medium text-slate-700">{solicitud.solicitanteEmail}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
-            <div className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/></svg>
-              Detalles de la solicitud
-            </div>
-            <div className="space-y-4 text-sm">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <span className="text-slate-500">Categoría</span>
-                <span className="font-semibold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg text-right">{nombreCategoria(solicitud.categoria)}</span>
-              </div>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <span className="text-slate-500">Subtipo</span>
-                <span className="font-semibold text-slate-900 text-right">{solicitud.subtipo ? (solicitud.subtipo === "producto" ? "Producto" : "Servicio") : "Por definir"}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Fecha requerida</span>
-                {solicitud.fechaRequerida ? (
-                  <span className="font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-lg">{formatoFechaLegible(solicitud.fechaRequerida)}</span>
-                ) : (
-                  <span className="text-slate-400 font-medium">Por definir</span>
-                )}
+              <div>
+                <dt className="eyebrow text-body">Fecha requerida</dt>
+                <dd className="mt-1 text-caption text-ink">
+                  {solicitud.fechaRequerida ? formatoFechaLegible(solicitud.fechaRequerida) : "Por definir"}
+                </dd>
               </div>
               {solicitud.archivoLogoNombre ? (
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <span className="text-slate-500">Logo/archivo del producto</span>
-                  <a
-                    href={`/api/solicitudes/${solicitud.id}/logo`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-sky-700 hover:bg-sky-50 border border-sky-200"
-                    title={`Descargar ${solicitud.archivoLogoNombre}`}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    {solicitud.archivoLogoNombre}
-                  </a>
+                <div>
+                  <dt className="eyebrow text-body">Logo / archivo del producto</dt>
+                  <dd className="mt-1">
+                    <a
+                      href={`/api/solicitudes/${solicitud.id}/logo`}
+                      className="inline-flex items-center gap-1.5 text-caption font-medium text-ink underline underline-offset-4 hover:opacity-80"
+                      title={`Descargar ${solicitud.archivoLogoNombre}`}
+                    >
+                      <Icon name="download" size={14} />
+                      {solicitud.archivoLogoNombre}
+                    </a>
+                  </dd>
                 </div>
               ) : null}
-            </div>
-          </div>
+            </dl>
+          </Panel>
 
-          {/* Documentos adjuntos (4.4.12): Compras sube y también ve lo que subió el solicitante. */}
           <DocumentosAdjuntos solicitudId={solicitud.id} />
-
-          {/* Formulario original + historial de rondas: el contexto completo para el
-              coordinador, al final de la columna derecha (4.13.20). */}
           <FormularioYRespuestas
             preguntas={formulario}
             rondas={rondas}
@@ -699,7 +661,7 @@ function MenuMas({ children }: { children: (cerrar: () => void) => React.ReactNo
         aria-expanded={abierto}
         aria-controls="menu-mas-acciones"
         onClick={() => setAbierto((v) => !v)}
-        className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold text-slate-700 hover:bg-white border border-slate-200 bg-white/70 transition-all"
+        className="mono-label inline-flex items-center gap-1.5 rounded-sm px-3.5 py-2.5 text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] transition-colors hover:bg-surface-soft"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
         Más
@@ -707,7 +669,7 @@ function MenuMas({ children }: { children: (cerrar: () => void) => React.ReactNo
       {abierto ? (
         <div
           id="menu-mas-acciones"
-          className="absolute right-0 z-30 mt-2 w-64 rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden step-enter"
+          className="absolute right-0 z-30 mt-2 w-64 overflow-hidden rounded-sm bg-canvas shadow-[var(--shadow-soft-drop)]"
         >
           {children(() => setAbierto(false))}
         </div>

@@ -10,13 +10,14 @@ const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).jo
 export { cx };
 
 /* ---------------- Button ---------------- */
-type ButtonStyle = "primary" | "mint" | "white" | "outline" | "ghost-dark";
+type ButtonStyle = "primary" | "mint" | "white" | "outline" | "ghost-dark" | "danger";
 const buttonStyles: Record<ButtonStyle, string> = {
   primary: "bg-primary text-on-dark hover:bg-surface-dark-soft rounded-sm",
   mint: "bg-mint text-ink hover:shadow-[inset_0_0_0_1px_#000] rounded-sm",
   white: "bg-canvas text-ink hover:bg-surface-soft rounded-sm",
   outline: "bg-canvas text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] hover:bg-surface-soft rounded-xs",
   "ghost-dark": "bg-surface-dark-soft text-on-dark hover:shadow-[inset_0_0_0_1px_var(--color-text-on-dark-muted)] rounded-sm",
+  danger: "bg-canvas text-critical shadow-[inset_0_0_0_1px_var(--color-text-critical)] hover:bg-surface-soft rounded-sm",
 };
 
 export function Button({
@@ -91,17 +92,22 @@ export function IconButton({
   icon,
   label,
   onDark,
+  tone = "default",
   className,
   children,
   ...rest
-}: { icon: IconName; label: string; onDark?: boolean; children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: { icon: IconName; label: string; onDark?: boolean; tone?: "default" | "critical"; children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       type="button"
       aria-label={label}
       className={cx(
         "relative grid size-9 max-sm:size-11 shrink-0 place-items-center rounded-sm transition-colors duration-150",
-        onDark ? "bg-surface-dark-soft text-on-dark hover:bg-[#3d4350]" : "bg-canvas text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] hover:bg-surface-soft",
+        onDark
+          ? "bg-surface-dark-soft text-on-dark hover:bg-[#3d4350]"
+          : tone === "critical"
+            ? "bg-canvas text-critical shadow-[inset_0_0_0_1px_var(--color-border-hairline)] hover:bg-surface-soft"
+            : "bg-canvas text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] hover:bg-surface-soft",
         className,
       )}
       {...rest}

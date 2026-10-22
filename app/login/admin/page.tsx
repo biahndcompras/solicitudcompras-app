@@ -1,12 +1,6 @@
-import { LoginForm } from "@/components/auth/LoginForm";
+import { redirect } from "next/navigation";
 
+/** Un solo login para el equipo: las rutas viejas se conservan como redirección. */
 export default function LoginAdminPage() {
-  return (
-    <LoginForm
-      titulo="Acceso Administrador"
-      descripcion="Rol: Admin · Trazabilidad. Supervisión general y métricas."
-      rol="admin"
-      tono="admin"
-    />
-  );
+  redirect("/login");
 }

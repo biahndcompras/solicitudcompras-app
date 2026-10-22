@@ -30,7 +30,7 @@ export function Modal({ children, onCerrar, titulo, descripcion }: ModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onCerrar} />
+      <div className="absolute inset-0 bg-canvas-dark/60" onClick={onCerrar} />
       <div
         ref={panelRef}
         role="dialog"
@@ -38,13 +38,13 @@ export function Modal({ children, onCerrar, titulo, descripcion }: ModalProps) {
         aria-labelledby={tituloId}
         aria-describedby={descripcion ? `${tituloId}-desc` : undefined}
         tabIndex={-1}
-        className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md relative z-10 p-6 step-enter focus:outline-none"
+        className="bg-canvas rounded-sm w-full max-w-md relative z-10 p-6 shadow-[var(--shadow-soft-drop)] focus:outline-none"
       >
-        <div id={tituloId} className="text-base font-semibold text-slate-900">
+        <div id={tituloId} className="text-display-md text-ink">
           {titulo}
         </div>
         {descripcion ? (
-          <div id={`${tituloId}-desc`} className="text-sm text-slate-600 mt-2">
+          <div id={`${tituloId}-desc`} className="mt-2 text-caption text-body">
             {descripcion}
           </div>
         ) : null}

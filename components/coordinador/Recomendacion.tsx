@@ -4,6 +4,8 @@ import { useState } from "react";
 import type { Cotizacion, ProsContras } from "@/lib/domain/types";
 import { bloqueoB3Activo } from "@/lib/domain/rules";
 import { formato } from "@/lib/domain/comparativa";
+import { Badge, Button, Panel } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/Icon";
 
 type RecomendacionProps = {
   cotizaciones: Cotizacion[];
@@ -11,7 +13,7 @@ type RecomendacionProps = {
   sugerenciaIA?: string;
   cotizacionSugeridaId?: string;
   enlace?: { token: string; url: string } | null;
-  onEnviar: (recomendacion: string) => Promise<boolean>; // real: PATCH a ENVIADA_A_SOLICITANTE, retorna si se envió
+  onEnviar: (recomendacion: string) => Promise<boolean>;
 };
 
 export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizacionSugeridaId, enlace, onEnviar }: RecomendacionProps) {
@@ -25,103 +27,150 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
 
   if (enviado) {
     return (
-      <div className="step-enter bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm relative overflow-hidden">
-        <div className="absolute -top-16 -left-20 w-72 h-72 rounded-full bg-gradient-to-r from-emerald-200/30 to-sky-500/10 blur-[70px]" />
-        <div className="relative">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-green-800 bg-green-100 px-2.5 py-1.5 rounded-xl">ENVIADA_A_SOLICITANTE</div>
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 mt-2">Comparativa enviada</h2>
-          <p className="text-sm text-slate-500 mt-2 max-w-2xl">La solicitud queda en espera de la decisión del solicitante. El ciclo del coordinador termina aquí.</p>
+      <Panel
+        title="Comparativa enviada"
+        subtitle="La solicitud queda en espera de la decisión del solicitante. El ciclo del coordinador termina aquí."
+        action={<Badge tone="success">ENVIADA_A_SOLICITANTE</Badge>}
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="rounded-sm bg-surface-soft px-4 py-3">
+            <p className="eyebrow text-body">Enlace público (token)</p>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                readOnly
+                defaultValue={enlace?.url ?? "Generando enlace…"}
+                title={enlace?.url}
+                className="h-10 min-w-0 flex-1 rounded-sm bg-canvas px-3 text-caption text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] outline-none"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (enlace) {
+                    navigator.clipboard?.writeText(enlace.url);
+                    setCopiado(true);
+                  }
+                }}
+              >
+                {copiado ? "Copiado" : "Copiar"}
+              </Button>
+            </div>
+            <p className="mt-2 text-caption text-body">Se incluye en el correo al solicitante.</p>
+          </div>
 
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
-              <div className="text-xs font-semibold text-slate-900">Enlace público (token)</div>
-              <div className="mt-2 flex items-center gap-2">
-                <input readOnly defaultValue={enlace?.url ?? "Generando enlace…"} title={enlace?.url} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700" />
-                <button onClick={() => { if (enlace) { navigator.clipboard?.writeText(enlace.url); setCopiado(true); } }} className="text-xs font-semibold uppercase tracking-wider text-slate-700 hover:text-slate-900 bg-white px-3 py-2 min-h-[44px] rounded-xl border border-slate-200">{copiado ? "Copiado" : "Copiar"}</button>
-              </div>
-              <div className="text-xs text-slate-500 mt-2">Se incluye en el correo al solicitante.</div>
-            </div>
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
-              <div className="text-xs font-semibold text-slate-900">Estado</div>
-              <div className="mt-2 text-xs text-slate-600 leading-relaxed">Transición: <span className="font-semibold text-slate-900">COMPARATIVA_LISTA → ENVIADA_A_SOLICITANTE</span></div>
-              <div className="mt-2 text-xs text-slate-600">Siguiente: <span className="font-semibold">Decisión del solicitante</span></div>
-            </div>
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
-              <div className="text-xs font-semibold text-slate-900">Notificación</div>
-              <div className="mt-2 text-xs text-slate-600 leading-relaxed">Correo 3 disparado al solicitante con el enlace público.</div>
-              <div className="mt-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-                Entregado (simulado)
-              </div>
-            </div>
+          <div className="rounded-sm bg-surface-soft px-4 py-3">
+            <p className="eyebrow text-body">Estado</p>
+            <p className="mt-2 text-caption text-ink">
+              Transición: <span className="font-medium">COMPARATIVA_LISTA → ENVIADA_A_SOLICITANTE</span>
+            </p>
+            <p className="mt-1 text-caption text-body">
+              Siguiente: <span className="font-medium text-ink">decisión del solicitante</span>
+            </p>
+          </div>
+
+          <div className="rounded-sm bg-surface-soft px-4 py-3">
+            <p className="eyebrow text-body">Notificación</p>
+            <p className="mt-2 text-caption text-ink">Correo 3 enviado al solicitante con el enlace público.</p>
+            <p className="mt-2 inline-flex items-center gap-1.5 text-caption text-body">
+              <Icon name="check-circle" size={14} />
+              Registrado en la bitácora
+            </p>
           </div>
         </div>
-      </div>
+      </Panel>
     );
   }
 
   return (
-    <div className="step-enter">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold tracking-tight text-slate-900">09 · Recomendación</h3>
-        <p className="text-xs text-slate-500 mt-1">Punto de control humano (RN-01). Puede contradecir la sugerencia de la IA sin fricción.</p>
+    <div className="flex flex-col gap-4">
+      <div>
+        <h2 className="text-display-md text-ink">09 · Recomendación</h2>
+        <p className="mt-1 text-caption text-body">
+          Punto de control humano (RN-01). Puede contradecir la sugerencia del sistema sin fricción.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {cotizaciones.map((c) => {
           const pc = prosContras[c.id];
+          const esSugerida = c.id === cotizacionSugeridaId;
           return (
-            <div key={c.id} className={"bg-white rounded-2xl border p-4 shadow-sm " + (c.id === cotizacionSugeridaId ? "border-sky-200 ring-1 ring-sky-500/20" : "border-slate-200/60")}>
-              <div className="text-xs font-semibold text-slate-900">{c.proveedorNombre}</div>
-              <div className="text-xs text-slate-500 mt-1">Total: <span className="font-semibold text-slate-900">{c.moneda ?? "L"} {formato(c.valorTotal)}</span></div>
-              <div className="mt-3 text-xs">
-                <div className="text-green-700 font-semibold">✓ Pros</div>
-                <ul className="mt-1 space-y-1 text-slate-600">{(pc?.pros ?? []).map((p) => <li key={p}>{p}</li>)}</ul>
-                <div className="mt-2 text-rose-700 font-semibold">✗ Contras</div>
-                <ul className="mt-1 space-y-1 text-slate-600">{(pc?.contras ?? []).map((c2) => <li key={c2}>{c2}</li>)}</ul>
+            <div
+              key={c.id}
+              className={
+                "flex min-w-0 flex-col gap-2 rounded-sm p-4 " +
+                (esSugerida
+                  ? "bg-mint shadow-[inset_0_0_0_1px_#000]"
+                  : "bg-canvas shadow-[inset_0_0_0_1px_var(--color-border-hairline)]")
+              }
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="min-w-0 truncate text-body-md font-medium text-ink">{c.proveedorNombre}</p>
+                {esSugerida ? <Badge tone="dark">Sugerido</Badge> : null}
               </div>
+              <p className="text-caption text-body">
+                Total: <span className="font-medium text-ink">{c.moneda ?? "L"} {formato(c.valorTotal)}</span>
+              </p>
+              {(pc?.pros.length ?? 0) > 0 || (pc?.contras.length ?? 0) > 0 ? (
+                <>
+                  {(pc?.pros.length ?? 0) > 0 ? (
+                    <div>
+                      <p className="eyebrow text-success">Pros</p>
+                      <ul className="mt-1 flex flex-col gap-0.5 text-caption text-ink">
+                        {(pc?.pros ?? []).map((p) => (
+                          <li key={p}>+ {p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {(pc?.contras.length ?? 0) > 0 ? (
+                    <div>
+                      <p className="eyebrow text-critical">Contras</p>
+                      <ul className="mt-1 flex flex-col gap-0.5 text-caption text-ink">
+                        {(pc?.contras ?? []).map((p) => (
+                          <li key={p}>− {p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <p className="text-caption text-body">Sin pros ni contras registrados.</p>
+              )}
             </div>
           );
         })}
       </div>
 
       {sugerenciaIA ? (
-        <div className="bg-gradient-to-br from-white to-sky-50/40 rounded-2xl border border-slate-200/60 p-5 shadow-sm mb-4 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-sky-500/10 blur-[45px]" />
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="bg-sky-700 text-white text-xs font-semibold px-2 py-1 rounded uppercase tracking-wider flex items-center gap-1">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 3 3 5 6 1-4 4 1 6-6-2-6 2 1-6-4-4 6-1z"/></svg>
-                Sugerencia del asistente (IA)
-              </span>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Solo un insumo</span>
-            </div>
-            <div className="text-sm font-semibold text-slate-900">Proveedor sugerido: {sugerida?.proveedorNombre ?? "—"}</div>
-            <div className="text-xs text-slate-600 mt-1 leading-relaxed">{sugerenciaIA}</div>
+        <div className="rounded-sm bg-surface-soft px-4 py-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="eyebrow text-body">Sugerencia del sistema</span>
+            <span className="text-caption text-body">Solo un insumo, no la decisión</span>
           </div>
+          <p className="mt-2 text-caption font-medium text-ink">
+            Proveedor sugerido: {sugerida?.proveedorNombre ?? "—"}
+          </p>
+          <p className="mt-1 text-caption text-body">{sugerenciaIA}</p>
         </div>
       ) : null}
 
-      <div className="bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm">
-        <label className="block text-xs font-semibold text-slate-900 mb-2">
-          Recomendación del coordinador <span className="text-rose-600">*</span>
-        </label>
+      <Panel title="Recomendación del coordinador" subtitle="Es obligatoria: el servidor también la exige (B3).">
         <textarea
           value={recomendacion}
           onChange={(e) => setRecomendacion(e.target.value)}
           rows={4}
-          placeholder="Escriba su criterio para el solicitante: qué conviene, riesgos, qué falta confirmar, etc."
-          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:bg-white transition-all resize-none"
+          placeholder="Escriba su criterio para el solicitante: qué conviene, riesgos, qué falta confirmar…"
+          className="w-full resize-none rounded-sm bg-canvas px-3 py-2.5 text-body-md text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] outline-none focus:shadow-[inset_0_0_0_1px_#000]"
         />
         {bloqueado ? (
-          <div className="mt-2 text-xs text-amber-800 flex items-start gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mt-[1px]"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-            Escriba su recomendación antes de enviar. El solicitante decide, pero su criterio es lo que más le sirve para decidir.
-          </div>
+          <p className="text-caption text-body">
+            Escriba su recomendación antes de enviar. El solicitante decide, pero su criterio es lo que más le sirve.
+          </p>
         ) : null}
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <button
-            type="button"
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-caption text-body">El solicitante recibe el enlace y decide.</p>
+          <Button
             disabled={bloqueado || enviando}
             onClick={async () => {
               setErrorEnvio(null);
@@ -131,18 +180,16 @@ export function Recomendacion({ cotizaciones, prosContras, sugerenciaIA, cotizac
               if (ok) setEnviado(true);
               else setErrorEnvio("No se pudo enviar. Revise la conexión e intente de nuevo.");
             }}
-            className="bg-sky-500 text-white text-xs px-7 py-3 rounded-full font-medium hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20"
           >
             {enviando ? "Enviando…" : "Enviar comparativa al solicitante"}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m22 2-7 20-4-9-9-4Z"/></svg>
-          </button>
+          </Button>
         </div>
         {errorEnvio ? (
-          <div className="mt-2 rounded-xl px-3 py-2 text-xs text-rose-700 bg-rose-50 border border-rose-200">{errorEnvio}</div>
-        ) : (
-          <div className="mt-2 text-xs text-slate-500">Bloqueo duro B3: es obligatorio acá y en el servidor. Si se vacía el campo, el envío se rechaza.</div>
-        )}
-      </div>
+          <p role="alert" className="text-caption text-critical">
+            {errorEnvio}
+          </p>
+        ) : null}
+      </Panel>
     </div>
   );
 }

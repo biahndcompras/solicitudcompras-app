@@ -5,14 +5,14 @@ export const metadata = {
   title: "Nueva solicitud — Portal de Compras BIA",
 };
 
+/**
+ * El wizard trae su propio shell (rail + contenido). Antes esta página lo envolvía en
+ * un `max-w-[1160px]` que duplicaba el ancho y dejaba ver el fondo del body.
+ */
 export default function NuevaSolicitudPage() {
   return (
-    <div className="mx-auto max-w-[1160px] md:px-8">
-      <div className="md:pt-8">
-        <Suspense>
-          <SolicitanteWizard />
-        </Suspense>
-      </div>
-    </div>
+    <Suspense>
+      <SolicitanteWizard />
+    </Suspense>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Badge, Button } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/Icon";
 
 type Pregunta = { campoKey: string; pregunta: string };
 
@@ -71,17 +73,17 @@ export function ResponderPreguntas({
 
   if (enviado) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5" role="status" aria-live="polite">
-        <div className="flex items-start gap-3">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-emerald-600 mt-0.5 shrink-0">
-            <path d="M5 13l4 4L19 7" />
-          </svg>
-          <div>
-            <p className="text-sm font-semibold text-emerald-900">Listo, ya le llegó a Compras.</p>
-            <p className="text-xs text-emerald-800 mt-0.5">
-              Su respuesta fue al coordinador que está viendo su solicitud. No tiene que hacer nada más.
-            </p>
-          </div>
+      <div
+        className="flex items-start gap-3 rounded-sm bg-canvas p-5 shadow-[inset_0_0_0_1px_var(--color-text-success)]"
+        role="status"
+        aria-live="polite"
+      >
+        <Icon name="check-circle" size={18} className="mt-0.5 shrink-0 text-success" />
+        <div>
+          <p className="text-body-md font-medium text-ink">Listo, ya le llegó a Compras.</p>
+          <p className="mt-0.5 text-caption text-body">
+            Su respuesta fue al coordinador que está viendo su solicitud. No tiene que hacer nada más.
+          </p>
         </div>
       </div>
     );
@@ -89,34 +91,29 @@ export function ResponderPreguntas({
 
   return (
     <section
-      className="rounded-2xl border border-amber-300 bg-amber-50/50 p-5"
+      className="rounded-sm bg-canvas p-5 shadow-[inset_0_0_0_1px_var(--color-text-critical)]"
       aria-labelledby={`${prefijo}-titulo`}
     >
-      <div className="flex items-start justify-between gap-3 mb-1">
-        <h2 id={`${prefijo}-titulo`} className="text-sm font-semibold text-amber-900">
-          Compras necesita un dato tuyo
+      <div className="mb-1 flex items-start justify-between gap-3">
+        <h2 id={`${prefijo}-titulo`} className="text-body-md font-medium text-ink">
+          Compras necesita un dato suyo
         </h2>
-        <span className="shrink-0 inline-flex items-center text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-100 text-amber-800">
-          {ronda > 1 ? `Ronda ${ronda}` : "Pendiente"}
-        </span>
+        <Badge tone={ronda > 1 ? "periwinkle" : "neutral"}>{ronda > 1 ? `Ronda ${ronda}` : "Pendiente"}</Badge>
       </div>
-      {/* Sin contador de días: calcularlo obliga a leer la hora durante el render, y eso da
-          HTML distinto en servidor y cliente. La urgencia la cubren el correo de recordatorio
-          y el distintivo del panel del coordinador, que es donde hace falta. */}
-      <p className="text-xs text-amber-900/80 leading-relaxed mb-4">
+      <p className="mb-4 text-caption text-body">
         Conteste lo que pueda: con eso Compras puede seguir con su solicitud.
       </p>
 
-      <div className="space-y-4">
+      <div className="flex flex-col gap-3">
         {preguntas.map((p, i) => {
           const idCampo = `${prefijo}-${i}`;
           const esNoSe = noSe[p.campoKey] === true;
           return (
-            <div key={p.campoKey} className="rounded-xl border border-amber-200 bg-white p-4">
-              <label htmlFor={idCampo} className="block text-[13px] font-semibold text-slate-900 mb-2.5">
+            <div key={p.campoKey} className="rounded-sm bg-surface-soft p-4">
+              <label htmlFor={idCampo} className="mb-2.5 block text-caption font-medium text-ink">
                 {p.pregunta}
               </label>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <input
                   id={idCampo}
                   type="text"
@@ -125,21 +122,25 @@ export function ResponderPreguntas({
                   disabled={esNoSe}
                   placeholder="Escriba su respuesta"
                   className={
-                    "w-full min-h-[44px] bg-white border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-1 transition-all " +
-                    (esNoSe ? "opacity-50 border-slate-200" : "border-slate-200 focus:border-sky-500 focus:ring-sky-500")
+                    "min-h-[44px] w-full rounded-sm bg-canvas px-3 py-2 text-body-md text-ink outline-none transition-shadow " +
+                    (esNoSe
+                      ? "opacity-50 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]"
+                      : "shadow-[inset_0_0_0_1px_var(--color-border-hairline)] focus:shadow-[inset_0_0_0_1px_#000]")
                   }
                 />
                 <label
                   className={
-                    "shrink-0 inline-flex items-center justify-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-xs font-semibold cursor-pointer transition-all select-none " +
-                    (esNoSe ? "bg-green-100 border-green-300 text-green-800" : "bg-white/70 border-slate-200 text-slate-600 hover:border-slate-300")
+                    "inline-flex min-h-[44px] shrink-0 cursor-pointer select-none items-center justify-center gap-2 rounded-sm px-3.5 text-caption font-medium transition-colors " +
+                    (esNoSe
+                      ? "bg-mint text-ink shadow-[inset_0_0_0_1px_#000]"
+                      : "bg-canvas text-body shadow-[inset_0_0_0_1px_var(--color-border-hairline)] hover:text-ink")
                   }
                 >
                   <input
                     type="checkbox"
                     checked={esNoSe}
                     onChange={(e) => set(p.campoKey, "", e.target.checked)}
-                    className="w-4 h-4 rounded accent-green-600"
+                    className="size-4 rounded-xs accent-[var(--color-bg-primary)]"
                   />
                   No lo sé
                 </label>
@@ -150,19 +151,17 @@ export function ResponderPreguntas({
       </div>
 
       {error ? (
-        <p role="alert" className="mt-4 rounded-xl px-3 py-2 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200">
+        <p
+          role="alert"
+          className="mt-4 rounded-sm px-3 py-2 text-caption font-medium text-critical shadow-[inset_0_0_0_1px_var(--color-text-critical)]"
+        >
           {error}
         </p>
       ) : null}
 
-      <button
-        type="button"
-        onClick={enviar}
-        disabled={enviando}
-        className="mt-4 w-full min-h-[44px] rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60 transition-all"
-      >
+      <Button type="button" onClick={enviar} disabled={enviando} className="mt-4 w-full">
         {enviando ? "Enviando…" : "Enviar respuesta a Compras"}
-      </button>
+      </Button>
     </section>
   );
 }

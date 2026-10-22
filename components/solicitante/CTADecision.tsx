@@ -6,7 +6,6 @@
 // así que el token se lee del mapa local. Si no hay token, se dice la verdad: que la
 // decisión llega por el correo de Compras.
 import { useSyncExternalStore } from "react";
-import Link from "next/link";
 import {
   snapshotDecision,
   servidorDecision,
@@ -14,6 +13,7 @@ import {
   esperandoDecision,
   type MapaDecision,
 } from "@/lib/enlaces-decision";
+import { ButtonLink } from "@/components/ui/primitives";
 
 export function CTADecision({ solicitudId, estado }: { solicitudId: string; estado: string }) {
   const tokens = useSyncExternalStore(
@@ -25,27 +25,24 @@ export function CTADecision({ solicitudId, estado }: { solicitudId: string; esta
 
   if (token) {
     return (
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="flex flex-col gap-3 rounded-sm bg-canvas p-5 shadow-[inset_0_0_0_1px_#000] sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-slate-900">Su decisión es el siguiente paso</div>
-          <div className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-body-md font-medium text-ink">Su decisión es el siguiente paso</p>
+          <p className="mt-0.5 text-caption text-body">
             Abrió este enlace en este navegador: puede decidir sin volver al correo.
-          </div>
+          </p>
         </div>
-        <Link
-          href={`/comparativa/${encodeURIComponent(token)}`}
-          className="shrink-0 inline-flex items-center justify-center min-h-[44px] px-5 text-sm font-semibold text-white bg-slate-900 rounded-full"
-        >
+        <ButtonLink href={`/comparativa/${encodeURIComponent(token)}`} variant="primary">
           Decidir ahora
-        </Link>
+        </ButtonLink>
       </div>
     );
   }
 
   if (esperandoDecision(estado)) {
     return (
-      <p className="mt-4 text-xs text-amber-700 bg-amber-50/70 border border-amber-200 rounded-xl px-4 py-3">
-        Compras ya te envió un enlace para decidir. Abrilo desde el correo: si lo abrís en este
+      <p className="rounded-sm bg-surface-soft px-4 py-3 text-caption text-ink">
+        Compras ya le envió un enlace para decidir. Ábralo desde el correo: si lo abre en este
         navegador, el botón de decidir aparece aquí y en el listado.
       </p>
     );

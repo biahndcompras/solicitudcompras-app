@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AmbientBackground } from "@/components/ui-ext/AmbientBackground";
-import { Badge, type BadgeTone } from "@/components/Badge";
-import { SemParoBadge } from "@/components/Semaforo";
+import { PublicShell } from "@/components/layout/PublicShell";
+import { Badge, ButtonLink, Panel, type BadgeTone } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/Icon";
 import { TrackerEtapas } from "@/components/TrackerEtapas";
 import { CTADecision } from "@/components/solicitante/CTADecision";
 import { ResponderPreguntas } from "@/components/solicitante/ResponderPreguntas";
@@ -33,143 +33,150 @@ export default async function DetalleSolicitudSolicitantePage({
 
   const cotizaciones = await repo.listarCotizaciones(id);
   const volverA = `/mis-solicitudes?email=${encodeURIComponent(email)}`;
+  const retraso = diasDeRetraso(solicitud);
 
   return (
-    <main className="min-h-screen flex items-start justify-center p-4 md:p-8 relative overflow-hidden">
-      <AmbientBackground />
-      <div className="w-full max-w-[900px] bg-white/70 backdrop-blur-3xl rounded-3xl md:rounded-[2.5rem] border border-white shadow-[0_8px_40px_rgb(0,0,0,0.06)] overflow-hidden relative z-10 p-8">
-        <Link
-          href={volverA}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 hover:bg-white transition-all mb-6"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    <PublicShell>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {solicitud.numeroReferencia ? (
+              <span className="mono-label rounded-xs px-2 py-1 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+                {solicitud.numeroReferencia}
+              </span>
+            ) : (
+              <span className="text-caption italic text-body">Sin referencia</span>
+            )}
+            <Badge tone={toneDe(solicitud.estado)}>{estadoLegible(solicitud.estado)}</Badge>
+            {retraso !== null ? <Badge tone="critical">Retrasada · {retraso} d</Badge> : null}
+          </div>
+          <h1 className="mt-2 text-display-lg text-ink">{solicitud.titulo}</h1>
+          <p className="mt-1 text-caption text-body">
+            Creada: {formatoFechaLegible(solicitud.fechaCreacion)} · Atención:{" "}
+            {duracionAtencion({ fechaCreacion: solicitud.fechaCreacion, fechaCierre: solicitud.fechaCierre }).texto}
+          </p>
+        </div>
+        <ButtonLink href={volverA} variant="outline" icon="chevron-left">
           Volver
-        </Link>
+        </ButtonLink>
+      </div>
 
-        {/* Va arriba de todo a propósito: es lo único que la persona tiene que hacer. Si se
-            entierra debajo del detalle, Compras queda esperando por algo que nadie vio. */}
-        {solicitud.informacionPendiente && solicitud.informacionPreguntas ? (
-          <div className="mb-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_388px]">
+        <div className="flex min-w-0 flex-col gap-4">
+          {/* Va arriba de todo a propósito: es lo único que la persona tiene que hacer. */}
+          {solicitud.informacionPendiente && solicitud.informacionPreguntas ? (
             <ResponderPreguntas
               solicitudId={solicitud.id}
               email={email}
               ronda={solicitud.informacionPreguntas.ronda}
               preguntas={solicitud.informacionPreguntas.preguntas}
             />
-          </div>
-        ) : null}
+          ) : null}
 
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-xl">{solicitud.numeroReferencia ?? "—"}</span>
-          <SemParoBadge solicitud={solicitud} />
-          <Badge tone={toneDe(solicitud.estado)} label={estadoLegible(solicitud.estado)} />
-        </div>
-        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">{solicitud.titulo}</h1>
-        <p className="text-xs text-slate-500 mt-1">
-          Creada: {formatoFechaLegible(solicitud.fechaCreacion)} · Atención: {duracionAtencion({ fechaCreacion: solicitud.fechaCreacion, fechaCierre: solicitud.fechaCierre }).texto}
-        </p>
+          {solicitud.descripcion ? (
+            <Panel title="Descripción" subtitle="Lo que pidió">
+              <p className="whitespace-pre-line text-caption text-ink">{solicitud.descripcion}</p>
+            </Panel>
+          ) : null}
 
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4 text-[12px] bg-white rounded-2xl border border-slate-200 p-5">
-          <DetalleCampo label="Solicitante" valor={solicitud.solicitanteNombre} />
-          <DetalleCampo label="Área" valor={solicitud.areaSolicitante} />
-          <DetalleCampo label="Tipo" valor={solicitud.tipo ?? "—"} />
-          <DetalleCampo label="Subtipo" valor={solicitud.subtipo ?? "—"} />
-          <DetalleCampo label="Categoría" valor={nombreCategoria(solicitud.categoria)} />
-          <DetalleCampo label="Fecha requerida" valor={formatoFechaLegible(solicitud.fechaRequerida)} />
-        </div>
-
-        {solicitud.informacionRespuesta ? (
-          <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5">
-            <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">
-              Lo que respondiste a Compras (ronda {solicitud.informacionRespuesta.ronda})
-            </span>
-            <ul className="space-y-1.5">
-              {(solicitud.informacionPreguntas?.preguntas ?? []).map((p) => (
-                <li key={p.campoKey} className="text-xs text-slate-600">
-                  <span className="font-semibold text-slate-800">{p.pregunta}</span>{" "}
-                  {solicitud.informacionRespuesta?.respuestas[p.campoKey] || <em className="text-slate-400">no lo sé</em>}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        {solicitud.descripcion ? (
-          <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5">
-            <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-semibold">Descripción</span>
-            <p className="text-xs text-slate-600 leading-relaxed">{solicitud.descripcion}</p>
-          </div>
-        ) : null}
-
-        {solicitud.archivoLogoNombre ? (
-          <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between gap-3">
-            <span className="text-xs font-semibold text-slate-700">Logo / arte del producto</span>
-            <a
-              href={`/api/solicitudes/${solicitud.id}/logo?email=${encodeURIComponent(email)}`}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl text-sky-700 hover:bg-sky-50 border border-sky-200"
+          {solicitud.informacionRespuesta ? (
+            <Panel
+              title="Lo que respondió a Compras"
+              subtitle={`Ronda ${solicitud.informacionRespuesta.ronda}`}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-              Descargar {solicitud.archivoLogoNombre}
-            </a>
-          </div>
-        ) : null}
+              <ul className="flex flex-col gap-2">
+                {(solicitud.informacionPreguntas?.preguntas ?? []).map((p) => (
+                  <li key={p.campoKey} className="border-b border-hairline pb-2 last:border-0 last:pb-0">
+                    <p className="text-caption font-medium text-ink">{p.pregunta}</p>
+                    <p className="mt-0.5 text-caption text-body">
+                      {solicitud.informacionRespuesta?.respuestas[p.campoKey] || <em>no lo sé</em>}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          ) : null}
 
-        <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5">
-          <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-3 font-semibold">Progreso</span>
-          <TrackerEtapas estado={solicitud.estado as EstadoSolicitud} />
-        </div>
-
-        {/* Cuántas cotizaciones hay, sin nombres ni montos.
-            Esta pantalla se abre **solo con el correo** (`?email=`): cualquiera que sepa el
-            correo de un compañero entra. Mostrar acá los importes filtraba los precios de todos
-            los proveedores por un dato que no es secreto. El listado ya los ocultaba a
-            propósito (`user-flows.md:181`); el detalle era la misma información con otro
-            criterio. Los importes se ven donde corresponde: en el enlace de decisión, que pide
-            token. */}
-        <div className="mt-4 bg-white rounded-2xl border border-slate-200 p-5">
-          <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">
-            Cotizaciones recibidas
-          </span>
-          {cotizaciones.length === 0 ? (
-            <p className="text-xs text-slate-500">Todavía no hay cotizaciones cargadas.</p>
-          ) : (
-            <>
-              <p className="text-2xl font-semibold tracking-tight text-slate-900">{cotizaciones.length}</p>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                Cuando Compras tenga la comparativa lista, va a recibir un correo con el enlace
-                para verlas y decidir.
-              </p>
-            </>
-          )}
-        </div>
-
-        {/* El solicitante también puede adjuntar (4.4.12): aclaraciones, fichas, fotos. */}
-        <DocumentosAdjuntos solicitudId={solicitud.id} email={email} puedeSubir />
-
-        {/* P2-c: el detalle también es un lugar desde donde se decide, no solo el listado. */}
-        <CTADecision solicitudId={solicitud.id} estado={solicitud.estado} />
-
-        <p className="mt-6 text-center">
-          <Link
-            href="/guias/manual-solicitante"
-            className="inline-flex items-center gap-1.5 min-h-[44px] px-3 text-xs font-medium text-slate-500 hover:text-sky-600 transition-colors"
+          <Panel
+            title="Cotizaciones recibidas"
+            subtitle="Sin importes: se ven en el enlace de decisión"
+            action={<Badge tone="neutral">{cotizaciones.length}</Badge>}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 6.25A2.25 2.25 0 0 1 14.25 4h4A2.75 2.75 0 0 1 21 6.75v10.5A2.75 2.75 0 0 1 18.25 20h-4A2.25 2.25 0 0 1 12 17.75z"/><path d="M12 6.25A2.25 2.25 0 0 0 9.75 4h-4A2.75 2.75 0 0 0 3 6.75v10.5A2.75 2.75 0 0 0 5.75 20h4A2.25 2.25 0 0 0 12 17.75"/></svg>
-            Guía rápida de uso
-          </Link>
-        </p>
+            {cotizaciones.length === 0 ? (
+              <p className="text-caption text-body">Todavía no hay cotizaciones cargadas.</p>
+            ) : (
+              <p className="text-caption text-body">
+                Cuando Compras tenga la comparativa lista, va a recibir un correo con el enlace para verlas y decidir.
+              </p>
+            )}
+          </Panel>
+
+          {/* El solicitante también puede adjuntar (4.4.12): aclaraciones, fichas, fotos. */}
+          <DocumentosAdjuntos solicitudId={solicitud.id} email={email} puedeSubir />
+
+          {/* P2-c: el detalle también es un lugar desde donde se decide, no solo el listado. */}
+          <CTADecision solicitudId={solicitud.id} estado={solicitud.estado} />
+        </div>
+
+        <aside className="flex min-w-0 flex-col gap-4">
+          <Panel title="Datos de la solicitud">
+            <dl className="flex flex-col gap-3">
+              <Dato label="Solicitante" valor={solicitud.solicitanteNombre} />
+              <Dato label="Área" valor={solicitud.areaSolicitante} />
+              <Dato label="Tipo" valor={solicitud.tipo ?? "—"} />
+              <Dato label="Subtipo" valor={solicitud.subtipo ? (solicitud.subtipo === "producto" ? "Producto" : solicitud.subtipo === "servicio" ? "Servicio" : "Mixto") : "—"} />
+              <Dato label="Categoría" valor={nombreCategoria(solicitud.categoria)} />
+              <Dato label="Fecha requerida" valor={formatoFechaLegible(solicitud.fechaRequerida)} />
+              {solicitud.archivoLogoNombre ? (
+                <div>
+                  <dt className="eyebrow text-body">Logo / arte del producto</dt>
+                  <dd className="mt-1">
+                    <a
+                      href={`/api/solicitudes/${solicitud.id}/logo?email=${encodeURIComponent(email)}`}
+                      className="inline-flex items-center gap-1.5 text-caption font-medium text-ink underline underline-offset-4 hover:opacity-80"
+                    >
+                      <Icon name="download" size={14} />
+                      {solicitud.archivoLogoNombre}
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </Panel>
+
+          <Panel title="Progreso" subtitle="En qué etapa está su solicitud">
+            <TrackerEtapas estado={solicitud.estado as EstadoSolicitud} />
+          </Panel>
+
+          <p>
+            <Link
+              href="/guias/manual-solicitante"
+              className="inline-flex items-center gap-1.5 text-caption font-medium text-body underline underline-offset-4 hover:text-ink"
+            >
+              <Icon name="info" size={14} />
+              Guía rápida de uso
+            </Link>
+          </p>
+        </aside>
       </div>
-    </main>
+    </PublicShell>
   );
 }
 
-function DetalleCampo({ label, valor }: { label: string; valor?: string }) {
+function Dato({ label, valor }: { label: string; valor?: string }) {
   return (
     <div>
-      <span className="block text-[10px] text-slate-400 uppercase tracking-wider mb-0.5 font-semibold">{label}</span>
-      <span className="text-xs font-medium text-slate-900">{valor || "—"}</span>
+      <dt className="eyebrow text-body">{label}</dt>
+      <dd className="mt-1 text-caption text-ink">{valor || "—"}</dd>
     </div>
   );
+}
+
+function diasDeRetraso(s: { fechaRequerida?: string; fechaCierre?: string }): number | null {
+  if (s.fechaCierre || !s.fechaRequerida) return null;
+  const req = new Date(`${s.fechaRequerida}T23:59:59`).getTime();
+  if (!Number.isFinite(req) || req >= Date.now()) return null;
+  return Math.max(1, Math.round((Date.now() - req) / 86_400_000));
 }
 
 function estadoLegible(e: string): string {
@@ -187,9 +194,10 @@ function estadoLegible(e: string): string {
 }
 
 function toneDe(e: string): BadgeTone {
-  if (e === "EN_COTIZACION" || e === "COMPARATIVA_LISTA") return "cotizaciones";
-  if (e === "ENVIADA_A_SOLICITANTE") return "decision";
-  if (e === "CERRADA_CON_DECISION") return "cerrada";
-  if (e === "CERRADA_SIN_DECISION" || e === "CANCELADA") return "error";
-  return "activa";
+  if (e === "EN_COTIZACION") return "periwinkle";
+  if (e === "COMPARATIVA_LISTA" || e === "ENVIADA_A_SOLICITANTE") return "mint";
+  if (e === "CERRADA_CON_DECISION") return "success";
+  if (e === "CANCELADA") return "critical";
+  if (e === "CERRADA_SIN_DECISION") return "neutral";
+  return "dark";
 }

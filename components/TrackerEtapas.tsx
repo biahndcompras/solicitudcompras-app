@@ -34,16 +34,16 @@ export function TrackerEtapas({ estado, compacto = false }: { estado: EstadoSoli
                 className={
                   "h-1.5 w-full rounded-full " +
                   (cancelada && i === ETAPAS.length - 1
-                    ? "bg-rose-400"
+                    ? "bg-[var(--color-bg-critical)]"
                     : completada
-                      ? "bg-sky-500"
+                      ? "bg-primary"
                       : esActual
-                        ? "bg-sky-300"
-                        : "bg-slate-200")
+                        ? "bg-mint"
+                        : "bg-surface-soft")
                 }
                 title={etiqueta}
               />
-              <span className={"text-[11px] leading-tight text-center break-words px-0.5 " + (cancelada && i === ETAPAS.length - 1 ? "text-rose-600 font-bold" : esActual ? "text-sky-700 font-bold" : completada ? "text-slate-600" : "text-slate-400")}>
+              <span className={"text-[11px] leading-tight text-center break-words px-0.5 " + (cancelada && i === ETAPAS.length - 1 ? "text-critical font-bold" : esActual ? "text-ink font-bold" : completada ? "text-body" : "text-body")}>
                 {etiqueta}
               </span>
             </div>
@@ -64,23 +64,23 @@ export function TrackerEtapas({ estado, compacto = false }: { estado: EstadoSoli
             <div key={e.label} className="flex-1 flex flex-col items-center relative">
               {/* línea conectora */}
               {i > 0 ? (
-                <span className={"absolute top-3 right-1/2 w-full h-0.5 " + (completada || (cerrada && i <= ETAPAS.length - 1) ? "bg-sky-400" : cancelada && i === ETAPAS.length - 1 ? "bg-rose-300" : "bg-slate-200")} />
+                <span className={"absolute top-3 right-1/2 w-full h-0.5 " + (completada || (cerrada && i <= ETAPAS.length - 1) ? "bg-primary" : cancelada && i === ETAPAS.length - 1 ? "bg-[var(--color-bg-critical)]" : "bg-surface-soft")} />
               ) : null}
               <span
                 className={
                   "relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs " +
                   (cancelada && i === ETAPAS.length - 1
-                    ? "bg-rose-50 border-rose-400 text-rose-600"
+                    ? "bg-surface-soft border-[var(--color-text-critical)] text-critical"
                     : completada
-                      ? "bg-sky-500 border-sky-500 text-white"
+                      ? "bg-primary border-primary text-on-dark"
                       : esActual
-                        ? "bg-white border-sky-500 text-sky-600 ring-2 ring-sky-500/20"
-                        : "bg-white border-slate-300 text-slate-400")
+                        ? "bg-canvas border-primary text-ink ring-2 ring-[var(--color-bg-accent-mint)]"
+                        : "bg-canvas border-hairline text-body")
                 }
               >
-                {cancelada && i === ETAPAS.length - 1 ? "✕" : completada ? "✓" : e.icono}
+                {cancelada && i === ETAPAS.length - 1 ? "✕" : completada ? "✓" : i + 1}
               </span>
-              <span className={"mt-1.5 text-[11px] text-center px-0.5 leading-tight " + (cancelada && i === ETAPAS.length - 1 ? "text-rose-600 font-bold" : esActual ? "text-sky-700 font-bold" : completada ? "text-slate-700" : "text-slate-400")}>
+              <span className={"mt-1.5 text-[11px] text-center px-0.5 leading-tight " + (cancelada && i === ETAPAS.length - 1 ? "text-critical font-bold" : esActual ? "text-ink font-bold" : completada ? "text-ink" : "text-body")}>
                 {etiqueta}
               </span>
             </div>

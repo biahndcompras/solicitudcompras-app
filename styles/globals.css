@@ -147,9 +147,17 @@
   background-color: var(--color-bg-canvas);
 }
 
-.bia-ds :focus-visible {
+/* El anillo de foco va en el contenedor del campo (TextField/SelectField usan
+   focus-within). Si además se dibuja en el <input>, quedan DOS halos. Los campos
+   nativos del wizard ya cambian su borde en foco. */
+.bia-ds :focus-visible:not(input):not(select):not(textarea) {
   outline: 2px solid var(--color-border-strong);
   outline-offset: 2px;
+}
+.bia-ds input:focus-visible,
+.bia-ds select:focus-visible,
+.bia-ds textarea:focus-visible {
+  outline: none;
 }
 .bia-ds .on-dark :focus-visible {
   outline-color: var(--color-bg-accent-mint);

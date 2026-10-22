@@ -90,6 +90,7 @@ export default async function AdminProcesosPage() {
 
 function estadoLegible(e: string): string {
   const m: Record<string, string> = {
+    BORRADOR: "Borrador",
     ENVIADA_A_COMPRAS: "Activa",
     EN_COTIZACION: "Esperando cotizaciones",
     COMPARATIVA_LISTA: "Comparativa lista",

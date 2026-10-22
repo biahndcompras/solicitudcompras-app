@@ -7,13 +7,13 @@ import { Logo } from "@/components/ui/primitives";
 import { site } from "@/config/site";
 import { ease } from "@/lib/design/motion";
 
-const headline = "Cada solicitud, su comparativa y su decisión, en un solo tablero.";
+const HEADLINE = "Cada solicitud, su comparativa y su decisión, en un solo tablero.";
 
-const puntos = [
+const PUNTOS = [
   ["Solicitudes con contexto", "Especificaciones, respuestas y adjuntos desde el primer día."],
   ["Comparativas comparables", "Los proveedores en columnas, con pros, contras y ahorro."],
   ["Decisión trazada", "El solicitante decide y Compras recibe la notificación."],
-];
+] as [string, string][];
 
 /**
  * Pantalla de acceso partida, portada de la referencia (DESIGN.md §4.4):
@@ -22,7 +22,19 @@ const puntos = [
  * Sin cifras de demostración: la referencia mostraba métricas inventadas
  * («186 venues»). Acá van tres propuestas de valor, sin datos que no existen.
  */
-export function AuthLayout({ children }: { children: ReactNode }) {
+export function AuthLayout({
+  children,
+  eyebrow = "Portal de Compras · Equipo",
+  headline = HEADLINE,
+  points = PUNTOS,
+  footer = `${site.fullName} · v1.0`,
+}: {
+  children: ReactNode;
+  eyebrow?: string;
+  headline?: string;
+  points?: [string, string][];
+  footer?: string;
+}) {
   const words = headline.split(" ");
 
   return (
@@ -53,7 +65,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            Portal de Compras · Equipo
+            {eyebrow}
           </motion.p>
 
           <h1 className="mt-5 text-[30px] leading-[36px] font-medium tracking-[-0.6px] text-on-dark sm:text-display-xl">
@@ -72,7 +84,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           </h1>
 
           <ul className="mt-6 flex flex-col gap-3">
-            {puntos.map(([titulo, texto], i) => (
+            {points.map(([titulo, texto], i) => (
               <motion.li
                 key={titulo}
                 initial={{ opacity: 0, y: 10 }}
@@ -103,7 +115,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           {children}
         </motion.div>
         <p className="mono-caption absolute bottom-6 left-6 text-body sm:left-14">
-          {site.fullName} · v1.0
+          {footer}
         </p>
       </section>
     </div>

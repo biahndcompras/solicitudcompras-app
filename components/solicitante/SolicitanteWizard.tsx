@@ -1,9 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { useId, useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { Modal } from "@/components/ui-ext/Modal";
+import { Ribbon } from "@/components/brand/Ribbon";
+import { Icon } from "@/components/ui/Icon";
+import { ease } from "@/lib/design/motion";
 import {
   useSolicitudWizard,
   TEXTO_FASE_ENVIO,
@@ -15,7 +19,7 @@ import {
 } from "@/hooks/useSolicitudWizard";
 import { CATEGORIAS, nombreCategoria } from "@/lib/domain/categorias";
 import { formatoFechaLegible } from "@/lib/domain/semaforo";
-import { ACCEPT_ARCHIVO, MAX_BYTES_ARCHIVO, MAX_MB_ARCHIVO } from "@/lib/domain/archivos";
+import { ACCEPT_ARCHIVO, MAX_MB_ARCHIVO } from "@/lib/domain/archivos";
 
 // El rail se deriva del estado real del wizard (5 pasos, no 4 inventados).
 // `label` es el nombre largo del rail de escritorio; `corto` el de la barra móvil.
@@ -169,66 +173,67 @@ export function SolicitanteWizard() {
             compacta de arriba, que ya salió de aquí. */}
         <aside
           aria-label="Progreso de la solicitud"
-          className="hidden shrink-0 border-r border-hairline bg-surface-soft md:block md:overflow-hidden"
+          className="on-dark hidden shrink-0 border-r border-on-dark-line bg-canvas-dark md:block md:overflow-hidden"
         >
-          <div className="hidden md:flex md:w-[280px] lg:w-[320px] h-full flex-col p-6 lg:p-8 relative">
+          <div className="relative hidden h-full flex-col p-6 md:flex md:w-[280px] lg:w-[320px] lg:p-8">
+            <Ribbon className="pointer-events-none absolute inset-x-0 bottom-0 h-48 w-full opacity-20" />
             <div className="relative z-10 mb-8 flex items-center gap-2 md:mb-12">
-              <MarcaBia />
-              <span className="text-sm font-medium tracking-tight">Compras</span>
+              <MarcaBia onDark />
+              <span className="text-body-md font-medium text-on-dark">Compras</span>
             </div>
 
             <div className="relative z-10 flex h-full flex-col">
-              <p className="text-caption font-semibold text-body uppercase tracking-wider mb-6">
-                Progreso de la solicitud
-              </p>
-              <ol className="space-y-7 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px before:h-full before:w-[2px] before:bg-surface-soft before:-z-10">
-                {PASOS.map((paso) => {
+              <p className="eyebrow mb-4 text-on-dark-muted">Progreso de la solicitud</p>
+              <ol className="flex flex-col gap-1">
+                {PASOS.map((paso, index) => {
                   const isActive = estado.paso === paso.id;
                   const isDone = estado.paso > paso.id;
                   const alcanzable = paso.id <= estado.maxAlcanzado && paso.id < 6;
-                  return (
-                    <li key={paso.id} className="relative flex items-center gap-4">
+                  const contenido = (
+                    <>
                       <span
                         className={
-                          "absolute left-0 w-6 h-6 rounded-sm border-[3px] border-hairline z-10 flex items-center justify-center transition-all duration-300 " +
+                          "grid size-5 shrink-0 place-items-center rounded-xs " +
                           (isDone
-                            ? "bg-primary "
+                            ? "bg-mint text-ink"
                             : isActive
-                              ? "bg-canvas ring-4 ring-[var(--color-bg-accent-mint)]"
-                              : "bg-surface-soft")
+                              ? "bg-canvas text-ink"
+                              : "bg-surface-dark-soft text-on-dark-muted")
                         }
                       >
-                        {isDone ? (
-                          <svg className="text-white text-caption" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="M5 13l4 4L19 7"/></svg>
-                        ) : isActive ? (
-                          <span className="w-1.5 h-1.5 bg-primary rounded-sm" />
-                        ) : null}
+                        {isDone ? <Icon name="check" size={11} /> : <span className="mono-caption">{index + 1}</span>}
                       </span>
+                      <span
+                        className={
+                          "min-w-0 truncate text-caption " +
+                          (isActive ? "font-medium text-on-dark" : isDone ? "text-on-dark" : "text-on-dark-muted")
+                        }
+                      >
+                        {paso.label}
+                      </span>
+                    </>
+                  );
+                  return (
+                    <li key={paso.id}>
                       {alcanzable ? (
                         <button
                           type="button"
                           onClick={() => irA(paso.id)}
                           className={
-                            "ml-10 text-sm text-left transition-colors duration-300 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-border-strong)] rounded " +
-                            (isActive ? "font-semibold text-ink" : isDone ? "font-medium text-ink" : "text-body font-medium")
+                            "flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left transition-colors " +
+                            (isActive ? "bg-surface-dark-soft" : "hover:bg-surface-dark-soft/60")
                           }
                         >
-                          {paso.label}
+                          {contenido}
                         </button>
                       ) : (
-                        <span
-                          className={
-                            "ml-10 text-sm transition-colors duration-300 " +
-                            (isActive ? "font-semibold text-ink" : isDone ? "font-medium text-ink" : "text-body font-medium")
-                          }
-                        >
-                          {paso.label}
-                        </span>
+                        <span className="flex items-center gap-3 px-2 py-2">{contenido}</span>
                       )}
                     </li>
                   );
                 })}
               </ol>
+
               <EstadoActual listo={listo} enPaso={estado.paso} borradoAt={borradoAt} persistenciaOk={persistenciaOk} />
               {estado.paso < 6 ? (
                 <AccionesBorrador
@@ -261,6 +266,14 @@ export function SolicitanteWizard() {
               <p className="text-sm text-body mb-0">{BAJADAS_PASO[estado.paso]}</p>
             </header>
           ) : null}
+          <div className="flex min-h-0 flex-1 flex-col gap-6 xl:flex-row">
+            <motion.div
+              key={estado.paso}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease }}
+              className="flex min-w-0 flex-1 flex-col"
+            >
           {estado.paso === 2 ? (
             <PasoCaptura estado={estado} set={set} siguiente={siguiente} pasoValido={pasoValido} faltantes={faltantes} clasificarIA={clasificarIA} clasificandoIA={clasificandoIA} />
           ) : estado.paso === 3 ? (
@@ -276,6 +289,14 @@ export function SolicitanteWizard() {
                la captura. Antes caía en la confirmación y decía "Su solicitud fue enviada". */
             <PasoCaptura estado={estado} set={set} siguiente={siguiente} pasoValido={pasoValido} faltantes={faltantes} clasificarIA={clasificarIA} clasificandoIA={clasificandoIA} />
           )}
+            </motion.div>
+
+            {estado.paso >= 2 && estado.paso <= 5 ? (
+              <aside className="hidden w-[280px] shrink-0 xl:block" aria-label="Resumen de la solicitud">
+                <ResumenVivo estado={estado} />
+              </aside>
+            ) : null}
+          </div>
         </section>
       </main>
 
@@ -424,10 +445,67 @@ export function SolicitanteWizard() {
   );
 }
 
-function MarcaBia() {
+function ResumenVivo({ estado }: { estado: WizardState }) {
+  const paso = Math.min(5, Math.max(1, estado.paso - 1));
+  // El par producto/servicio lo eligen las tarjetas y vive en `subtipo`; `tipoNecesidad`
+  // es el detalle del catálogo. El resumen refleja lo que la persona ve seleccionado.
+  const tipo =
+    estado.subtipo === "producto"
+      ? "Producto"
+      : estado.subtipo === "servicio"
+        ? "Servicio"
+        : estado.subtipo === "mixto"
+          ? "Mixto"
+          : "Por definir";
+
   return (
-    <div className="w-7 h-7 rounded-sm bg-primary flex items-center justify-center shrink-0">
-      <span className="text-white text-caption font-bold tracking-tighter">BIA</span>
+    <div className="sticky top-28 flex flex-col gap-4 rounded-sm bg-canvas p-4 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+      <p className="eyebrow text-body">Resumen</p>
+      <p className="text-body-md font-medium text-ink">{estado.titulo?.trim() || "Sin título todavía"}</p>
+      <dl className="flex flex-col gap-2">
+        <FilaResumen label="Necesidad" valor={tipo} />
+        <FilaResumen label="Tipo de documento" valor={estado.paso >= 3 ? estado.clasificacion || "—" : "Por clasificar"} />
+        <FilaResumen
+          label="Fecha requerida"
+          valor={estado.fechaRequerida ? formatoFechaLegible(estado.fechaRequerida) : "Por definir"}
+        />
+        <FilaResumen label="Área" valor={estado.area || "—"} />
+        <FilaResumen
+          label="Respuestas"
+          valor={String(Object.keys(estado.assessmentRespuestas ?? {}).length)}
+        />
+      </dl>
+      <div>
+        <div className="flex items-center justify-between text-caption">
+          <span className="text-body">Paso</span>
+          <span className="font-medium text-ink">{paso} de 5</span>
+        </div>
+        <div className="mt-1.5 h-1.5 w-full bg-surface-soft">
+          <div className="h-1.5 bg-primary transition-[width] duration-300" style={{ width: `${(paso / 5) * 100}%` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilaResumen({ label, valor }: { label: string; valor: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-caption text-body">{label}</dt>
+      <dd className="truncate text-right text-caption font-medium text-ink">{valor}</dd>
+    </div>
+  );
+}
+
+function MarcaBia({ onDark = false }: { onDark?: boolean }) {
+  return (
+    <div
+      className={
+        "grid size-7 shrink-0 place-items-center rounded-sm " +
+        (onDark ? "bg-mint text-ink" : "bg-primary text-on-dark")
+      }
+    >
+      <span className="text-caption font-bold tracking-tighter">BIA</span>
     </div>
   );
 }
@@ -444,33 +522,19 @@ function EstadoActual({
   persistenciaOk: boolean;
 }) {
   return (
-    <div className="mt-auto bg-canvas p-4 rounded-sm border border-hairline flex items-center gap-3 ">
-      <div className="w-8 h-8 bg-surface-soft rounded-sm flex items-center justify-center shrink-0">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-body"><path d="M12 8v4l2.5 2.5M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/></svg>
-      </div>
-      <div className="min-w-0">
-        <span className="block text-caption font-semibold text-body uppercase tracking-wider mb-0.5">Estado actual</span>
-        <span
-          className={
-            "text-xs font-medium px-2 py-0.5 rounded inline-block " +
-            (listo ? "text-success bg-surface-soft" : enPaso >= 5 ? "text-ink bg-surface-soft" : "text-ink bg-surface-soft")
-          }
-        >
-          {listo ? "Enviada" : enPaso >= 5 ? "Lista para envío" : persistenciaOk ? "Borrador activo" : "Sin guardar"}
-        </span>
-        {/* Si el navegador no deja guardar, se dice: "Borrador activo" sería mentira. */}
-        <span
-          className={
-            "block text-caption mt-1 " + (persistenciaOk ? "text-body" : "text-critical font-medium")
-          }
-        >
-          {!persistenciaOk
-            ? "Este navegador no nos deja guardar nada. No cierres la pestaña: si se pierde, no hay recuperación."
-            : borradoAt
-              ? `Guardado en este navegador a las ${new Date(borradoAt).toLocaleTimeString("es-HN", { hour: "2-digit", minute: "2-digit" })}.`
-              : "Se guarda solo mientras escribe en este navegador."}
-        </span>
-      </div>
+    <div className="mt-auto rounded-sm bg-surface-dark-soft px-4 py-3">
+      <span className="eyebrow text-on-dark-muted">Estado actual</span>
+      <span className="mt-1.5 block w-fit rounded-xs bg-mint px-2 py-0.5 text-caption font-medium text-ink">
+        {listo ? "Enviada" : enPaso >= 5 ? "Lista para envío" : persistenciaOk ? "Borrador activo" : "Sin guardar"}
+      </span>
+      {/* Si el navegador no deja guardar, se dice: "Borrador activo" sería mentira. */}
+      <p className={"mt-1.5 text-caption " + (persistenciaOk ? "text-on-dark-muted" : "text-critical")}>
+        {!persistenciaOk
+          ? "Este navegador no nos deja guardar nada. No cierre la pestaña: si se pierde, no hay recuperación."
+          : borradoAt
+            ? `Guardado a las ${new Date(borradoAt).toLocaleTimeString("es-HN", { hour: "2-digit", minute: "2-digit" })}.`
+            : "Se guarda solo mientras escribe en este navegador."}
+      </p>
     </div>
   );
 }
@@ -491,16 +555,16 @@ function AccionesBorrador({
       <button
         type="button"
         onClick={onGuardar}
-        className="w-full min-h-[40px] text-xs font-bold text-white bg-primary hover:bg-surface-dark-soft border border-primary rounded-sm py-2.5 px-3 flex items-center justify-center gap-1.5   transition-colors"
+        className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-sm bg-mint px-3 py-2.5 text-caption font-medium text-ink transition-colors hover:opacity-90"
       >
         {borradoAt && persistenciaOk ? (
           <>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 13l4 4L19 7"/></svg>
-            ¡Guardado!
+            <Icon name="check" size={14} />
+            Guardado
           </>
         ) : (
           <>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+            <Icon name="download" size={14} />
             Guardar borrador
           </>
         )}
@@ -508,13 +572,13 @@ function AccionesBorrador({
       <button
         type="button"
         onClick={onCancelar}
-        className="w-full min-h-[40px] text-xs font-semibold text-critical hover:bg-surface-soft bg-canvas border border-[var(--color-text-critical)] rounded-sm py-2.5 px-3 flex items-center justify-center gap-1.5 transition-colors"
+        className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-sm border border-[var(--color-text-critical)] px-3 py-2.5 text-caption font-medium text-on-dark transition-colors hover:bg-surface-dark-soft"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+        <Icon name="close" size={14} />
         Cancelar y descartar
       </button>
       {borradoAt && persistenciaOk ? (
-        <p className="text-center text-caption text-success">Borrador guardado en este navegador.</p>
+        <p className="text-center text-caption text-mint">Borrador guardado en este navegador.</p>
       ) : null}
     </div>
   );
@@ -533,9 +597,9 @@ function BotonBorradorMobile({
     <button
       type="button"
       onClick={onGuardar}
-      className="min-h-[44px] px-3 text-xs font-bold text-white bg-primary rounded-sm"
+      className="mono-label min-h-[44px] rounded-sm bg-primary px-3 text-on-dark"
     >
-      {borradoAt && persistenciaOk ? "¡Guardado!" : "Guardar"}
+      {borradoAt && persistenciaOk ? "Guardado" : "Guardar"}
     </button>
   );
 }
@@ -772,7 +836,7 @@ function PasoClasificacion({
           {clasificandoIA
             ? "Analizando su solicitud…"
             : !sinSugerencia
-              ? <>Esto parece una <span className={"font-semibold " + tipoTextoColor(estado.clasificacion)}>{estado.clasificacion}</span></>
+              ? <>Esto parece una <span className={"font-semibold " + tipoTextoColor()}>{estado.clasificacion}</span></>
               : "Elija el tipo que mejor describa su necesidad"}
         </h2>
         {!sinSugerencia ? (
@@ -823,9 +887,9 @@ function PasoClasificacion({
       <p className="text-sm text-body mb-3 font-medium">¿No le parece correcto? Puede cambiarlo con un clic:</p>
       <div className="space-y-3 mb-6">
         {opts.map((o) => (
-          <label key={o.v} className={"group flex items-start gap-3 p-4 rounded-sm border border-hairline bg-canvas cursor-pointer hover:border-[var(--color-border-strong)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--color-border-strong)] has-[:checked]:ring-1 transition-all  " + (estado.clasificacion === o.v ? tipoCardChecked(o.v) : "")}>
+          <label key={o.v} className={"group flex items-start gap-3 p-4 rounded-sm border border-hairline bg-canvas cursor-pointer hover:border-[var(--color-border-strong)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--color-border-strong)] has-[:checked]:ring-1 transition-all  " + (estado.clasificacion === o.v ? tipoCardChecked() : "")}>
             <input type="radio" name="classif" checked={estado.clasificacion === o.v} onChange={() => { set("clasificacion", o.v); set("clasificacionCorregida", true); }} className="sr-only" />
-            <div className={"mt-0.5 w-4 h-4 shrink-0 rounded-sm border flex items-center justify-center transition-colors " + (estado.clasificacion === o.v ? tipoRadioOn(o.v) : "border-hairline")}>
+            <div className={"mt-0.5 w-4 h-4 shrink-0 rounded-sm border flex items-center justify-center transition-colors " + (estado.clasificacion === o.v ? tipoRadioOn() : "border-hairline")}>
               <div className="w-1.5 h-1.5 bg-canvas rounded-sm" style={{ opacity: estado.clasificacion === o.v ? 1 : 0 }} />
             </div>
             <div>
@@ -1197,7 +1261,7 @@ function PasoDocumento({
               <span className="block text-caption text-body mt-0.5">La referencia definitiva se asigna al enviar</span>
             </div>
           </div>
-          <span className={tipoBadgeClases(estado.clasificacion)}>
+          <span className={tipoBadgeClases()}>
             {estado.clasificacion}
           </span>
         </div>
@@ -1236,7 +1300,7 @@ function PasoDocumento({
               <span className="block text-caption text-body uppercase tracking-wider mb-0.5 font-semibold">Clasificación Asignada</span>
               <span className="text-caption font-medium text-ink">
                 <span className="inline-flex items-center gap-1 font-semibold">
-                  <span className={tipoDotClases(estado.clasificacion)} />
+                  <span className={tipoDotClases()} />
                   {estado.clasificacion}
                 </span>{" "}
                 — {tipoNombreCompleto(estado.clasificacion)}
@@ -1374,82 +1438,97 @@ function ProgresoEnvio({ fase }: { fase: FaseEnvio }) {
 
 /* ---------- STEP 6: Confirmación ---------- */
 function PasoConfirmacion({ estado, referencia }: { estado: WizardState; referencia?: string }) {
-  // El PDF se abre con un <a href>, o sea sin sesión: el correo identifica al solicitante
-  // dueño, igual que en /mis-solicitudes?email=. Sin el, el endpoint responde 401.
   const docUrl = estado.solicitudId
     ? `/api/solicitudes/${estado.solicitudId}/documento?email=${encodeURIComponent(estado.email)}`
     : null;
+  const pasos = [
+    ["Compras cotiza", "El equipo pide ofertas a los proveedores de la categoría."],
+    ["Recibe la comparativa", "Le llega un correo con el enlace para comparar."],
+    ["Usted decide", "Elige la opción y Compras cierra la solicitud."],
+  ];
   return (
-    <div className="flex flex-col items-center justify-center min-h-full w-full text-center py-6 step-enter">
-      <div className="relative mb-6">
-        <div className="absolute inset-0 bg-mint blur-xl opacity-40 rounded-sm" />
-        <div className="relative w-20 h-20 bg-green-50 border border-green-100 text-green-500 rounded-sm flex items-center justify-center ">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12l5 5L20 6"/></svg>
+    <div className="flex flex-col gap-6">
+      <section className="on-dark relative isolate overflow-hidden rounded-sm bg-canvas-dark px-6 py-10 text-center">
+        <Ribbon className="pointer-events-none absolute inset-y-0 right-0 w-2/3 opacity-30" />
+        <div className="relative z-10 flex flex-col items-center">
+          <span className="grid size-14 place-items-center rounded-sm bg-mint text-ink">
+            <Icon name="check" size={26} />
+          </span>
+          <h1 className="mt-5 text-display-xl text-on-dark">Su solicitud fue enviada</h1>
+          {referencia ? (
+            <p className="mono-label mt-3 rounded-xs bg-surface-dark-soft px-3 py-1.5 text-on-dark">{referencia}</p>
+          ) : null}
+          <p className="mt-3 max-w-md text-caption text-on-dark-muted">
+            Le avisaremos a <span className="font-medium text-on-dark break-all">{estado.email || "su correo"}</span> en
+            cuanto haya una comparativa lista para que decida.
+          </p>
         </div>
-      </div>
-      <h1 className="text-3xl font-medium tracking-tight mb-2 text-ink">Su solicitud fue enviada</h1>
-      {referencia ? (
-        <div className="mb-3 inline-flex items-center gap-2 bg-primary text-white text-sm font-mono font-semibold px-4 py-2 rounded-sm">
-          Referencia: {referencia}
-        </div>
-      ) : null}
-      <p className="text-sm text-body mb-6 max-w-sm leading-relaxed">
-        Todo listo. Le avisaremos a <span className="font-semibold text-ink break-all">{estado.email || "su correo"}</span> en cuanto haya una comparativa lista para que decida.
-      </p>
+      </section>
+
+      <section className="rounded-sm bg-canvas p-5 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+        <p className="eyebrow mb-4 text-body">Qué sigue</p>
+        <ol className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {pasos.map(([titulo, texto], i) => (
+            <li key={titulo} className="flex gap-3">
+              <span className="mono-label grid size-6 shrink-0 place-items-center rounded-xs bg-mint text-ink">
+                {i + 1}
+              </span>
+              <span>
+                <span className="block text-caption font-medium text-ink">{titulo}</span>
+                <span className="block text-caption text-body">{texto}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       {docUrl ? (
-        <div className="mb-6 rounded-sm border border-hairline bg-canvas  p-6 w-full max-w-md mx-auto text-left">
-          <div className="flex items-center justify-between mb-3 gap-2">
-            <span className="text-caption font-semibold uppercase tracking-wider text-body">Documento generado</span>
-            <span className={tipoBadgeClases(estado.clasificacion)}>{estado.clasificacion}</span>
-          </div>
-          <div className="text-sm font-semibold text-ink mb-1 break-words">{estado.titulo || "Solicitud"}</div>
-          <div className="flex items-center gap-2 text-xs text-body mb-5 flex-wrap">
-            <span className="inline-flex items-center gap-1.5">
-              <span className={tipoDotClases(estado.clasificacion)} />{tipoNombreCompleto(estado.clasificacion)}
-            </span>
-            <span className="text-body">•</span>
-            <span className="break-all">{estado.email || "—"}</span>
+        <section className="flex flex-col gap-3 rounded-sm bg-canvas p-5 shadow-[inset_0_0_0_1px_var(--color-border-hairline)] sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1">
+            <span className="eyebrow text-body">Documento generado</span>
+            <p className="mt-1 truncate text-body-md font-medium text-ink">{estado.titulo || "Solicitud"}</p>
+            <p className="text-caption text-body">
+              {estado.clasificacion} · {estado.email || "—"}
+            </p>
           </div>
           <div className="flex gap-2">
             <a
               href={docUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-1.5 bg-primary text-white text-xs px-4 min-h-[44px] rounded-sm font-medium hover:bg-surface-dark-soft transition-all"
+              className="mono-label inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm bg-primary px-4 text-on-dark transition-colors hover:bg-surface-dark-soft"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/></svg>
+              <Icon name="file" size={14} />
               Ver PDF
             </a>
             <a
               href={docUrl}
               download={`${estado.solicitudId}.pdf`}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 bg-canvas text-ink text-xs px-4 min-h-[44px] rounded-sm font-medium hover:bg-surface-soft transition-all border border-hairline"
+              className="mono-label inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm px-4 text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] transition-colors hover:bg-surface-soft"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <Icon name="download" size={14} />
               Descargar
             </a>
           </div>
-        </div>
+        </section>
       ) : null}
 
-      <div className="bg-canvas border border-hairline  rounded-sm p-4 flex items-center gap-4 w-full max-w-xs text-left mb-6">
-        <div className="w-12 h-12 bg-surface-soft rounded-sm flex items-center justify-center shrink-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-caption text-body">Comprador asignado: <span className="font-medium text-ink">Equipo Compras BIA</span></p>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={estado.email ? `/mis-solicitudes?email=${encodeURIComponent(estado.email)}` : "/mis-solicitudes"}
+            className="mono-label inline-flex min-h-[44px] items-center rounded-sm bg-primary px-4 text-on-dark transition-colors hover:bg-surface-dark-soft"
+          >
+            Ver mis solicitudes
+          </a>
+          <a
+            href="/guias/manual-solicitante"
+            className="mono-label inline-flex min-h-[44px] items-center rounded-sm px-4 text-ink shadow-[inset_0_0_0_1px_var(--color-border-hairline)] transition-colors hover:bg-surface-soft"
+          >
+            Guía
+          </a>
         </div>
-        <div>
-          <span className="block text-caption text-body uppercase tracking-wider font-semibold mb-0.5">Comprador asignado</span>
-          <span className="text-sm font-medium text-ink">Equipo Compras BIA</span>
-        </div>
-      </div>
-      <div className="flex flex-col items-center gap-1">
-        <Link href={estado.email ? `/mis-solicitudes?email=${encodeURIComponent(estado.email)}` : "/mis-solicitudes"} className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 text-sm font-medium text-body hover:text-ink transition-colors">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M10 5 5 12l5 7"/></svg>
-          Ver mis solicitudes
-        </Link>
-        <Link href="/guias/manual-solicitante" className="inline-flex items-center justify-center min-h-[44px] px-4 text-sm font-medium text-body hover:text-ink transition-colors">
-          Guía rápida de uso
-        </Link>
       </div>
     </div>
   );
@@ -1469,37 +1548,32 @@ function hoyISO(): string {
 }
 
 // Badge de tipo de solicitud: RFQ = celeste, RFI = naranja, RFP = amarillo.
-function tipoBadgeClases(tipo: string): string {
-  if (tipo === "RFI") return "px-2.5 py-1 rounded text-caption font-bold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200";
-  if (tipo === "RFP") return "px-2.5 py-1 rounded text-caption font-bold uppercase tracking-wider bg-surface-soft text-ink border border-hairline";
-  return "px-2.5 py-1 rounded text-caption font-bold uppercase tracking-wider bg-surface-soft text-ink border border-hairline";
+function tipoBadgeClases(): string {
+  return "px-2.5 py-1 rounded-xs text-caption font-bold uppercase tracking-wider bg-surface-soft text-ink border border-hairline";
 }
 
-function tipoDotClases(tipo: string): string {
-  if (tipo === "RFI") return "w-2 h-2 rounded-sm bg-orange-400 inline-block";
-  if (tipo === "RFP") return "w-2 h-2 rounded-sm bg-periwinkle inline-block";
+function tipoDotClases(): string {
   return "w-2 h-2 rounded-sm bg-primary inline-block";
 }
 
 // Colores coherentes por tipo para los radio options del PasoClasificacion.
-type ClasesTipo = { card: string; esquema: string; accent: "sky" | "orange" | "amber" };
-function tipoVisual(tipo: string): ClasesTipo {
-  if (tipo === "RFI") return { card: "border-orange-400 ring-orange-400/30 bg-orange-50/60", esquema: "border-orange-500 bg-orange-500", accent: "orange" };
-  if (tipo === "RFP") return { card: "border-[var(--color-border-strong)] ring-[var(--color-border-strong)] bg-surface-soft", esquema: "border-[var(--color-border-strong)] bg-primary", accent: "amber" };
-  return { card: "border-[var(--color-border-strong)] ring-[var(--color-border-strong)] bg-surface-soft", esquema: "border-[var(--color-border-strong)] bg-primary", accent: "sky" };
+type ClasesTipo = { card: string; esquema: string };
+function tipoVisual(): ClasesTipo {
+  return {
+    card: "border-[var(--color-border-strong)] ring-[var(--color-border-strong)] bg-surface-soft",
+    esquema: "border-[var(--color-border-strong)] bg-primary",
+  };
 }
 
-function tipoCardChecked(tipo: string): string {
-  return tipoVisual(tipo).card;
+function tipoCardChecked(): string {
+  return tipoVisual().card;
 }
 
-function tipoRadioOn(tipo: string): string {
-  return tipoVisual(tipo).esquema;
+function tipoRadioOn(): string {
+  return tipoVisual().esquema;
 }
 
-function tipoTextoColor(tipo: string): string {
-  if (tipo === "RFI") return "text-orange-600";
-  if (tipo === "RFP") return "text-body";
+function tipoTextoColor(): string {
   return "text-ink";
 }
 

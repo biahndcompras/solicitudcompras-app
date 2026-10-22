@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { Badge, ButtonLink, Panel, type BadgeTone } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/Icon";
+import { SummaryStrip } from "@/components/ui/forms";
 import { TrackerEtapas } from "@/components/TrackerEtapas";
 import { CTADecision } from "@/components/solicitante/CTADecision";
 import { ResponderPreguntas } from "@/components/solicitante/ResponderPreguntas";
@@ -60,6 +61,41 @@ export default async function DetalleSolicitudSolicitantePage({
           Volver
         </ButtonLink>
       </div>
+
+      <SummaryStrip
+        items={[
+          {
+            label: "Estado",
+            value: <Badge tone={toneDe(solicitud.estado)}>{estadoLegible(solicitud.estado)}</Badge>,
+            sub: solicitud.fechaCierre ? "Ciclo cerrado" : "Ciclo en curso",
+          },
+          {
+            label: "Tiempo",
+            value: duracionAtencion({
+              fechaCreacion: solicitud.fechaCreacion,
+              fechaCierre: solicitud.fechaCierre,
+            }).texto,
+            sub: "desde la creación",
+          },
+          {
+            label: "Entrega",
+            value: solicitud.fechaRequerida ? formatoFechaLegible(solicitud.fechaRequerida) : "—",
+            sub: retraso !== null ? `Retrasada ${retraso} d` : "Dentro de plazo",
+            tone: retraso !== null ? "bad" : undefined,
+          },
+          {
+            label: "Categoría",
+            value: nombreCategoria(solicitud.categoria),
+            sub: solicitud.subtipo
+              ? solicitud.subtipo === "producto"
+                ? "Producto"
+                : solicitud.subtipo === "servicio"
+                  ? "Servicio"
+                  : "Mixto"
+              : "Por definir",
+          },
+        ]}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_388px]">
         <div className="flex min-w-0 flex-col gap-4">

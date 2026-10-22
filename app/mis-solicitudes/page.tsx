@@ -8,6 +8,8 @@ import { TrackerEtapas } from "@/components/TrackerEtapas";
 import { Badge, Button, ButtonLink, type BadgeTone } from "@/components/ui/primitives";
 import { TextField } from "@/components/ui/forms";
 import { Icon } from "@/components/ui/Icon";
+import { SummaryStrip } from "@/components/ui/forms";
+import { Ribbon } from "@/components/brand/Ribbon";
 import { duracionAtencion, formatoFechaLegible } from "@/lib/domain/semaforo";
 import { api, type SalidaCorta } from "@/lib/api-client";
 import {
@@ -77,6 +79,15 @@ function MisSolicitudesInner() {
     await consultar(email);
   }
 
+  const enCurso = resultados.filter((s) =>
+    ["ENVIADA_A_COMPRAS", "EN_COTIZACION", "COMPARATIVA_LISTA"].includes(s.estado)
+  ).length;
+  const esperando = resultados.filter((s) => s.estado === "ENVIADA_A_SOLICITANTE").length;
+  const cerradas = resultados.filter((s) =>
+    ["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"].includes(s.estado)
+  ).length;
+  const conDecision = resultados.find((s) => tokensDecision[s.id]);
+
   return (
     <PublicShell>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
@@ -115,9 +126,59 @@ function MisSolicitudesInner() {
         </p>
       </div>
 
+      {buscado && !cargando && !error && resultados.length > 0 ? (
+        <div className="mb-4 flex flex-col gap-4">
+          <SummaryStrip
+            items={[
+              { label: "Solicitudes", value: String(resultados.length), sub: "en su historial" },
+              { label: "En curso", value: String(enCurso), sub: "Compras trabajando" },
+              {
+                label: "Esperando decisión",
+                value: String(esperando),
+                sub: esperando ? "requiere su acción" : "nada pendiente",
+                tone: esperando ? "bad" : undefined,
+              },
+              { label: "Cerradas", value: String(cerradas), sub: "archivo" },
+            ]}
+          />
+
+          {esperando > 0 ? (
+            <div className="on-dark relative isolate overflow-hidden rounded-sm bg-canvas-dark px-5 py-4">
+              <Ribbon className="pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-30" />
+              <div className="relative z-10 flex flex-wrap items-center gap-3">
+                <span className="rb-pulse relative size-2 shrink-0 bg-mint" aria-hidden />
+                <p className="min-w-0 flex-1 text-body-md text-on-dark">
+                  {esperando} {esperando === 1 ? "solicitud espera" : "solicitudes esperan"} su decisión.
+                </p>
+                {conDecision ? (
+                  <ButtonLink
+                    href={`/comparativa/${encodeURIComponent(tokensDecision[conDecision.id].token)}`}
+                    variant="mint"
+                    size="sm"
+                  >
+                    Decidir ahora
+                  </ButtonLink>
+                ) : (
+                  <span className="text-caption text-on-dark-muted">Abra el enlace que le envió Compras.</span>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       {buscado ? (
         cargando ? (
-          <p className="text-caption text-body">Consultando…</p>
+          <div className="flex flex-col gap-4" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="animate-pulse rounded-sm bg-canvas p-5 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]">
+                <div className="h-3 w-28 bg-surface-soft" />
+                <div className="mt-3 h-4 w-2/3 bg-surface-soft" />
+                <div className="mt-4 h-1.5 w-full bg-surface-soft" />
+                <div className="mt-4 h-3 w-1/3 bg-surface-soft" />
+              </div>
+            ))}
+          </div>
         ) : error ? (
           <p role="alert" className="text-caption text-critical">
             Ocurrió un problema al consultar: {error}
@@ -140,7 +201,7 @@ function MisSolicitudesInner() {
                 // zona clicable con after:inset-0.
                 <article
                   key={s.id}
-                  className="relative rounded-sm bg-canvas p-5 shadow-[inset_0_0_0_1px_var(--color-border-hairline)] transition-shadow hover:shadow-[inset_0_0_0_1px_#000]"
+                  className={"relative rounded-sm bg-canvas p-5 transition-colors hover:bg-surface-soft/30 " + acentoEstado(s.estado)}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -201,6 +262,25 @@ function MisSolicitudesInner() {
       )}
     </PublicShell>
   );
+}
+
+const ACENTO: Record<string, string> = {
+  ENVIADA_A_SOLICITANTE:
+    "shadow-[inset_3px_0_0_var(--color-bg-accent-mint),inset_0_0_0_1px_var(--color-border-hairline)]",
+  EN_COTIZACION:
+    "shadow-[inset_3px_0_0_var(--color-bg-accent-periwinkle),inset_0_0_0_1px_var(--color-border-hairline)]",
+  COMPARATIVA_LISTA:
+    "shadow-[inset_3px_0_0_var(--color-bg-accent-periwinkle),inset_0_0_0_1px_var(--color-border-hairline)]",
+  CERRADA_CON_DECISION:
+    "shadow-[inset_3px_0_0_var(--color-text-success),inset_0_0_0_1px_var(--color-border-hairline)]",
+  CERRADA_SIN_DECISION:
+    "shadow-[inset_3px_0_0_var(--color-text-body),inset_0_0_0_1px_var(--color-border-hairline)]",
+  CANCELADA:
+    "shadow-[inset_3px_0_0_var(--color-bg-critical),inset_0_0_0_1px_var(--color-border-hairline)]",
+};
+
+function acentoEstado(estado: string): string {
+  return ACENTO[estado] ?? "shadow-[inset_3px_0_0_var(--color-bg-primary),inset_0_0_0_1px_var(--color-border-hairline)]";
 }
 
 function diasDeRetraso(s: { fechaRequerida?: string; fechaCierre?: string }): number | null {

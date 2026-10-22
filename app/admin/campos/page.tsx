@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AdminShell } from "@/components/ui-ext/AdminShell";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Badge, Button, IconButton, Panel, cx } from "@/components/ui/primitives";
+import { Checkbox, Modal, SelectField, TextField } from "@/components/ui/forms";
 import type { CampoCatalogo } from "@/lib/domain/types";
-import { cn } from "@/lib/design/cn";
 
 const VACIO = { campoKey: "", label: "", tipoDato: "texto", origen: "assessment", obligatorio: false, orden: 100 };
 
@@ -241,15 +242,23 @@ export default function AdminCamposPage() {
       setPorEliminar(null);
     }
   }
+  const activos = campos.filter((c) => c.activo).length;
 
   return (
-    <AdminShell title="Catálogo de campos" subtitle="Gestión de campos que el sistema pide y que la IA usa para completar cotizaciones.">
-      {mensaje && (
+    <>
+      <PageHeader
+        title="Campos"
+        subtitle="Campos que el sistema pide y que la IA usa para completar cotizaciones."
+      />
+
+      {mensaje ? (
         <div
           role="status"
-          className={cn(
-            "mb-4 text-[13px] px-3 py-2.5 rounded-lg border flex items-center justify-between gap-3",
-            mensaje.tipo === "ok" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-rose-50 text-rose-800 border-rose-200"
+          className={cx(
+            "flex items-center justify-between gap-3 rounded-sm px-4 py-3 text-caption",
+            mensaje.tipo === "ok"
+              ? "text-success shadow-[inset_0_0_0_1px_var(--color-text-success)]"
+              : "text-critical shadow-[inset_0_0_0_1px_var(--color-text-critical)]"
           )}
         >
           <span>{mensaje.texto}</span>
@@ -257,186 +266,146 @@ export default function AdminCamposPage() {
             ✕
           </button>
         </div>
-      )}
+      ) : null}
 
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="text-[13px] text-slate-600 tabular-nums">
-          {campos.filter((c) => c.activo).length} campos activos · {campos.length} en total
-        </div>
-        <button
-          type="button"
-          onClick={() => (mostrandoForm ? cerrarForm() : abrirNuevo())}
-          className="bg-sky-600 text-white text-[12px] font-semibold px-3 py-2 rounded-lg hover:bg-sky-700 transition-colors"
+      {mostrandoForm ? (
+        <Panel
+          title={editando ? `Editar campo «${editando.label}»` : "Nuevo campo del catálogo"}
+          subtitle="La clave identifica el campo; la etiqueta es lo que ve el usuario."
         >
-          {mostrandoForm ? "Cancelar" : "Nuevo campo"}
-        </button>
-      </div>
-
-      {mostrandoForm && (
-        <div className="bg-white rounded-lg border border-slate-200 p-5 mb-5">
-          <div className="text-[14px] font-semibold text-slate-900 mb-4">
-            {editando ? `Editar campo «${editando.label}»` : "Nuevo campo del catálogo"}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <label className="block">
-              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Clave interna</span>
-              <input
-                value={form.campoKey}
-                onChange={(e) => setForm({ ...form, campoKey: e.target.value })}
-                placeholder="ej. dimensiones"
-                disabled={editando !== null}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-50 disabled:text-slate-500"
-              />
-              {editando && (
-                <span className="block text-[11px] text-slate-500 mt-1">La clave no se puede cambiar: identifica el campo.</span>
-              )}
-            </label>
-            <label className="block">
-              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Etiqueta (visible al usuario)</span>
-              <input
-                value={form.label}
-                onChange={(e) => setForm({ ...form, label: e.target.value })}
-                placeholder="ej. Dimensiones"
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
-              />
-            </label>
-            <label className="block">
-              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Tipo de dato</span>
-              <select
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <TextField
+              label="Clave interna"
+              value={form.campoKey}
+              onChange={(e) => setForm({ ...form, campoKey: e.target.value })}
+              placeholder="ej. dimensiones"
+              disabled={editando !== null}
+              helper={editando ? "La clave no se puede cambiar: identifica el campo." : undefined}
+            />
+            <TextField
+              label="Etiqueta (visible al usuario)"
+              value={form.label}
+              onChange={(e) => setForm({ ...form, label: e.target.value })}
+              placeholder="ej. Dimensiones"
+            />
+            <div className="flex flex-col gap-1.5">
+              <span className="text-caption font-medium text-ink">Tipo de dato</span>
+              <SelectField
+                label="Tipo de dato"
                 value={form.tipoDato}
-                onChange={(e) => setForm({ ...form, tipoDato: e.target.value })}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
-              >
-                {["texto", "texto_largo", "numero", "fecha", "seleccion", "seleccion_multiple", "booleano", "archivo", "moneda"].map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Origen</span>
-              <select
-                value={form.origen}
-                onChange={(e) => setForm({ ...form, origen: e.target.value })}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
-              >
-                <option value="assessment">Assessment (asistente)</option>
-                <option value="plantilla">Plantilla (formulario base)</option>
-              </select>
-            </label>
-            <label className="block">
-              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Orden</span>
-              <input
-                type="number"
-                value={form.orden}
-                onChange={(e) => setForm({ ...form, orden: Number(e.target.value) })}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
+                onChange={(v) => setForm({ ...form, tipoDato: v })}
+                options={["texto", "texto_largo", "numero", "fecha", "seleccion", "seleccion_multiple", "booleano", "archivo", "moneda"]}
               />
-            </label>
-            <label className="flex items-center gap-2 pt-6">
-              <input type="checkbox" checked={form.obligatorio} onChange={(e) => setForm({ ...form, obligatorio: e.target.checked })} className="w-4 h-4" />
-              <span className="text-[13px] text-slate-700">Obligatorio</span>
-            </label>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-caption font-medium text-ink">Origen</span>
+              <SelectField
+                label="Origen"
+                value={form.origen === "plantilla" ? "Plantilla (formulario base)" : "Assessment (asistente)"}
+                onChange={(v) => setForm({ ...form, origen: v.startsWith("Plantilla") ? "plantilla" : "assessment" })}
+                options={["Assessment (asistente)", "Plantilla (formulario base)"]}
+              />
+            </div>
+            <TextField
+              label="Orden"
+              type="number"
+              value={form.orden}
+              onChange={(e) => setForm({ ...form, orden: Number(e.target.value) })}
+            />
+            <div className="flex items-center pt-6">
+              <Checkbox
+                label="Obligatorio"
+                checked={form.obligatorio}
+                onChange={(v) => setForm({ ...form, obligatorio: v })}
+              />
+            </div>
           </div>
-          <div className="mt-5 flex flex-wrap justify-end gap-2">
-            <button type="button" onClick={() => cerrarForm()} className="text-[13px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={() => cerrarForm()}>
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               onClick={editando ? guardarEdicion : crearCampo}
               disabled={!form.label.trim() || (!editando && !form.campoKey.trim()) || guardando}
-              className="bg-slate-900 text-white text-[13px] px-4 py-2 rounded-lg font-semibold hover:bg-slate-800 disabled:opacity-40 transition-colors"
             >
               {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Guardar campo"}
-            </button>
+            </Button>
           </div>
-        </div>
-      )}
+        </Panel>
+      ) : null}
 
-      <div className="bg-white rounded-lg border border-slate-200">
+      <Panel
+        title="Catálogo"
+        subtitle={`${activos} campos activos · ${campos.length} en total`}
+        action={
+          !mostrandoForm ? (
+            <Button size="sm" onClick={abrirNuevo}>
+              Nuevo campo
+            </Button>
+          ) : null
+        }
+      >
         {cargando ? (
-          <div className="px-4 py-10 text-[13px] text-slate-500">Cargando campos…</div>
+          <p className="text-caption text-body">Cargando campos…</p>
         ) : cargandoError ? (
-          <div className="px-4 py-10 text-center">
-            <p className="text-[13px] font-semibold text-slate-700">No se pudo cargar el catálogo</p>
-            <p className="text-[12px] text-slate-500 mt-1">Revise la conexión e inténtelo de nuevo.</p>
-            <button type="button" onClick={recargar} className="mt-3 text-[12px] font-semibold text-sky-700 hover:text-sky-900">
+          <div className="flex flex-col items-center gap-2 py-10 text-center">
+            <p className="text-body-lg text-ink">No se pudo cargar el catálogo</p>
+            <p className="text-caption text-body">Revise la conexión e inténtelo de nuevo.</p>
+            <Button variant="outline" size="sm" onClick={recargar}>
               Reintentar
-            </button>
+            </Button>
           </div>
         ) : campos.length === 0 ? (
-          <div className="px-4 py-10 text-center">
-            <p className="text-[13px] font-semibold text-slate-700">Catálogo vacío</p>
-            <p className="text-[12px] text-slate-500 mt-1">Crea el primer campo para que el assessment pueda completarlo.</p>
+          <div className="flex flex-col items-center gap-2 py-10 text-center">
+            <p className="text-body-lg text-ink">Catálogo vacío</p>
+            <p className="text-caption text-body">Cree el primer campo para que el assessment pueda completarlo.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50">
-                <tr className="text-[11px] uppercase tracking-wide text-slate-500">
-                  <th scope="col" className="px-4 py-2.5 font-semibold">Clave</th>
-                  <th scope="col" className="px-4 py-2.5 font-semibold">Etiqueta</th>
-                  <th scope="col" className="px-4 py-2.5 font-semibold">Tipo</th>
-                  <th scope="col" className="px-4 py-2.5 font-semibold">Origen</th>
-                  <th scope="col" className="px-4 py-2.5 font-semibold">Orden</th>
-                  <th scope="col" className="px-4 py-2.5 font-semibold">Estado</th>
-                  <th scope="col" className="px-4 py-2.5 font-semibold text-right">Acciones</th>
+          <div className="-mx-6 overflow-x-auto px-6">
+            <table className="w-full min-w-[820px] border-collapse">
+              <thead>
+                <tr className="bg-surface-soft text-left">
+                  {["Clave", "Etiqueta", "Tipo", "Origen", "Orden", "Estado"].map((h) => (
+                    <th key={h} scope="col" className="eyebrow px-3 py-3 font-medium text-ink">
+                      {h}
+                    </th>
+                  ))}
+                  <th scope="col" className="eyebrow w-[160px] px-3 py-3 text-right font-medium text-ink">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-[12.5px]">
+              <tbody>
                 {campos.map((c) => (
-                  <tr key={c.campoKey} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 font-mono text-[12px] text-slate-700">{c.campoKey}</td>
-                    <td className="px-4 py-2.5 font-medium text-slate-900">{c.label}</td>
-                    <td className="px-4 py-2.5 text-slate-600">{c.tipoDato}</td>
-                    <td className="px-4 py-2.5">
-                      {/* Texto del mismo tono que el fondo: gris sobre color washes out. */}
-                      <span
-                        className={cn(
-                          "px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide",
-                          c.origen === "assessment" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-700"
-                        )}
-                      >
-                        {c.origen}
-                      </span>
+                  <tr key={c.campoKey} className="border-b border-hairline hover:bg-surface-soft/60">
+                    <td className="px-3 py-3">
+                      <span className="mono-label text-ink">{c.campoKey}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-slate-500 tabular-nums">{c.orden}</td>
-                    <td className="px-4 py-2.5">
-                      <span
-                        className={cn(
-                          "px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase",
-                          c.activo ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
-                        )}
-                      >
-                        {c.activo ? "Activo" : "Inactivo"}
-                      </span>
+                    <td className="px-3 py-3 text-body-md text-ink">{c.label}</td>
+                    <td className="px-3 py-3 text-caption text-body">{c.tipoDato}</td>
+                    <td className="px-3 py-3">
+                      <Badge tone={c.origen === "assessment" ? "periwinkle" : "neutral"}>{c.origen}</Badge>
                     </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <span className="inline-flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => abrirEditar(c)}
-                          disabled={ocupado === c.campoKey}
-                          className="text-[12px] font-semibold text-slate-600 hover:text-sky-700 disabled:opacity-50 transition-colors"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
+                    <td className="px-3 py-3 text-caption text-body tabular-nums">{c.orden}</td>
+                    <td className="px-3 py-3">
+                      <Badge tone={c.activo ? "success" : "neutral"}>{c.activo ? "Activo" : "Inactivo"}</Badge>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <span className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
+                        <IconButton icon="edit" label="Editar" onClick={() => abrirEditar(c)} disabled={ocupado === c.campoKey} />
+                        <IconButton
+                          icon="power"
+                          label={ocupado === c.campoKey ? "Aplicando" : c.activo ? "Desactivar" : "Activar"}
                           onClick={() => pedirToggle(c)}
                           disabled={ocupado === c.campoKey}
-                          className="text-[12px] font-semibold text-slate-600 hover:text-sky-700 disabled:opacity-50 transition-colors"
-                        >
-                          {ocupado === c.campoKey ? "…" : c.activo ? "Desactivar" : "Activar"}
-                        </button>
-                        <button
-                          type="button"
+                        />
+                        <IconButton
+                          icon="trash"
+                          label="Eliminar"
                           onClick={() => pedirEliminar(c)}
                           disabled={ocupado === c.campoKey}
-                          className="text-[12px] font-semibold text-rose-600 hover:text-rose-800 disabled:opacity-50 transition-colors"
-                        >
-                          Eliminar
-                        </button>
+                          className="text-critical"
+                        />
                       </span>
                     </td>
                   </tr>
@@ -445,75 +414,57 @@ export default function AdminCamposPage() {
             </table>
           </div>
         )}
-      </div>
+      </Panel>
 
-      {pendiente && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40">
-          <div role="dialog" aria-modal="true" aria-labelledby="conf-titulo" className="w-full max-w-md bg-white rounded-lg border border-slate-200 p-5 shadow-xl">
-            <h2 id="conf-titulo" className="text-[15px] font-semibold text-slate-900">
-              {pendiente.activo ? "Desactivar" : "Activar"} «{pendiente.label}»
-            </h2>
-            <p className="text-[13px] text-slate-600 mt-2">
-              {pendiente.activo
-                ? `El assessment dejará de pedir «${pendiente.label}» en las solicitudes nuevas. Esta acción afecta a todo el equipo y no se puede deshacer desde aquí.`
-                : `El assessment volverá a pedir «${pendiente.label}» en las solicitudes nuevas.`}
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setPendiente(null)}
-                disabled={ocupado !== null}
-                className="text-[13px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={confirmarToggle}
-                disabled={ocupado !== null}
-                className={cn(
-                  "text-[13px] px-4 py-2 rounded-lg font-semibold text-white disabled:opacity-60 transition-colors",
-                  pendiente.activo ? "bg-rose-600 hover:bg-rose-700" : "bg-emerald-600 hover:bg-emerald-700"
-                )}
-              >
-                {ocupado ? "Aplicando…" : pendiente.activo ? "Desactivar campo" : "Activar campo"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={pendiente !== null}
+        onClose={() => setPendiente(null)}
+        title={`${pendiente?.activo ? "Desactivar" : "Activar"} «${pendiente?.label ?? ""}»`}
+        description={
+          pendiente?.activo
+            ? `El assessment dejará de pedir «${pendiente?.label ?? ""}» en las solicitudes nuevas. Esta acción afecta a todo el equipo y no se puede deshacer desde aquí.`
+            : `El assessment volverá a pedir «${pendiente?.label ?? ""}» en las solicitudes nuevas.`
+        }
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setPendiente(null)} disabled={ocupado !== null}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmarToggle}
+              disabled={ocupado !== null}
+              className={pendiente?.activo ? "bg-[var(--color-bg-critical)] text-on-dark hover:bg-[var(--color-bg-critical)]" : undefined}
+            >
+              {ocupado ? "Aplicando…" : pendiente?.activo ? "Desactivar campo" : "Activar campo"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-caption text-body">El cambio aplica a las solicitudes nuevas.</p>
+      </Modal>
 
-      {porEliminar && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40">
-          <div role="dialog" aria-modal="true" aria-labelledby="del-titulo" className="w-full max-w-md bg-white rounded-lg border border-slate-200 p-5 shadow-xl">
-            <h2 id="del-titulo" className="text-[15px] font-semibold text-slate-900">
-              ¿Eliminar «{porEliminar.label}»?
-            </h2>
-            <p className="text-[13px] text-slate-600 mt-2">
-              El campo se desactivará y dejará de pedirse en las solicitudes nuevas. No se borra por
-              completo para no dejar sin referencia las respuestas que ya se guardaron con él.
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setPorEliminar(null)}
-                disabled={ocupado !== null}
-                className="text-[13px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={confirmarEliminar}
-                disabled={ocupado !== null}
-                className="text-[13px] px-4 py-2 rounded-lg font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-60 transition-colors"
-              >
-                {ocupado ? "Eliminando…" : "Eliminar campo"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </AdminShell>
+      <Modal
+        open={porEliminar !== null}
+        onClose={() => setPorEliminar(null)}
+        title={`¿Eliminar «${porEliminar?.label ?? ""}»?`}
+        description="El campo se desactivará y dejará de pedirse en las solicitudes nuevas. No se borra por completo para no dejar sin referencia las respuestas que ya se guardaron con él."
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setPorEliminar(null)} disabled={ocupado !== null}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmarEliminar}
+              disabled={ocupado !== null}
+              className="bg-[var(--color-bg-critical)] text-on-dark hover:bg-[var(--color-bg-critical)]"
+            >
+              {ocupado ? "Eliminando…" : "Eliminar campo"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-caption text-body">Esta acción queda registrada en el catálogo.</p>
+      </Modal>
+    </>
   );
 }

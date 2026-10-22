@@ -1,4 +1,5 @@
-import { AdminShell } from "@/components/ui-ext/AdminShell";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Avatar } from "@/components/ui/primitives";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 import { CoordinadoresManager } from "./CoordinadoresManager";
 
@@ -7,14 +8,6 @@ export const dynamic = "force-dynamic";
 const repo = new PostgresRepositorio();
 
 const ESTADOS_TERMINALES = new Set(["CERRADA_CON_DECISION", "CERRADA_SIN_DECISION", "CANCELADA"]);
-const COLORES_AVATAR = [
-  "bg-sky-100 border-sky-200 text-sky-700",
-  "bg-emerald-100 border-emerald-200 text-emerald-700",
-  "bg-purple-100 border-purple-200 text-purple-700",
-  "bg-amber-100 border-amber-200 text-amber-700",
-  "bg-rose-100 border-rose-200 text-rose-700",
-];
-const DOTS = ["bg-emerald-400", "bg-sky-400", "bg-amber-400"];
 
 export default async function AdminCoordinadoresPage() {
   // Se traen también los inactivos: la pantalla de gestión necesita poder reactivarlos.
@@ -45,55 +38,64 @@ export default async function AdminCoordinadoresPage() {
       id: c.id,
       nombre: c.nombre,
       email: c.email,
-      iniciales: c.nombre.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase(),
-      color: COLORES_AVATAR[i % COLORES_AVATAR.length],
-      dot: DOTS[i % DOTS.length],
+      iniciales: c.nombre
+        .split(" ")
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase(),
+      tone: (i % 2 === 0 ? "mint" : "periwinkle") as "mint" | "periwinkle",
       activos: activosCount,
       promedio,
     };
   });
 
   return (
-    <AdminShell title="Equipo de Coordinadores" subtitle="Rendimiento, carga de trabajo y asignación del equipo.">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="text-[11px] text-slate-500">
-          {activos.length} coordinadores activos
-          {coordinadores.length > activos.length ? ` · ${coordinadores.length - activos.length} inactivos` : ""}
-          {` · ${adminsActivos} administrador${adminsActivos === 1 ? "" : "es"} activo${adminsActivos === 1 ? "" : "s"}`}
-        </div>
-      </div>
+    <>
+      <PageHeader
+        title="Coordinadores"
+        subtitle={`${activos.length} coordinadores activos${
+          coordinadores.length > activos.length ? ` · ${coordinadores.length - activos.length} inactivos` : ""
+        } · ${adminsActivos} administrador${adminsActivos === 1 ? "" : "es"} activo${adminsActivos === 1 ? "" : "s"}.`}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {stats.map((m) => (
-          <div key={m.id} className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4">
-              <span className={"w-2.5 h-2.5 rounded-full block shadow-[0_0_8px_rgba(52,211,153,0.8)] " + m.dot}></span>
+          <article
+            key={m.id}
+            className="flex min-w-0 flex-col gap-5 rounded-sm bg-canvas p-6 shadow-[inset_0_0_0_1px_var(--color-border-hairline)]"
+          >
+            <div className="flex items-center gap-3">
+              <Avatar initials={m.iniciales} tone={m.tone} />
+              <div className="min-w-0">
+                <h2 className="truncate text-body-md font-medium text-ink">{m.nombre}</h2>
+                <p className="truncate text-caption text-body">{m.email}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-4 mb-5">
-              <div className={"w-14 h-14 rounded-full flex items-center justify-center border text-lg font-semibold " + m.color}>{m.iniciales}</div>
+            <dl className="grid grid-cols-2 gap-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900">{m.nombre}</h3>
-                <p className="text-[11px] text-slate-500 font-medium">{m.email}</p>
+                <dt className="eyebrow text-body">Activas</dt>
+                <dd className="mt-1.5 text-display-md text-ink tabular-nums">{m.activos}</dd>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                <div className="text-[10px] text-slate-500 font-medium mb-0.5">Activos</div>
-                <div className="text-lg font-semibold text-slate-900 tracking-tight">{m.activos}</div>
+              <div>
+                <dt className="eyebrow text-body">Promedio</dt>
+                <dd className="mt-1.5 text-display-md text-ink tabular-nums">
+                  {m.promedio === null ? (
+                    "—"
+                  ) : (
+                    <>
+                      {m.promedio.toFixed(1)}
+                      <span className="ml-1 text-caption font-normal text-body">días</span>
+                    </>
+                  )}
+                </dd>
               </div>
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                <div className="text-[10px] text-slate-500 font-medium mb-0.5">Promedio</div>
-                <div className="text-lg font-semibold text-slate-900 tracking-tight">
-                  {m.promedio === null ? "—" : m.promedio.toFixed(1)} <span className="text-[10px] text-slate-400 ml-1 font-medium">días</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            </dl>
+          </article>
         ))}
       </div>
 
       <CoordinadoresManager inicial={equipo} />
-    </AdminShell>
+    </>
   );
 }
-

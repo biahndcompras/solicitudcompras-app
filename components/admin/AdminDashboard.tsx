@@ -11,7 +11,6 @@ import { ESTADOS_ABIERTOS, rellenarSerie, serieDashboard } from "@/lib/domain/da
 import type { MetricasDashboard } from "@/lib/domain/metrics";
 import type { Solicitud } from "@/lib/domain/types";
 import { Reveal, revealChild } from "@/lib/design/motion";
-import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader, SearchField } from "@/components/layout/PageHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { LiveBand } from "@/components/dashboard/LiveBand";
@@ -310,7 +309,7 @@ export function AdminDashboard() {
   const hoyTexto = `${ahora.toLocaleDateString("es-HN", { day: "2-digit", month: "short" })} ${ahora.getFullYear()}`;
 
   return (
-    <AppShell>
+    <>
       <PageHeader
         title="Panel de compras"
         subtitle={`${hoyTexto} · ${procesos.length} solicitudes · ${activas} en curso.`}
@@ -756,7 +755,7 @@ export function AdminDashboard() {
           </Panel>
         </>
       )}
-    </AppShell>
+    </>
   );
 }
 

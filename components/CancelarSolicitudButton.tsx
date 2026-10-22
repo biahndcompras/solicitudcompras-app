@@ -4,8 +4,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api-client";
+import { Button } from "@/components/ui/primitives";
 
-export function CancelarSolicitudButton({ solicitudId, rol = "admin", variante = "borde" }: { solicitudId: string; rol?: "admin" | "coordinador"; variante?: "borde" | "texto" }) {
+export function CancelarSolicitudButton({
+  solicitudId,
+  rol = "admin",
+}: {
+  solicitudId: string;
+  rol?: "admin" | "coordinador";
+  variante?: "borde" | "texto";
+}) {
   const router = useRouter();
   const [cancelando, setCancelando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,19 +39,10 @@ export function CancelarSolicitudButton({ solicitudId, rol = "admin", variante =
 
   return (
     <span className="inline-flex items-center gap-2">
-      <button
-        type="button"
-        onClick={cancelar}
-        disabled={cancelando}
-        className={
-          variante === "texto"
-            ? "text-[11px] font-semibold text-rose-600 hover:text-rose-800 disabled:opacity-50"
-            : "px-3 py-1.5 rounded-lg text-[11px] font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 bg-white/70 disabled:opacity-50 transition-colors"
-        }
-      >
+      <Button variant="outline" size="sm" onClick={cancelar} disabled={cancelando} className="text-critical">
         {cancelando ? "Cancelando…" : "Cancelar solicitud"}
-      </button>
-      {error ? <span className="text-[10px] text-rose-600">{error}</span> : null}
+      </Button>
+      {error ? <span className="text-caption text-critical">{error}</span> : null}
     </span>
   );
 }

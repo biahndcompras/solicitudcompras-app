@@ -7,6 +7,8 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api-client";
 import type { Adjunto } from "@/lib/domain/types";
+import { Icon } from "@/components/ui/Icon";
+import { Button, Panel } from "@/components/ui/primitives";
 
 const ACEPTA = ".pdf,.docx,.doc,.pptx,.ppt,.png,.jpg,.jpeg";
 const MAX_MB = 4;
@@ -93,17 +95,11 @@ export function DocumentosAdjuntos({
   }
 
   return (
-    <section className="mt-4 bg-white rounded-2xl border border-slate-200 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <span className="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-            Documentos de la solicitud
-          </span>
-          <p className="text-[11px] text-slate-500 mt-1">
-            PDF, Word, PowerPoint o imágenes · hasta {MAX_MB} MB.
-          </p>
-        </div>
-        {puedeSubir ? (
+    <Panel
+      title="Documentos"
+      subtitle={`PDF, Word, PowerPoint o imágenes · hasta ${MAX_MB} MB.`}
+      action={
+        puedeSubir ? (
           <>
             <input
               ref={input}
@@ -116,57 +112,48 @@ export function DocumentosAdjuntos({
                 if (f) void subir(f);
               }}
             />
-            <button
-              type="button"
-              onClick={() => input.current?.click()}
-              disabled={subiendo}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 min-h-[40px] rounded-xl text-sky-700 hover:bg-sky-50 border border-sky-200 disabled:opacity-60"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M12 3v12m0-12 4 4m-4-4-4 4" />
-              </svg>
+            <Button variant="outline" size="sm" icon="upload" onClick={() => input.current?.click()} disabled={subiendo}>
               {subiendo ? "Subiendo…" : "Adjuntar documento"}
-            </button>
+            </Button>
           </>
-        ) : null}
-      </div>
-
+        ) : null
+      }
+    >
       {error ? (
-        <div role="alert" className="mt-3 text-[12px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3">
+        <div role="alert" className="flex items-center justify-between gap-3 rounded-sm px-3 py-2 text-caption text-critical shadow-[inset_0_0_0_1px_var(--color-text-critical)]">
           <span>{error}</span>
           <button
             type="button"
-            onClick={() => { setCargando(true); setRecarga((n) => n + 1); }}
-            className="shrink-0 font-semibold underline underline-offset-2 hover:text-rose-900"
+            onClick={() => {
+              setCargando(true);
+              setRecarga((n) => n + 1);
+            }}
+            className="shrink-0 font-medium underline underline-offset-2 hover:opacity-80"
           >
             Reintentar
           </button>
         </div>
       ) : null}
 
-      <div className="mt-4" aria-live="polite">
+      <div aria-live="polite">
         {cargando ? (
-          <p className="text-xs text-slate-400">Cargando documentos…</p>
+          <p className="text-caption text-body">Cargando documentos…</p>
         ) : adjuntos.length === 0 ? (
-          <p className="text-xs text-slate-500">Todavía no hay documentos adjuntos.</p>
+          <p className="text-caption text-body">Todavía no hay documentos adjuntos.</p>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-hairline">
             {adjuntos.map((a) => (
-              <li key={a.id} className="py-2.5 flex items-center gap-3">
-                <span className="text-slate-400" aria-hidden="true">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M14 3v5h5M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-                  </svg>
-                </span>
+              <li key={a.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                <Icon name="paperclip" size={15} className="shrink-0 text-body" />
                 <div className="min-w-0 flex-1">
                   <a
                     href={api.urlAdjunto(solicitudId, a.id, email)}
-                    className="block text-xs font-semibold text-slate-800 hover:text-sky-700 truncate"
+                    className="block truncate text-caption font-medium text-ink hover:underline"
                     download
                   >
                     {a.nombreArchivo}
                   </a>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-caption text-body">
                     {fecha(a.creadoEn)}
                     {a.tamanoBytes ? ` · ${tamano(a.tamanoBytes)}` : ""}
                     {a.subidoPorEmail ? ` · ${a.subidoPorEmail}` : ""}
@@ -176,7 +163,7 @@ export function DocumentosAdjuntos({
                   <button
                     type="button"
                     onClick={() => void borrar(a)}
-                    className="text-[11px] font-semibold text-rose-700 hover:text-rose-800 px-2 py-1.5 rounded-lg hover:bg-rose-50"
+                    className="shrink-0 rounded-xs px-2 py-1.5 text-caption font-medium text-critical hover:bg-surface-soft"
                     aria-label={`Eliminar ${a.nombreArchivo}`}
                   >
                     Eliminar
@@ -187,6 +174,6 @@ export function DocumentosAdjuntos({
           </ul>
         )}
       </div>
-    </section>
+    </Panel>
   );
 }

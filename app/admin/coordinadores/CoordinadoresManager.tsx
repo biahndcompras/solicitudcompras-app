@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Usuario } from "@/lib/domain/types";
 import { CATEGORIAS, nombreCategoria } from "@/lib/domain/categorias";
-import { cn } from "@/lib/design/cn";
+import { Badge, Button, Panel, cx } from "@/components/ui/primitives";
+import { Checkbox, Modal, SelectField, TextField } from "@/components/ui/forms";
 
 type Props = { inicial: Usuario[] };
 
@@ -33,7 +34,12 @@ export function CoordinadoresManager({ inicial }: Props) {
 
   function abrirEditar(c: Usuario) {
     setEditando(c);
-    setForm({ nombre: c.nombre, email: c.email, rol: c.rol === "admin" ? "admin" : "coordinador", categorias: c.categoriasAsignadas });
+    setForm({
+      nombre: c.nombre,
+      email: c.email,
+      rol: c.rol === "admin" ? "admin" : "coordinador",
+      categorias: c.categoriasAsignadas,
+    });
     setMensaje(null);
     setMostrandoForm(true);
   }
@@ -142,247 +148,192 @@ export function CoordinadoresManager({ inicial }: Props) {
   const puedeGuardar = form.nombre.trim().length > 0 && (editando !== null || form.email.trim().length > 0) && !guardando;
 
   return (
-    <div className="mt-8">
-      {mensaje && (
+    <div className="flex flex-col gap-4">
+      {mensaje ? (
         <div
           role="status"
-          className={cn(
-            "mb-4 text-[13px] px-3 py-2.5 rounded-lg border flex items-center justify-between gap-3",
+          className={cx(
+            "flex items-center justify-between gap-3 rounded-sm px-4 py-3 text-caption",
             mensaje.tipo === "ok"
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-              : "bg-rose-50 text-rose-800 border-rose-200"
+              ? "text-success shadow-[inset_0_0_0_1px_var(--color-text-success)]"
+              : "text-critical shadow-[inset_0_0_0_1px_var(--color-text-critical)]"
           )}
         >
           <span>{mensaje.texto}</span>
-          <button
-            type="button"
-            onClick={() => setMensaje(null)}
-            aria-label="Cerrar aviso"
-            className="shrink-0 text-current hover:opacity-70"
-          >
+          <button type="button" onClick={() => setMensaje(null)} aria-label="Cerrar aviso" className="shrink-0 text-current hover:opacity-70">
             ✕
           </button>
         </div>
-      )}
+      ) : null}
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[15px] font-semibold text-slate-900">Gestión del equipo</h2>
-        <button
-          type="button"
-          onClick={() => (mostrandoForm ? cerrarForm() : abrirNuevo())}
-          className="bg-sky-600 text-white text-[12px] font-semibold px-3 py-2 rounded-lg hover:bg-sky-700 transition-colors"
+      {mostrandoForm ? (
+        <Panel
+          title={editando ? `Editar a «${editando.nombre}»` : "Nueva cuenta"}
+          subtitle="La cuenta se crea por invitación: la persona define su contraseña desde el enlace del correo."
         >
-          {mostrandoForm ? "Cancelar" : "Nueva cuenta"}
-        </button>
-      </div>
-
-      {mostrandoForm && (
-        <div className="bg-white rounded-lg border border-slate-200 p-5 mb-5">
-          <div className="text-[14px] font-semibold text-slate-900 mb-4">
-            {editando ? `Editar a «${editando.nombre}»` : "Nueva cuenta"}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="block">
-              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Nombre</span>
-              <input
-                value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                placeholder="Nombre y apellido"
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <TextField
+              label="Nombre"
+              value={form.nombre}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              placeholder="Nombre y apellido"
+            />
+            <TextField
+              label="Correo"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="nombre@biabrands.co"
+              disabled={editando !== null}
+              helper={editando ? "El correo identifica la cuenta y no se puede cambiar." : undefined}
+            />
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+              <span className="text-caption font-medium text-ink">Rol</span>
+              <SelectField
+                label="Rol"
+                value={form.rol === "admin" ? "Administrador" : "Coordinador de Compras"}
+                onChange={(v) => setForm({ ...form, rol: v === "Administrador" ? "admin" : "coordinador" })}
+                options={["Coordinador de Compras", "Administrador"]}
               />
-            </label>
-            <label className="block">
-              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Correo</span>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="nombre@biabrands.co"
-                disabled={editando !== null}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-50 disabled:text-slate-500"
-              />
-              {editando && (
-                <span className="block text-[11px] text-slate-500 mt-1">
-                  El correo identifica la cuenta y no se puede cambiar.
-                </span>
-              )}
-            </label>
-            <label className="block md:col-span-2">
-              <span className="block text-[12px] font-medium text-slate-700 mb-1.5">Rol</span>
-              <select
-                value={form.rol}
-                onChange={(e) => setForm({ ...form, rol: e.target.value === "admin" ? "admin" : "coordinador" })}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-500"
-              >
-                <option value="coordinador">Coordinador de Compras</option>
-                <option value="admin">Administrador</option>
-              </select>
-              <span className="block text-[11px] text-slate-500 mt-1">
+              <p className="text-caption text-body">
                 {editando
                   ? "Cambiar el rol actualiza el acceso. No puede quitarse el suyo ni dejar el sistema sin administradores."
                   : "La cuenta se crea por invitación: la persona define su contraseña al abrir el enlace del correo."}
-              </span>
-            </label>
+              </p>
+            </div>
             {form.rol === "coordinador" ? (
-            <div className="md:col-span-2">
-              <span className="block text-[12px] font-medium text-slate-700 mb-2">Categorías asignadas</span>
-              <div className="flex flex-wrap gap-x-5 gap-y-2">
-                {CATEGORIAS.map((c) => (
-                  <label key={c.clave} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
+              <div className="md:col-span-2">
+                <span className="mb-2 block text-caption font-medium text-ink">Categorías asignadas</span>
+                <div className="flex flex-wrap gap-x-5 gap-y-2">
+                  {CATEGORIAS.map((c) => (
+                    <Checkbox
+                      key={c.clave}
+                      label={c.etiqueta}
                       checked={form.categorias.includes(c.clave)}
                       onChange={() => alternarCategoria(c.clave)}
-                      className="w-4 h-4"
                     />
-                    <span className="text-[13px] text-slate-700">{c.etiqueta}</span>
-                  </label>
-                ))}
+                  ))}
+                </div>
+                <p className="mt-2 text-caption text-body">Sin categorías, el coordinador aplica a todas.</p>
               </div>
-              <span className="block text-[11px] text-slate-500 mt-2">
-                Sin categorías, el coordinador aplica a todas.
-              </span>
-            </div>
             ) : null}
           </div>
-          <div className="mt-5 flex flex-wrap justify-end gap-2">
-            <button
-              type="button"
-              onClick={cerrarForm}
-              className="text-[13px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg"
-            >
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={cerrarForm}>
               Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={guardar}
-              disabled={!puedeGuardar}
-              className="bg-slate-900 text-white text-[13px] px-4 py-2 rounded-lg font-semibold hover:bg-slate-800 disabled:opacity-40 transition-colors"
-            >
+            </Button>
+            <Button onClick={guardar} disabled={!puedeGuardar}>
               {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Enviar invitación"}
-            </button>
+            </Button>
           </div>
-        </div>
-      )}
+        </Panel>
+      ) : null}
 
-      <div className="bg-white rounded-lg border border-slate-200 overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50">
-            <tr className="text-[11px] uppercase tracking-wide text-slate-500">
-              <th scope="col" className="px-4 py-2.5 font-semibold">Nombre</th>
-              <th scope="col" className="px-4 py-2.5 font-semibold">Correo</th>
-              <th scope="col" className="px-4 py-2.5 font-semibold">Rol</th>
-              <th scope="col" className="px-4 py-2.5 font-semibold">Categorías</th>
-              <th scope="col" className="px-4 py-2.5 font-semibold">Estado</th>
-              <th scope="col" className="px-4 py-2.5 font-semibold text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 text-[12.5px]">
-            {lista.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-[13px] text-slate-500">
-                  Todavía no hay cuentas. Cree la primera.
-                </td>
+      <Panel
+        title="Equipo"
+        subtitle="Cuentas de coordinación y administración."
+        action={
+          !mostrandoForm ? (
+            <Button size="sm" onClick={abrirNuevo}>
+              Nueva cuenta
+            </Button>
+          ) : null
+        }
+      >
+        <div className="-mx-6 overflow-x-auto px-6">
+          <table className="w-full min-w-[820px] border-collapse">
+            <thead>
+              <tr className="bg-surface-soft text-left">
+                {["Nombre", "Correo", "Rol", "Categorías", "Estado"].map((h) => (
+                  <th key={h} scope="col" className="eyebrow px-3 py-3 font-medium text-ink">
+                    {h}
+                  </th>
+                ))}
+                <th scope="col" className="eyebrow px-3 py-3 text-right font-medium text-ink">
+                  Acciones
+                </th>
               </tr>
-            ) : (
-              lista.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-2.5 font-medium text-slate-900">{c.nombre}</td>
-                  <td className="px-4 py-2.5 text-slate-600">{c.email}</td>
-                  <td className="px-4 py-2.5">
-                    <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase", c.rol === "admin" ? "bg-sky-100 text-sky-800" : "bg-slate-100 text-slate-700")}>
-                      {c.rol === "admin" ? "Admin" : "Coordinador"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-slate-600">
-                    {c.categoriasAsignadas.length > 0
-                      ? c.categoriasAsignadas.map((cat) => nombreCategoria(cat)).join(" · ")
-                      : "Todas"}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <span
-                      className={cn(
-                        "px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase",
-                        c.activo ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
-                      )}
-                    >
-                      {c.activo ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right">
-                    <span className="inline-flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => abrirEditar(c)}
-                        disabled={ocupado === c.id}
-                        className="text-[12px] font-semibold text-slate-600 hover:text-sky-700 disabled:opacity-50 transition-colors"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => pedirToggle(c)}
-                        disabled={ocupado === c.id}
-                        className={cn(
-                          "text-[12px] font-semibold disabled:opacity-50 transition-colors",
-                          c.activo ? "text-rose-600 hover:text-rose-800" : "text-emerald-700 hover:text-emerald-900"
-                        )}
-                      >
-                        {ocupado === c.id ? "…" : c.activo ? "Desactivar" : "Activar"}
-                      </button>
-                    </span>
+            </thead>
+            <tbody>
+              {lista.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-10 text-center text-caption text-body">
+                    Todavía no hay cuentas. Cree la primera.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {pendiente && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="conf-titulo"
-            className="w-full max-w-md bg-white rounded-lg border border-slate-200 p-5 shadow-xl"
-          >
-            <h2 id="conf-titulo" className="text-[15px] font-semibold text-slate-900">
-              {pendiente.activo ? "Desactivar" : "Activar"} a {pendiente.nombre}
-            </h2>
-            <p className="text-[13px] text-slate-600 mt-2">
-              {pendiente.activo
-                ? "Se le quitará el acceso: no podrá iniciar sesión como coordinador ni ver su bandeja. Si tiene una sesión abierta, la perderá al refrescar. Puede reactivarlo cuando quiera."
-                : "Volverá a tener acceso al panel y aparecerá de nuevo entre los coordinadores asignables."}
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setPendiente(null)}
-                disabled={ocupado !== null}
-                className="text-[13px] font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={confirmarToggle}
-                disabled={ocupado !== null}
-                className={cn(
-                  "text-[13px] px-4 py-2 rounded-lg font-semibold text-white disabled:opacity-60 transition-colors",
-                  pendiente.activo ? "bg-rose-600 hover:bg-rose-700" : "bg-emerald-600 hover:bg-emerald-700"
-                )}
-              >
-                {ocupado
-                  ? "Aplicando…"
-                  : pendiente.activo
-                    ? "Desactivar coordinador"
-                    : "Activar coordinador"}
-              </button>
-            </div>
-          </div>
+              ) : (
+                lista.map((c) => (
+                  <tr key={c.id} className="border-b border-hairline hover:bg-surface-soft/60">
+                    <td className="px-3 py-3 text-body-md whitespace-nowrap text-ink">{c.nombre}</td>
+                    <td className="px-3 py-3 text-caption whitespace-nowrap text-body">{c.email}</td>
+                    <td className="px-3 py-3">
+                      <Badge tone={c.rol === "admin" ? "periwinkle" : "neutral"}>
+                        {c.rol === "admin" ? "Admin" : "Coordinador"}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-3 text-caption text-body">
+                      {c.categoriasAsignadas.length > 0
+                        ? c.categoriasAsignadas.map((cat) => nombreCategoria(cat)).join(" · ")
+                        : "Todas"}
+                    </td>
+                    <td className="px-3 py-3">
+                      <Badge tone={c.activo ? "success" : "neutral"}>{c.activo ? "Activo" : "Inactivo"}</Badge>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <span className="inline-flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => abrirEditar(c)}
+                          disabled={ocupado === c.id}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant={c.activo ? "outline" : "mint"}
+                          size="sm"
+                          onClick={() => pedirToggle(c)}
+                          disabled={ocupado === c.id}
+                          className={c.activo ? "text-critical" : undefined}
+                        >
+                          {ocupado === c.id ? "…" : c.activo ? "Desactivar" : "Activar"}
+                        </Button>
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </Panel>
+
+      <Modal
+        open={pendiente !== null}
+        onClose={() => setPendiente(null)}
+        title={`${pendiente?.activo ? "Desactivar" : "Activar"} a ${pendiente?.nombre ?? ""}`}
+        description={
+          pendiente?.activo
+            ? "Se le quitará el acceso: no podrá iniciar sesión como coordinador ni ver su bandeja. Si tiene una sesión abierta, la perderá al refrescar. Puede reactivarlo cuando quiera."
+            : "Volverá a tener acceso al panel y aparecerá de nuevo entre los coordinadores asignables."
+        }
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setPendiente(null)} disabled={ocupado !== null}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmarToggle}
+              disabled={ocupado !== null}
+              className={pendiente?.activo ? "bg-[var(--color-bg-critical)] text-on-dark hover:bg-[var(--color-bg-critical)]" : undefined}
+            >
+              {ocupado ? "Aplicando…" : pendiente?.activo ? "Desactivar coordinador" : "Activar coordinador"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-caption text-body">Esta acción queda registrada en la cuenta de acceso.</p>
+      </Modal>
     </div>
   );
 }

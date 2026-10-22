@@ -1,4 +1,5 @@
-import { AdminShell } from "@/components/ui-ext/AdminShell";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Panel } from "@/components/ui/primitives";
 import { getSession } from "@/lib/auth";
 
 /**
@@ -28,33 +29,32 @@ export default async function AdminAjustesPage() {
   const rol = sesion?.rol ? ROL_LEGIBLE[sesion.rol] ?? sesion.rol : "—";
 
   return (
-    <AdminShell title="Mi perfil" subtitle="Identidad y rol con el que entras al portal.">
+    <>
+      <PageHeader title="Mi perfil" subtitle="Identidad y rol con el que entras al portal." />
+
       <div className="max-w-2xl">
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-200">
-            <h2 className="text-[13px] font-semibold text-slate-700">Datos de la cuenta</h2>
-          </div>
-          <dl className="divide-y divide-slate-100 text-[13px]">
-            <div className="px-5 py-3 flex items-center justify-between gap-4">
-              <dt className="text-slate-500">Nombre</dt>
-              <dd className="font-medium text-slate-900 text-right">{nombre}</dd>
+        <Panel title="Datos de la cuenta" subtitle="Se leen de su cuenta de acceso.">
+          <dl className="divide-y divide-hairline">
+            <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <dt className="text-caption text-body">Nombre</dt>
+              <dd className="text-right text-body-md text-ink">{nombre}</dd>
             </div>
-            <div className="px-5 py-3 flex items-center justify-between gap-4">
-              <dt className="text-slate-500">Correo</dt>
-              <dd className="font-medium text-slate-900 text-right break-all">{correo}</dd>
+            <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <dt className="text-caption text-body">Correo</dt>
+              <dd className="break-all text-right text-body-md text-ink">{correo}</dd>
             </div>
-            <div className="px-5 py-3 flex items-center justify-between gap-4">
-              <dt className="text-slate-500">Rol</dt>
-              <dd className="font-medium text-slate-900 text-right">{rol}</dd>
+            <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <dt className="text-caption text-body">Rol</dt>
+              <dd className="text-right text-body-md text-ink">{rol}</dd>
             </div>
           </dl>
-        </div>
+        </Panel>
 
-        <p className="mt-4 text-[12px] text-slate-500">
+        <p className="mt-4 text-caption text-body">
           Nombre, correo y rol se leen de su cuenta de acceso. Para cambiarlos, un administrador
           debe gestionarlo desde Coordinadores. La contraseña se cambia desde el enlace de acceso.
         </p>
       </div>
-    </AdminShell>
+    </>
   );
 }

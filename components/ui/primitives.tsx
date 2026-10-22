@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import Link from "next/link";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { IconName } from "./Icon";
 import { Icon } from "./Icon";
@@ -50,6 +51,38 @@ export function Button({
       )}
       {children}
     </button>
+  );
+}
+
+/* ---------------- Button link (misma piel, navegación) ---------------- */
+export function ButtonLink({
+  href,
+  variant = "outline",
+  size = "sm",
+  icon,
+  children,
+  className,
+}: {
+  href: string;
+  variant?: ButtonStyle;
+  size?: "md" | "sm";
+  icon?: IconName;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cx(
+        "inline-flex shrink-0 items-center justify-center gap-2 transition-[background-color,box-shadow] duration-150",
+        size === "md" ? "mono-button h-8 max-sm:min-h-11 px-5" : "mono-label h-7 max-sm:min-h-11 px-3.5",
+        buttonStyles[variant],
+        className,
+      )}
+    >
+      {icon && <Icon name={icon} size={size === "md" ? 16 : 14} />}
+      {children}
+    </Link>
   );
 }
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AdminShell } from "@/components/ui-ext/AdminShell";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Badge } from "@/components/ui/primitives";
 import { PostgresRepositorio } from "@/lib/db/postgres-repo";
 
 export const dynamic = "force-dynamic";
@@ -27,53 +28,63 @@ export default async function AdminProcesosPage() {
   const activas = todas.filter((s) => !ESTADOS_TERMINALES.has(s.estado));
 
   return (
-    <AdminShell title="Procesos de Compras" subtitle="Estado de todas las solicitudes activas, agrupadas por tipo de proceso.">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <>
+      <PageHeader
+        title="Procesos"
+        subtitle={`${activas.length} solicitudes activas, agrupadas por tipo.`}
+      />
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         {COLUMNAS.map((col) => {
           const items = activas
             .filter((s) => (s.tipo ?? "SIN_TIPO") === col.tipo)
             .sort((a, b) => (a.fechaCreacion < b.fechaCreacion ? 1 : -1));
           return (
-            <div key={col.tipo}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-slate-900">{col.titulo}</h3>
-                <span className="text-xs font-semibold text-slate-500 bg-slate-100 rounded-lg px-2 py-0.5">{items.length}</span>
-              </div>
-              <div className="space-y-3">
-                {items.length ? items.map((s) => (
-                  <Link
-                    key={s.id}
-                    href={`/admin/solicitud/${s.id}`}
-                    className="block bg-white border border-slate-200/70 rounded-xl p-4 shadow-sm hover:border-sky-300 hover:shadow-md transition-all"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      {/* 4.1.1: sin numero_referencia no se inventa `SOL-<id>`; se dice
-                          «Sin referencia» igual que el panel del coordinador. */}
-                      {s.numeroReferencia ? (
-                        <span className="font-mono text-[11px] font-semibold text-slate-700">{s.numeroReferencia}</span>
-                      ) : (
-                        <span className="text-[11px] italic text-slate-500" title={`Sin referencia asignada · id interno ${s.id}`}>
-                          Sin referencia
-                        </span>
-                      )}
-                      <span className="text-[10px] text-slate-400">{haceCuanto(s.fechaCreacion)}</span>
-                    </div>
-                    <p className="text-xs font-medium text-slate-900 line-clamp-2">{s.titulo}</p>
-                    <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-500">
-                      <span>{s.solicitanteNombre ?? "Anónimo"}</span>
-                      <span>·</span>
-                      <span>{estadoLegible(s.estado)}</span>
-                    </div>
-                  </Link>
-                )) : (
-                  <p className="text-[11px] text-slate-400 bg-white/60 border border-dashed border-slate-200 rounded-xl p-4 text-center">Sin procesos activos</p>
+            <section key={col.tipo} aria-label={col.titulo} className="flex min-w-0 flex-col gap-3">
+              <header className="flex items-center justify-between gap-3">
+                <h2 className="text-display-md text-ink">{col.titulo}</h2>
+                <Badge tone="neutral">{items.length}</Badge>
+              </header>
+              <div className="flex flex-col gap-2">
+                {items.length ? (
+                  items.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/admin/solicitud/${s.id}`}
+                      className="group/card block rounded-sm bg-canvas p-4 shadow-[inset_0_0_0_1px_var(--color-border-hairline)] transition-shadow hover:shadow-[inset_0_0_0_1px_#000]"
+                    >
+                      <div className="mb-1.5 flex items-center justify-between gap-3">
+                        {s.numeroReferencia ? (
+                          <span className="mono-label text-ink">{s.numeroReferencia}</span>
+                        ) : (
+                          <span
+                            className="text-caption italic text-body"
+                            title={`Sin referencia asignada · id interno ${s.id}`}
+                          >
+                            Sin referencia
+                          </span>
+                        )}
+                        <span className="mono-caption shrink-0 text-body">{haceCuanto(s.fechaCreacion)}</span>
+                      </div>
+                      <p className="line-clamp-2 text-body-md text-ink">{s.titulo}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-body">
+                        <span>{s.solicitanteNombre ?? "Anónimo"}</span>
+                        <span aria-hidden>·</span>
+                        <span>{estadoLegible(s.estado)}</span>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="rounded-sm bg-surface-soft px-4 py-6 text-center text-caption text-body">
+                    Sin procesos activos
+                  </p>
                 )}
               </div>
-            </div>
+            </section>
           );
         })}
       </div>
-    </AdminShell>
+    </>
   );
 }
 

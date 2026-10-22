@@ -10,6 +10,8 @@ const eslintConfig = [
     "build/**",
     "coverage/**",
     "next-env.d.ts",
+    // Referencia de diseño: se lee, no se compila ni se lintea (también excluida de tsconfig).
+    "frontend-reference/**",
   ]),
   ...nextCoreWebVitals,
   ...nextTs,

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
 @theme {
   /* Paleta — BIA Compras Enterprise (identidad oficial) */
@@ -38,6 +39,138 @@
   --radius-xl: 24px;
   --radius-2xl: 2rem;
   --radius-full: 9999px;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Sistema de diseño portado de frontend-reference/restoboard-nextjs.
+   Utilidades nuevas (bg-canvas, text-ink, text-body-md, eyebrow…) que NO chocan
+   con el tema anterior. Los dos valores que sí chocaban (radius-sm, success) se
+   resuelven con el scope `.bia-ds` más abajo, para no alterar el shell viejo.
+   Ver DESIGN.md §2.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-canvas: var(--color-bg-canvas);
+  --color-canvas-dark: var(--color-bg-canvas-dark);
+  --color-surface-soft: var(--color-bg-surface-soft);
+  --color-surface-dark-soft: var(--color-bg-surface-dark-soft);
+  --color-primary: var(--color-bg-primary);
+  --color-mint: var(--color-bg-accent-mint);
+  --color-periwinkle: var(--color-bg-accent-periwinkle);
+  --color-critical: var(--color-text-critical);
+  --color-ink: var(--color-text-ink);
+  --color-body: var(--color-text-body);
+  --color-on-dark: var(--color-text-on-dark);
+  --color-on-dark-muted: var(--color-text-on-dark-muted);
+  --color-hairline: var(--color-border-hairline);
+  --color-on-dark-line: var(--color-border-on-dark);
+
+  --radius-xs: 3.25px;
+
+  --shadow-soft: var(--shadow-soft-drop);
+  --ease-out-soft: var(--ease-out);
+
+  --text-display-xxl: 64px;
+  --text-display-xxl--line-height: 70.4px;
+  --text-display-xxl--letter-spacing: -1.92px;
+  --text-display-xxl--font-weight: 500;
+  --text-display-xl: 40px;
+  --text-display-xl--line-height: 48px;
+  --text-display-xl--letter-spacing: -0.8px;
+  --text-display-xl--font-weight: 500;
+  --text-display-lg: 28px;
+  --text-display-lg--line-height: 32.2px;
+  --text-display-lg--letter-spacing: -0.42px;
+  --text-display-lg--font-weight: 500;
+  --text-display-md: 22px;
+  --text-display-md--line-height: 25.3px;
+  --text-display-md--letter-spacing: -0.22px;
+  --text-display-md--font-weight: 500;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 23.4px;
+  --text-body-lg--letter-spacing: -0.18px;
+  --text-body-md: 16px;
+  --text-body-md--line-height: 20.8px;
+  --text-body-md--letter-spacing: -0.16px;
+  --text-caption: 14px;
+  --text-caption--line-height: 19.6px;
+}
+
+/* Mono labels: siempre mayúsculas y tracking positivo (DESIGN.md §3) */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 11px;
+  letter-spacing: 0.55px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 15.4px;
+  letter-spacing: 0.055px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+@utility mono-button {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 16px;
+  letter-spacing: 0.08px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+@utility mono-caption {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 0.05px;
+  font-weight: 400;
+}
+
+/*
+ * Scope del sistema nuevo. Todo lo que se renderice dentro de `.bia-ds` usa los
+ * valores de la referencia; lo que quede fuera conserva el tema anterior.
+ * - radius-sm 4px / radius-md 8px (el tema viejo usa 8/12px).
+ * - success #067647 (el tema viejo usa #10b981).
+ * - Inter Variable + Geist Mono (el tema viejo usa Inter + JetBrains Mono).
+ */
+.bia-ds {
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --color-success: var(--color-text-success);
+  --font-sans: "Inter Variable", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "tnum";
+  color: var(--color-text-ink);
+  background-color: var(--color-bg-canvas);
+}
+
+.bia-ds :focus-visible {
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: 2px;
+}
+.bia-ds .on-dark :focus-visible {
+  outline-color: var(--color-bg-accent-mint);
+}
+.bia-ds ::selection {
+  background: var(--color-bg-accent-mint);
+  color: var(--color-text-ink);
+}
+
+/* Pulso del indicador «live» (único bucle permitido junto al listón) */
+@keyframes rb-pulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  70% { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+.rb-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  animation: rb-pulse 1.8s var(--ease-out) infinite;
 }
 
 :root {

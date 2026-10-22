@@ -1,0 +1,78 @@
+/*
+ * Tokens del Portal de Compras BIA — portados de la referencia de diseño
+ * (frontend-reference/restoboard-nextjs/styles/tokens.css). Los valores NO se
+ * reinterpretan: se copian 1:1. Ver DESIGN.md §2 para la tabla completa con la
+ * fuente de cada uno.
+ *
+ * Se aplican dentro de `.bia-ds`. El shell viejo mantiene su tema hasta que su
+ * ruta migre (ver DESIGN.md §16).
+ */
+:root {
+  /* Primitives */
+  --rb-black: #000000;
+  --rb-white: #ffffff;
+  --rb-navy-950: #010120;
+  --rb-navy-800: #26263a;
+  --rb-navy-400: #9999a6;
+  --rb-slate-700: #313641;
+  --rb-grey-400: #959494;
+  --rb-grey-100: #ebebeb;
+  --rb-orange-500: #fc4c02;
+  --rb-magenta-500: #ef2cc1;
+  --rb-periwinkle-200: #bdbbff;
+  --rb-mint-100: #c8f6f9;
+  --rb-red-600: #d92d20;
+  --rb-green-700: #067647;
+
+  /* Semantic: color */
+  --color-bg-canvas: var(--rb-white);
+  --color-bg-canvas-dark: var(--rb-navy-950);
+  --color-bg-surface-soft: var(--rb-grey-100);
+  --color-bg-surface-dark-soft: var(--rb-slate-700);
+  --color-bg-primary: var(--rb-black);
+  --color-bg-accent-mint: var(--rb-mint-100);
+  --color-bg-accent-periwinkle: var(--rb-periwinkle-200);
+  --color-bg-critical: var(--rb-red-600);
+  --color-text-ink: var(--rb-black);
+  --color-text-body: var(--rb-grey-400);
+  --color-text-on-dark: var(--rb-white);
+  --color-text-on-dark-muted: var(--rb-navy-400);
+  --color-text-critical: var(--rb-red-600);
+  --color-text-success: var(--rb-green-700);
+  --color-border-hairline: var(--rb-grey-100);
+  --color-border-on-dark: var(--rb-navy-800);
+  --color-border-strong: var(--rb-black);
+  --color-gradient-orange: var(--rb-orange-500);
+  --color-gradient-magenta: var(--rb-magenta-500);
+  --color-gradient-periwinkle: var(--rb-periwinkle-200);
+
+  /* Spacing (referencia histórica: la app usa la escala numérica de Tailwind) */
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+  --spacing-4xl: 44px;
+  --spacing-5xl: 48px;
+  --spacing-6xl: 55.2px;
+  --spacing-section: 80px;
+
+  /* Radius */
+  --radius-none: 0px;
+  --radius-xs: 3.25px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-full: 9999px;
+
+  /* Elevation */
+  --shadow-soft-drop: 0 4px 10px 0 rgb(1 1 32 / 0.1);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 160ms;
+  --duration-base: 320ms;
+  --duration-slow: 700ms;
+}

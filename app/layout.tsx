@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+// Sistema de diseño nuevo (DESIGN.md §3): mismas fuentes que la referencia.
+import "@fontsource-variable/inter";
+import "@fontsource/geist-mono/400.css";
+import "@fontsource/geist-mono/500.css";
 import "../styles/globals.css";
 
 const inter = Inter({

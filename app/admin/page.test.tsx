@@ -80,7 +80,9 @@ describe("Admin · dashboard: referencia honesta y consistente (4.1.1)", () => {
       sol({ id: "a1b2c3d4-0000-4000-8000-000000000000", numeroReferencia: "RFQ-2026-0042" }),
     ]);
     render(<AdminDashboardPage />);
-    expect(await screen.findByText("RFQ-2026-0042")).toBeInTheDocument();
+    // La referencia aparece en la tabla y, si está envejecida, también en el panel
+    // «Sin decisión»: es la misma solicitud en dos contextos, no un duplicado.
+    expect((await screen.findAllByText("RFQ-2026-0042")).length).toBeGreaterThan(0);
     expect(screen.queryByText("Sin referencia")).toBeNull();
   });
 });

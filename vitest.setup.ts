@@ -55,3 +55,44 @@ afterEach(() => {
   // `cleanup()` de Testing Library necesita un DOM; en entorno `node` no hay nada que limpiar.
   if (typeof document !== "undefined") cleanup();
 });
+
+// jsdom no implementa IntersectionObserver/ResizeObserver/matchMedia y `motion` los
+// usa (Reveal, CountUp, useInView). Sin esto, cualquier test que monte un componente
+// con animaciones falla por entorno, no por código.
+if (typeof window !== "undefined") {
+  class ObservadorVacio {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  if (!window.IntersectionObserver) {
+    Object.defineProperty(window, "IntersectionObserver", { configurable: true, writable: true, value: ObservadorVacio });
+  }
+  if (!window.ResizeObserver) {
+    Object.defineProperty(window, "ResizeObserver", { configurable: true, writable: true, value: ObservadorVacio });
+  }
+  if (!window.matchMedia) {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener() {},
+        removeListener() {},
+        addEventListener() {},
+        removeEventListener() {},
+        dispatchEvent() {
+          return false;
+        },
+      }),
+    });
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+  }
+}

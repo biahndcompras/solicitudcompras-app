@@ -33,7 +33,7 @@ export interface Repositorio {
       Solicitud,
       "titulo" | "solicitanteEmail" | "solicitanteNombre" | "estado"
     >,
-    opciones?: { areaSolicitante?: string; descripcion?: string; tipo?: string; subtipo?: string; categoria?: string; fechaRequerida?: string; clasificacionCorregida?: boolean; idempotencyKey?: string; plantillaId?: string; llevaBranding?: boolean }
+    opciones?: { areaSolicitante?: string; descripcion?: string; tipo?: string; subtipo?: string; categoria?: string; fechaRequerida?: string; clasificacionCorregida?: boolean; idempotencyKey?: string; plantillaId?: string; llevaBranding?: boolean; coordinadorId?: string }
   ): Promise<Solicitud>;
 
   /**

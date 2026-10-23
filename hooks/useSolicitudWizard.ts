@@ -604,7 +604,7 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
           api.crearSolicitud(
             {
               titulo: estado.titulo,
-              solicitanteEmail: estado.email,
+              solicitanteEmail: estado.email.trim(),
               solicitanteNombre: estado.nombre || "Colaborador",
               areaSolicitante: estado.area,
               descripcion: estado.descripcion,
@@ -619,6 +619,9 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
               clasificacionCorregida: estado.clasificacionCorregida,
               llevaBranding: estado.llevaBranding,
               fechaRequerida: estado.fechaRequerida,
+              // Si el solicitante eligió comprador, viaja en el alta (antes solo se veía en
+              // la UI y la solicitud quedaba sin coordinador).
+              coordinadorId: estado.coordinadorId || undefined,
               idempotencyKey: claveEnvio,
             },
             { signal }
@@ -716,7 +719,8 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
         // clasificar bien) y la fecha no puede ser pasada (una solicitud que vence antes
         // de existir no tiene sentido). El motivo del bloqueo lo explica `faltantes`.
         return Boolean(
-          s.titulo.trim() &&
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email.trim()) &&
+            s.titulo.trim() &&
             s.tipoNecesidad &&
             s.fechaRequerida &&
             !fechaEnPasado(s.fechaRequerida) &&
@@ -740,6 +744,7 @@ export function useSolicitudWizard(nuevo = false, identidad?: IdentidadUrl) {
     const s = estado;
     if (s.paso === 2) {
       const out: string[] = [];
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email.trim())) out.push("su correo");
       if (!s.titulo.trim()) out.push("el título");
       if (!s.tipoNecesidad) out.push("la categoría");
       if (!s.fechaRequerida) out.push("la fecha requerida");

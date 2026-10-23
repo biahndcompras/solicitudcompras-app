@@ -125,17 +125,17 @@ describe("assessment_requerimiento", () => {
     expect(r.preguntas.some((p) => /pintura/i.test(p.pregunta))).toBe(true);
   });
 
-  it("ofrece sugerencias del catálogo como chips cuando hay opciones", async () => {
+  it("ofrece sugerencias del catálogo como chips cuando hay opciones", () => {
     const conOpciones: CampoCatalogo[] = [
       { campoKey: "calidad", label: "Calidad", tipoDato: "seleccion", catalogoOpciones: "Estándar,Premium", obligatorio: false, origen: "assessment", orden: 1, activo: true },
     ];
-    const r = await assessment_requerimiento({
-      camposCapturados: [],
-      camposDisponiblesCatalogo: conOpciones,
-      titulo: "Pintura",
-      subtipo: "producto",
-    });
-    const calidad = r.preguntas.find((p) => p.campoKey === "calidad");
+    // Determinístico: la IA decide QUÉ preguntar; que las opciones del catálogo se
+    // conviertan en chips es lógica de consolidación, no del modelo.
+    const preguntas = consolidarPreguntas(
+      [{ campoKey: "calidad", pregunta: "¿Qué calidad espera?", por_que: "", critica: false }],
+      { camposCapturados: [], camposDisponiblesCatalogo: conOpciones, titulo: "Pintura", subtipo: "producto" }
+    );
+    const calidad = preguntas.find((p) => p.campoKey === "calidad");
     expect(calidad?.sugerencias).toEqual(["Estándar", "Premium"]);
   });
 });

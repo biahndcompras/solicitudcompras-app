@@ -78,6 +78,8 @@ const crearSchema = z.object({
   clasificacionCorregida: z.boolean().optional(),
   // B2: lleva marca → el servidor exige el logo antes de enviar.
   llevaBranding: z.boolean().optional(),
+  // Comprador preferido por el solicitante. Opcional: si no viene, Compras asigna al enviar.
+  coordinadorId: z.string().uuid().optional(),
   // No admite fechas pasadas: una solicitud no puede vencer antes de existir.
   fechaRequerida: z
     .string()
@@ -125,6 +127,7 @@ export async function POST(request: Request) {
         idempotencyKey: CLAVE_IDEMPOTENCIA_RE.test(clave) ? clave : undefined,
         plantillaId: plantilla?.id,
         llevaBranding: body.llevaBranding,
+        coordinadorId: body.coordinadorId,
       }
     );
     return NextResponse.json(solicitud, { status: 201 });

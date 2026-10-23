@@ -245,6 +245,34 @@ describe("POST /api/solicitudes · persiste la corrección de clasificación (4.
   });
 });
 
+describe("POST /api/solicitudes · comprador preferido", () => {
+  const base: Record<string, unknown> = {
+    titulo: "Sombrillas",
+    solicitanteEmail: "maria@bia.hn",
+    solicitanteNombre: "Maria",
+    areaSolicitante: "Marketing",
+    descripcion: "500 sombrillas con logo de la marca",
+    fechaRequerida: isoEnDias(10),
+  };
+
+  beforeEach(() => {
+    crearSolicitud.mockReset().mockResolvedValue({ id: "s-1" });
+  });
+
+  it("reenvía el coordinador elegido al repositorio (antes se perdía)", async () => {
+    const coordinadorId = "00000000-0000-4000-8000-000000000010";
+    const res = await pedirPost({ ...base, coordinadorId });
+    expect(res.status).toBe(201);
+    expect(crearSolicitud.mock.calls[0][1]).toMatchObject({ coordinadorId });
+  });
+
+  it("rechaza un comprador con id que no es UUID", async () => {
+    const res = await pedirPost({ ...base, coordinadorId: "carlos" });
+    expect(res.status).toBe(400);
+    expect(crearSolicitud).not.toHaveBeenCalled();
+  });
+});
+
 /**
  * RF-55 / 4.4.1 — la solicitud debe conservar la plantilla con la que se creó (y, con ella,
  * su versión). El id NO se recibe del cliente: se resuelve en el servidor a partir de

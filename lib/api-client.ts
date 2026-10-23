@@ -49,6 +49,8 @@ export const api = {
       clasificacionCorregida?: boolean;
       /** B2: si lleva marca, el servidor exige el arte antes de enviar. */
       llevaBranding?: boolean;
+      /** Comprador preferido: el alta lo persiste para que la bandeja correcta lo reciba. */
+      coordinadorId?: string;
       idempotencyKey?: string;
     },
     opts?: { signal?: AbortSignal }

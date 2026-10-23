@@ -185,7 +185,8 @@ export function sanearBorradorSolicitud<
     contextoInvestigado: texto(raw.contextoInvestigado, 600).trim() || undefined,
     preguntasContexto: lista(raw.preguntasContexto, 20)
       .map((p) => texto(p, 400))
-      .filter((p) => p.length > 0),
+      // Drafts viejos ya guardaron el texto "[object Object]" del bug del schema.
+      .filter((p) => p.length > 0 && p !== "[object Object]"),
     camposPlantilla: plantilla,
     assessmentRespuestas: sanearRespuestas(raw.assessmentRespuestas),
     solicitudId: uuidOpcional(raw.solicitudId),

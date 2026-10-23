@@ -52,6 +52,19 @@ const normalizarPregunta = (raw: unknown): unknown => {
 // Las sugerencias vienen como strings, pero algunos modelos devuelven objetos
 // ({texto} / {valor} / {sugerencia}) o strings vacíos. Normalizamos y limpiamos
 // sin descartar la pregunta entera.
+// `preguntas_contexto` debería ser string[], pero hay modelos que devuelven objetos
+// ({pregunta}/{texto}). Antes se hacía String(objeto) y la pantalla mostraba
+// "[object Object]". Normalizamos al texto útil y descartamos lo que no lo tenga.
+const normalizarPreguntaContexto = (raw: unknown): string => {
+  if (typeof raw === "string") return raw.trim();
+  if (raw && typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    const texto = o.pregunta ?? o.texto ?? o.label ?? o.valor ?? o.descripcion;
+    return typeof texto === "string" ? texto.trim() : "";
+  }
+  return "";
+};
+
 const normalizarSugerencias = (raw: unknown): unknown => {
   if (!Array.isArray(raw)) return raw;
   return raw
@@ -95,7 +108,7 @@ export const AssessmentOutputSchema = z.object({
   // lo declara en vez de inventar sugerencias genéricas; el wizard pide más contexto.
   contexto_insuficiente: booleanoTolerante.default(false),
   preguntas_contexto: z.preprocess(
-    (v) => (Array.isArray(v) ? v.map((s) => String(s)).filter((s) => s.trim().length > 0) : v),
+    (v) => (Array.isArray(v) ? v.map(normalizarPreguntaContexto).filter((s) => s.length > 0) : []),
     z.array(z.string()).max(5)
   ).default([]),
 }).transform((d) => ({

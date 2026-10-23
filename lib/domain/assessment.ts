@@ -42,6 +42,12 @@ export type AssessmentInput = {
 
 const MAX_PREGUNTAS = 10;
 
+/** Una clave sin valor declarado se considera cubierta por la UI; `valor: ""` sí es una
+ *  respuesta vacía y debe seguir preguntándose. */
+function esCapturado(c: { campoKey: string; valor?: string }): boolean {
+  return c.valor === undefined || c.valor.trim().length > 0;
+}
+
 // Campos que el wizard ya cubre con controles propios (no preguntarlos de nuevo).
 const CUBIERTOS_POR_UI = new Set(["archivo_logo", "marca_branding"]);
 // Campos de rubro: solo aplican según subtipo (antes aparecían "Alcance del servicio,
@@ -126,7 +132,7 @@ export function consolidarPreguntas(
   input: AssessmentInput
 ): PreguntaAssessment[] {
   const queEs = queEsDe(input);
-  const respondidos = new Set(input.camposCapturados.filter((c) => c.valor).map((c) => c.campoKey));
+  const capturados = new Set(input.camposCapturados.filter(esCapturado).map((c) => c.campoKey));
   const porClave = new Map(camposAplicables(input.camposDisponiblesCatalogo, input.subtipo).map((c) => [c.campoKey, c]));
   const enPlantilla = new Set(input.camposYaPreguntados ?? []);
 
@@ -134,7 +140,7 @@ export function consolidarPreguntas(
   const vistas = new Set<string>();
   const normalizadas = preguntas
     .filter((p) => {
-      if (enPlantilla.has(p.campoKey) || vistas.has(p.campoKey)) return false;
+      if (enPlantilla.has(p.campoKey) || capturados.has(p.campoKey) || vistas.has(p.campoKey)) return false;
       vistas.add(p.campoKey);
       return true;
     })
@@ -150,7 +156,7 @@ export function consolidarPreguntas(
     });
 
   const agregadas = [...porClave.values()]
-    .filter((c) => c.obligatorio && !respondidos.has(c.campoKey) && !vistas.has(c.campoKey) && !enPlantilla.has(c.campoKey))
+    .filter((c) => c.obligatorio && !capturados.has(c.campoKey) && !vistas.has(c.campoKey) && !enPlantilla.has(c.campoKey))
     .map((c) => preguntaDeCampo(c, queEs));
 
   // El tope de 10 es una cortesía de pantalla, no una regla de datos: se recorta lo que la IA
@@ -224,7 +230,7 @@ export async function assessment_requerimiento(input: AssessmentInput): Promise<
 
 export function assessmentFallback(input: AssessmentInput): ResultadoAssessment {
   const { camposCapturados, camposDisponiblesCatalogo, titulo, descripcion } = input;
-  const respondidos = new Set(camposCapturados.map((c) => c.campoKey));
+  const respondidos = new Set(camposCapturados.filter(esCapturado).map((c) => c.campoKey));
   const preguntas: PreguntaAssessment[] = [];
 
   const queEs = (titulo || descripcion || "").trim().split(/[.\n]/)[0]?.trim().slice(0, 60) || "lo que necesita";
